@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import logo from '../assets/logo.svg';
 import profile_pic from '../assets/profile_pic.png'
 import dropdown_icon from '../assets/dropdown_icon.svg'
 import medLogo from '../assets/medLogo.svg';
