@@ -3,6 +3,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import logo from '../assets/logo.svg';
 import profile_pic from '../assets/profile_pic.png'
 import dropdown_icon from '../assets/dropdown_icon.svg'
+import medLogo from '../assets/medLogo.svg';
 
 const Navbar = () => {
     const navigate = useNavigate();
@@ -12,7 +13,7 @@ const Navbar = () => {
 
   return (
     <div className='flex items-center justify-between text-sm py-4 mb-5 border-b border-b-gray-400'>
-        <img className='w-44 cursor-pointer' src={logo} alt='logo' />
+        <img className='w-44 cursor-pointer' src={medLogo} alt='logo' />
         <ul className='hidden md:flex items-start gap-5 font-medium'>
             <NavLink to='/'>
                 <li className='py-1'>HOME</li>
