@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import profile_pic from '../assets/profile_pic.png'
 import dropdown_icon from '../assets/dropdown_icon.svg'
