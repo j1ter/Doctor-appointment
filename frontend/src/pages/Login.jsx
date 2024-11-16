@@ -35,7 +35,7 @@ function Login() {
         if (data.success) {
           localStorage.setItem('token', data.token);
           setToken(data.token);
-          toast.success('You have successfully registered');
+          toast.success('You have successfully logged');
         } else {
           toast.error(data.message)
       }
