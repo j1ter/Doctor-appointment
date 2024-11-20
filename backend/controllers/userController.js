@@ -11,15 +11,15 @@ const registerUser = async (req, res) => {
     try{
         const { name, email, password } = req.body
         if( !name || !password || !email ){
-            return res.json({success:false, meessage: "Missing Details"})
+            return res.json({success:false, message: "Missing Details"})
         }
 
         if (!validator.isEmail(email)) {
-            return res.json({success:false, meessage: "Missing Details"})
+            return res.json({success:false, message: "Missing Details"})
         }
 
         if (password.length < 8 ) {
-            return res.json({success:false, meessage: "Missing Details"})
+            return res.json({success:false, message: "Your password must be at least 8 characters"})
         }
 
         const salt = await bcrypt.genSalt(10)
