@@ -15,6 +15,8 @@ function MyAppointments() {
         return dateArray[0]+ " " + months[Number(dateArray[1])] + " " + dateArray[2]
   }
 
+  const navigate = useNavigate()
+
   const getUserAppointments = async () => {
     try {
 
@@ -74,7 +76,7 @@ if (token) {
             </div>
             <div></div>
             <div className='flex flex-col gap-2 justify-end'>
-            {!item.cancelled && <button className='text-sm text-stone-500 text-center sm:min-w-48 py-2 border rounded hover:bg-blue-600 hover:text-white transition-all duration-300'>Pay Online</button>}
+           {/* {!item.cancelled && <button className='text-sm text-stone-500 text-center sm:min-w-48 py-2 border rounded hover:bg-blue-600 hover:text-white transition-all duration-300'>Pay Online</button>} */}
             {!item.cancelled && 
               <button 
                 onClick={() => cancelAppointment(item._id)} 
