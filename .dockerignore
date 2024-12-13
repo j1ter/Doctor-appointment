@@ -1,0 +1,88 @@
+# flyctl launch added from .idea/.gitignore
+# Default ignored files
+.idea/shelf
+.idea/workspace.xml
+# Editor-based HTTP Client requests
+.idea/httpRequests
+# Datasource local storage ignored files
+.idea/dataSources
+.idea/dataSources.local.xml
+
+# flyctl launch added from Admin/.gitignore
+# Logs
+Admin/**/logs
+Admin/**/*.log
+Admin/**/npm-debug.log*
+Admin/**/yarn-debug.log*
+Admin/**/yarn-error.log*
+Admin/**/pnpm-debug.log*
+Admin/**/lerna-debug.log*
+
+Admin/**/node_modules
+Admin/**/dist
+Admin/**/dist-ssr
+Admin/**/*.local
+
+# Editor directories and files
+Admin/**/.vscode/*
+!Admin/**/.vscode/extensions.json
+Admin/**/.idea
+Admin/**/.DS_Store
+Admin/**/*.suo
+Admin/**/*.ntvs*
+Admin/**/*.njsproj
+Admin/**/*.sln
+Admin/**/*.sw?
+
+# flyctl launch added from backend/.gitignore
+# Logs
+backend/**/logs
+backend/**/*.log
+backend/**/npm-debug.log*
+backend/**/yarn-debug.log*
+backend/**/yarn-error.log*
+backend/**/pnpm-debug.log*
+backend/**/lerna-debug.log*
+
+backend/**/node_modules
+backend/**/dist
+backend/**/dist-ssr
+backend/**/*.local
+
+# Editor directories and files
+backend/**/.vscode/*
+!backend/**/.vscode/extensions.json
+backend/**/.idea
+backend/**/.DS_Store
+backend/**/*.suo
+backend/**/*.ntvs*
+backend/**/*.njsproj
+backend/**/*.sln
+backend/**/*.sw?
+
+# flyctl launch added from frontend/.gitignore
+# Logs
+frontend/**/logs
+frontend/**/*.log
+frontend/**/npm-debug.log*
+frontend/**/yarn-debug.log*
+frontend/**/yarn-error.log*
+frontend/**/pnpm-debug.log*
+frontend/**/lerna-debug.log*
+
+frontend/**/node_modules
+frontend/**/dist
+frontend/**/dist-ssr
+frontend/**/*.local
+
+# Editor directories and files
+frontend/**/.vscode/*
+!frontend/**/.vscode/extensions.json
+frontend/**/.idea
+frontend/**/.DS_Store
+frontend/**/*.suo
+frontend/**/*.ntvs*
+frontend/**/*.njsproj
+frontend/**/*.sln
+frontend/**/*.sw?
+fly.toml
