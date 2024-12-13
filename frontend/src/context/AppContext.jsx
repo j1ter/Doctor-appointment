@@ -1,5 +1,5 @@
 import { createContext, useEffect, useState } from "react";
-import axios from 'axios';
+import api from '../api/axios';
 import {toast} from 'react-toastify';
 
 export const AppContext = createContext();
@@ -14,10 +14,8 @@ const AppContextProvider = (props) => {
     const [userData, setUserData] = useState(false);
 
     const getDoctorsData = async () => {
-
         try {
-
-            const {data} = await axios.get(backendUrl + '/api/doctor/list')
+            const {data} = await api.get('/api/doctor/list')
             if (data.success) {
                 setDoctors(data.doctors)
             } else{
@@ -33,7 +31,7 @@ const AppContextProvider = (props) => {
     const loadUserProfileData = async () => {
         try {
 
-            const {data} = await axios.get(backendUrl + '/api/user/get-profile', {headers: {token}});
+            const {data} = await api.get('/api/user/get-profile', {headers: {token}});
 
             if (data.success) {
                 setUserData(data.userData);

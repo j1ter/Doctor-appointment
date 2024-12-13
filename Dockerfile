@@ -1,39 +1,40 @@
-FROM node:18-alpine as backend
-WORKDIR /app/backend
-COPY backend/package*.json ./
-RUN npm install
-COPY backend .
-
-FROM node:18-alpine as admin
+# Build stage for Admin
+FROM node:18-alpine as admin-build
 WORKDIR /app/admin
 COPY Admin/package*.json ./
 RUN npm install
-COPY Admin .
+COPY Admin/ .
 RUN npm run build
 
-FROM node:18-alpine as frontend
+# Build stage for Frontend
+FROM node:18-alpine as frontend-build
 WORKDIR /app/frontend
 COPY frontend/package*.json ./
 RUN npm install
-COPY frontend .
+COPY frontend/ .
 RUN npm run build
 
+# Backend and final stage
 FROM node:18-alpine
 WORKDIR /app
+
 # Copy backend files
-COPY --from=backend /app/backend ./backend
-# Copy built assets from admin
-COPY --from=admin /app/admin/dist ./admin/dist
-# Copy built assets from frontend
-COPY --from=frontend /app/frontend/dist ./frontend/dist
-
-# Install production dependencies for backend
-WORKDIR /app/backend
 COPY backend/package*.json ./
-RUN npm install --production
+RUN npm install
+COPY backend/ .
 
-# Expose the backend port
-EXPOSE 8080
+# Create directories for static files
+RUN mkdir -p ./public/admin
+RUN mkdir -p ./public/frontend
 
-# Start the backend server
+# Copy built admin files
+COPY --from=admin-build /app/admin/dist ./public/admin
+
+# Copy built frontend files
+COPY --from=frontend-build /app/frontend/dist ./public/frontend
+
+# Expose the port the app runs on
+EXPOSE 3000
+
+# Start the application
 CMD ["npm", "start"]
