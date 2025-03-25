@@ -5,6 +5,8 @@ import jwt from 'jsonwebtoken';
 import {v2 as cloudinary} from 'cloudinary';
 import doctorModel from '../models/doctorModel.js';
 import appointmentModel from '../models/appointmentModel.js';
+import nodemailer from 'nodemailer';
+
 
 //API to register user
 const registerUser = async (req, res) => {
@@ -115,6 +117,44 @@ const updateProfile = async (req, res) => {
     }
 }
 
+const months = [
+    'January', 'February', 'March', 'April', 'May', 'June', 
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
+  
+  const formatSlotDate = (slotDate) => {
+    const dateArray = slotDate.split('_');
+    const day = dateArray[0];
+    const month = months[Number(dateArray[1]) - 1]; // Преобразуем индекс месяца
+    const year = dateArray[2];
+    return `${day} ${month} ${year}`;
+  };
+
+const sendEmailNotification = async (recipient, subject, message) => {
+    try {
+        const transporter = nodemailer.createTransport({
+            service: 'gmail', // Можно заменить на другой почтовый сервис
+            auth: {
+                user: process.env.EMAIL, // Email отправителя
+                pass: process.env.EMAIL_PASSWORD // Пароль или токен
+            }
+        });
+
+        await transporter.sendMail({
+            from: '"Clinic Booking" <your-email@gmail.com>', // Имя отправителя
+            to: recipient, // Email получателя
+            subject, // Тема письма
+            text: message, // Текст письма
+            html: `<p>${message}</p>` // HTML-формат письма
+        });
+
+        console.log('Email успешно отправлен');
+    } catch (error) {
+        console.error('Ошибка при отправке email:', error);
+    }
+};
+
+
 // API to book appointment
 const bookAppointment = async (req, res) => {
     try {
@@ -161,6 +201,17 @@ const bookAppointment = async (req, res) => {
 
         // save new slots data in docData
         await doctorModel.findByIdAndUpdate(docId, {slots_booked});
+
+        const formattedSlotDate = formatSlotDate(slotDate);
+
+        // Отправляем email уведомление
+        const message = `
+            Здравствуйте, ${userData.name}!
+            Вы записаны к врачу ${docData.name}.
+            Дата: ${formattedSlotDate}, Время: ${slotTime}.
+            Спасибо за использование нашей системы!
+        `;
+        await sendEmailNotification(userData.email, 'Запись к врачу подтверждена', message);
 
         res.json({success: true, message: 'Appointment Booked'})
 
