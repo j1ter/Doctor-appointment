@@ -1,0 +1,151 @@
+{
+    "appointment": {
+      "about": "About",
+      "appointment_fee": "Appointment fee: {{currencySymbol}}{{fee}}",
+      "booking_slots": "Booking slots",
+      "book_appointment": "Book an appointment",
+      "login_to_book": "Login to book appointment",
+      "success": "Appointment booked successfully",
+      "error": "Failed to book appointment",
+      "error_doctor_not_found": "Doctor not found",
+      "error_loading": "Error loading doctor information",
+      "loading": "Loading...",
+      "no_slots": "No available slots",
+      "error_select_slot": "Please select a time slot"
+    },
+    "header": {
+      "title": "Book Appointment With Trusted Doctors",
+      "description": "Simply browse through our extensive list of trusted doctors, schedule your appointment hassle-free.",
+      "book_appointment": "Book appointment"
+    },
+    "banner": {
+      "title": "Book Appointment",
+      "subtitle": "With 100+ Trusted Doctors",
+      "create_account": "Create account"
+    },
+    "footer": {
+      "description": "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.",
+      "company": "Company",
+      "home": "Home",
+      "about": "About us",
+      "contact": "Contact us",
+      "privacy_policy": "Privacy policy",
+      "get_in_touch": "Get in Touch",
+      "phone": "+7 707 493 03 18",
+      "email": "NarxozMed@narxoz.kz",
+      "copyright": "Copyright © 2024 NarxozMed - All Right Reserved."
+    },
+    "navbar": {
+  "home": "Home",
+  "all_doctors": "All Doctors",
+  "about": "About",
+  "contact": "Contact",
+  "my_profile": "My Profile",
+  "my_appointments": "My Appointments",
+  "logout": "Logout",
+  "create_account": "Create account",
+  "english": "English",
+  "russian": "Russian",
+  "kazakh": "Kazakh"
+},
+    "related_doctors": {
+      "title": "Related Doctors",
+      "description": "Simply browse through our extensive list of trusted doctors.",
+      "more": "more",
+      "available": "Available",
+      "not_available": "Not Available"
+    },
+    "speciality_menu": {
+      "title": "Find by Speciality",
+      "description": "Simply browse through our extensive list of trusted doctors, schedule your appointment hassle-free."
+    },
+    "top_doctors": {
+      "title": "Top Doctors to Book",
+      "description": "Simply browse through our extensive list of trusted doctors.",
+      "more": "more",
+      "available": "Available",
+      "not_available": "Not Available"
+    },
+    "my_appointments": {
+      "title": "My Appointments",
+      "address": "Address:",
+      "date_time": "Date & Time:",
+      "cancel_appointment": "Cancel Appointment",
+      "appointment_cancelled": "Appointment cancelled",
+      "completed": "Completed",
+      "cancel_success": "Appointment cancelled successfully",
+      "cancel_error": "Failed to cancel appointment"
+    },
+    "my_profile": {
+      "contact_info": "Contact Information",
+      "email": "Email id:",
+      "phone": "Phone:",
+      "address": "Address:",
+      "basic_info": "Basic Information",
+      "gender": "Gender:",
+      "birthday": "Birthday:",
+      "male": "Male",
+      "female": "Female",
+      "edit": "Edit",
+      "save_information": "Save information",
+      "update_success": "Profile updated successfully",
+      "update_error": "Failed to update profile"
+    },
+    "settings": {
+      "theme": "Theme",
+      "theme_description": "Choose a theme for your web interface"
+    },
+    "home": {
+      "title": "NarxozMed"
+    },
+    "about": {
+      "title": "About Us",
+      "welcome": "Welcome to NarxozMed, your trusted partner in managing your healthcare needs conveniently and efficiently. At NarxozMed, we understand the challenges individuals face when it comes to scheduling doctor appointments and managing their health records.",
+      "commitment": "NarxozMed is committed to excellence in healthcare technology. We continuously strive to enhance our platform, integrating the latest advancements to improve user experience and deliver superior service. Whether you're booking your first appointment or managing ongoing care, NarxozMed is here to support you every step of the way.",
+      "vision_title": "Our Vision",
+      "vision": "Our vision at NarxozMed is to create a seamless healthcare experience for every user. We aim to bridge the gap between patients and healthcare providers, making it easier for you to access the care you need, when you need it.",
+      "why_choose": "Why Choose Us",
+      "efficiency_title": "Efficiency",
+      "efficiency": "Streamlined appointment scheduling that fits into your busy lifestyle.",
+      "convenience_title": "Convenience",
+      "convenience": "Access to a network of trusted healthcare professionals in your area.",
+      "personalization_title": "Personalization",
+      "personalization": "Tailored recommendations and reminders to help you stay on top of your health."
+    },
+    "contact": {
+      "title": "Contact Us",
+      "office": "Our Office",
+      "address": "050000 Almaty, Zhandosova 50, Almaty, KZ",
+      "phone": "Tel: +7 707 493 03 18",
+      "email": "Email: NarxozMed@narxoz.kz",
+      "careers_title": "Careers at NarxozMed",
+      "careers": "Learn more about our teams and job openings.",
+      "explore_jobs": "Explore Jobs"
+    },
+    "doctors": {
+      "browse": "Browse through the doctors specialist.",
+      "filters": "Filters",
+      "general_physician": "General physician",
+      "gynecologist": "Gynecologist",
+      "dermatologist": "Dermatologist",
+      "pediatricians": "Pediatricians",
+      "neurologist": "Neurologist",
+      "gastroenterologist": "Gastroenterologist",
+      "available": "Available",
+      "not_available": "Not Available"
+    },
+    "login": {
+      "create_account": "Create account",
+      "login": "Login",
+      "signup_prompt": "Please sign up to book appointment",
+      "login_prompt": "Please log in to book appointment",
+      "full_name": "Full Name",
+      "email": "Email",
+      "password": "Password",
+      "already_have_account": "Already have an account? Login here",
+      "create_new_account": "Create a new account? Click here",
+      "signup_success": "You have successfully registered",
+      "login_success": "You have successfully logged in",
+      "error": "Authentication failed"
+    }
+  }
