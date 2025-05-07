@@ -18,9 +18,18 @@ connectDB()
 connectCloudinary()
 
 // middlewares
-app.use(express.json())
-app.use(cors())
-app.use(cookieParser())
+app.use(
+    cors({
+        origin: 'http://localhost:5173', // Убрали завершающий слеш
+        credentials: true,
+        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+        allowedHeaders: ['Content-Type', 'Authorization'],
+    })
+);
+app.options('*', cors()); // Поддержка preflight-запросов
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 // api endpoints
 app.use('/api/admin', adminRouter)
