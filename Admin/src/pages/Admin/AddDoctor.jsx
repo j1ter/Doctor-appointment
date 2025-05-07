@@ -129,12 +129,10 @@ try {
             <div className="flex flex-col gap-1">
               <p>Speciality</p>
               <select onChange={(e)=> setSpeciality(e.target.value)} value={speciality} className="border rounded px-3 py-2" name="speciality" id="speciality">
-                <option value="General physician">General physician</option>
-                <option value="Gynecologist">Gynecologist</option>
-                <option value="Dermatologist">Dermatologist</option>
-                <option value="Pediatricians">Pediatricians</option>
-                <option value="Neurologist">Neurologist</option>
-                <option value="Gastroenterologist">Gastroenterologist</option>
+                <option value="Therapist">Therapist</option>
+                <option value="Pediatrician">Pediatrician</option>
+                <option value="Psychologist">Psychologist</option>
+                <option value="Nurses">Nurses</option>
               </select>
             </div>
             <div className="flex flex-col gap-1">
