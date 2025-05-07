@@ -6,73 +6,250 @@ import {v2 as cloudinary} from 'cloudinary';
 import doctorModel from '../models/doctorModel.js';
 import appointmentModel from '../models/appointmentModel.js';
 import nodemailer from 'nodemailer';
+import { redis } from '../lib/redis.js';
+import dotenv from "dotenv";
 
+dotenv.config();
 
-//API to register user
+// Helper function to generate access and refresh tokens
+const generateTokens = (userId) => {
+    const accessToken = jwt.sign({ userId }, process.env.ACCESS_TOKEN_SECRET, {
+        expiresIn: '15m',
+    });
+
+    const refreshToken = jwt.sign({ userId }, process.env.REFRESH_TOKEN_SECRET, {
+        expiresIn: '7d',
+    });
+
+    return { accessToken, refreshToken };
+};
+
+// Helper function to store refresh token in Redis
+const storeRefreshToken = async (userId, refreshToken) => {
+    await redis.set(`refresh_token:${userId}`, refreshToken, 'EX', 7 * 24 * 60 * 60); // 7 days
+};
+
+// Helper function to set cookies
+const setCookies = (res, accessToken, refreshToken) => {
+    res.cookie('accessToken', accessToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 15 * 60 * 1000, // 15 minutes
+    });
+    res.cookie('refreshToken', refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+};
+
+// API to register user
 const registerUser = async (req, res) => {
-    try{
-        const { name, email, password } = req.body
-        if( !name || !password || !email ){
-            return res.json({success:false, message: "Missing Details"})
+    try {
+        const { name, email, password } = req.body;
+        if (!name || !password || !email) {
+            return res.json({ success: false, message: 'Missing Details' });
         }
 
         if (!validator.isEmail(email)) {
-            return res.json({success:false, message: "Missing Details"})
+            return res.json({ success: false, message: 'Invalid Email' });
         }
 
-        if (password.length < 8 ) {
-            return res.json({success:false, message: "Your password must be at least 8 characters"})
+        if (password.length < 8) {
+            return res.json({ success: false, message: 'Your password must be at least 8 characters' });
         }
 
-        const salt = await bcrypt.genSalt(10)
-        const hashedPassword = await bcrypt.hash(password, salt)
+        const userExists = await userModel.findOne({ email });
+        if (userExists) {
+            return res.json({ success: false, message: 'User already exists' });
+        }
+
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
 
         const userData = {
             name,
             email,
-            password : hashedPassword
-        }
-            
-        const newUser = new userModel(userData)
-        const user = await newUser.save()
+            password: hashedPassword,
+        };
 
-        const token = jwt.sign({id:user._id}, process.env.JWT_SECRET )
+        const newUser = new userModel(userData);
+        const user = await newUser.save();
 
-        res.json({success:true, token})
+        const { accessToken, refreshToken } = generateTokens(user._id);
+        await storeRefreshToken(user._id, refreshToken);
+        setCookies(res, accessToken, refreshToken);
 
-    } catch (error){
-        console.log(error);
-        res.json({success: false, message: error.message})
+        res.status(201).json({
+            success: true,
+            user: {
+                _id: user._id,
+                name: user.name,
+                email: user.email,
+            },
+            message: "Your account registered successfully!"
+        });
+    } catch (error) {
+        console.log('Error in registerUser:', error);
+        res.json({ success: false, message: error.message });
     }
-}
+};
 
 // API for user login
 const loginUser = async (req, res) => {
-
     try {
-
-        const {email, password} = req.body
-        const user = await userModel.findOne({email})
+        const { email, password } = req.body;
+        const user = await userModel.findOne({ email });
 
         if (!user) {
-            return res.json({success: false, message: "User does not exist"})
+            return res.json({ success: false, message: 'User does not exist' });
         }
 
-        const isMatch = await bcrypt.compare(password, user.password)
-
-        if (isMatch) {
-            const token = jwt.sign({id:user._id}, process.env.JWT_SECRET)
-            res.json({success:true,token})
-        }else {
-            res.json({success:false, message:"Invalid credentails"})
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            return res.json({ success: false, message: 'Invalid credentials' });
         }
 
-    }catch (error) {
-        console.log(error);
-        res.json({success: false, message: error.message})
+        const { accessToken, refreshToken } = generateTokens(user._id);
+        await storeRefreshToken(user._id, refreshToken);
+        setCookies(res, accessToken, refreshToken);
+
+        res.json({
+            success: true,
+            user: {
+                _id: user._id,
+                name: user.name,
+                email: user.email,
+            },
+            message: "Login successfully!"
+        });
+    } catch (error) {
+        console.log('Error in loginUser:', error);
+        res.json({ success: false, message: error.message });
     }
+};
 
-}
+// API to log out user
+const logoutUser = async (req, res) => {
+    try {
+        const refreshToken = req.cookies.refreshToken;
+        if (refreshToken) {
+            const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+            await redis.del(`refresh_token:${decoded.userId}`);
+        }
+
+        res.clearCookie('accessToken');
+        res.clearCookie('refreshToken');
+        res.json({ success: true, message: 'Logged out successfully' });
+    } catch (error) {
+        console.log('Error in logoutUser:', error);
+        res.json({ success: false, message: error.message });
+    }
+};
+
+// API to refresh access token
+const refreshToken = async (req, res) => {
+    try {
+        const refreshToken = req.cookies.refreshToken;
+
+        if (!refreshToken) {
+            return res.status(401).json({ success: false, message: 'No refresh token provided' });
+        }
+
+        const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+        const storedToken = await redis.get(`refresh_token:${decoded.userId}`);
+
+        if (storedToken !== refreshToken) {
+            return res.status(401).json({ success: false, message: 'Invalid refresh token' });
+        }
+
+        const accessToken = jwt.sign({ userId: decoded.userId }, process.env.ACCESS_TOKEN_SECRET, {
+            expiresIn: '15m',
+        });
+
+        res.cookie('accessToken', accessToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            maxAge: 15 * 60 * 1000,
+        });
+
+        res.json({ success: true, message: 'Token refreshed successfully' });
+    } catch (error) {
+        console.log('Error in refreshToken:', error);
+        res.json({ success: false, message: error.message });
+    }
+};
+
+
+
+//API to register user
+// const registerUser = async (req, res) => {
+//     try{
+//         const { name, email, password } = req.body
+//         if( !name || !password || !email ){
+//             return res.json({success:false, message: "Missing Details"})
+//         }
+
+//         if (!validator.isEmail(email)) {
+//             return res.json({success:false, message: "Missing Details"})
+//         }
+
+//         if (password.length < 8 ) {
+//             return res.json({success:false, message: "Your password must be at least 8 characters"})
+//         }
+
+//         const salt = await bcrypt.genSalt(10)
+//         const hashedPassword = await bcrypt.hash(password, salt)
+
+//         const userData = {
+//             name,
+//             email,
+//             password : hashedPassword
+//         }
+            
+//         const newUser = new userModel(userData)
+//         const user = await newUser.save()
+
+//         const token = jwt.sign({id:user._id}, process.env.JWT_SECRET )
+
+//         res.json({success:true, token})
+
+//     } catch (error){
+//         console.log(error);
+//         res.json({success: false, message: error.message})
+//     }
+// }
+
+// API for user login
+// const loginUser = async (req, res) => {
+
+//     try {
+
+//         const {email, password} = req.body
+//         const user = await userModel.findOne({email})
+
+//         if (!user) {
+//             return res.json({success: false, message: "User does not exist"})
+//         }
+
+//         const isMatch = await bcrypt.compare(password, user.password)
+
+//         if (isMatch) {
+//             const token = jwt.sign({id:user._id}, process.env.JWT_SECRET)
+//             res.json({success:true,token})
+//         }else {
+//             res.json({success:false, message:"Invalid credentails"})
+//         }
+
+//     }catch (error) {
+//         console.log(error);
+//         res.json({success: false, message: error.message})
+//     }
+
+// }
 
 // API to get user profile
 const getProfile = async (req, res) => {
@@ -269,4 +446,4 @@ const cancelAppointment = async (req, res) => {
 }
 
 
-export {registerUser, loginUser, getProfile, updateProfile, bookAppointment, listAppointment, cancelAppointment};
+export {registerUser, loginUser, getProfile, updateProfile, bookAppointment, listAppointment, cancelAppointment, logoutUser, refreshToken};

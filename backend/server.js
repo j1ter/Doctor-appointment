@@ -8,6 +8,7 @@ import doctorRouter from './routes/doctorRoute.js';
 import userRouter from './routes/userRoutes.js';
 import conversationsRouter from './routes/conversationsRoute.js';
 import messageRouter from './routes/messagesRoute.js';
+import cookieParser from 'cookie-parser';
 
 
 // app config
@@ -19,6 +20,7 @@ connectCloudinary()
 // middlewares
 app.use(express.json())
 app.use(cors())
+app.use(cookieParser())
 
 // api endpoints
 app.use('/api/admin', adminRouter)
