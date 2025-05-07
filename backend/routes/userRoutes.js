@@ -8,15 +8,14 @@ const userRouter = express.Router();
 userRouter.post('/register', registerUser);
 userRouter.post('/login', loginUser);
 userRouter.post('/logout', authUser, logoutUser);
-userRouter.post("/refresh-token", refreshToken);
+userRouter.post('/refresh-token', refreshToken);
 
-userRouter.get('/get-profile', authUser, getProfile);
+userRouter.get('/profile', authUser, getProfile);
 userRouter.post('/update-profile', upload.single('image'), authUser, updateProfile);
 userRouter.post('/book-appointment', authUser, bookAppointment);
-userRouter.get('/appointments', authUser, listAppointment)
+userRouter.get('/appointments', authUser, listAppointment);
 userRouter.post('/cancel-appointment', authUser, cancelAppointment);
 
-
-
+console.log('Registered user routes, including GET /api/user/profile');
 
 export default userRouter;

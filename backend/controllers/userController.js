@@ -2,12 +2,12 @@ import validator from 'validator';
 import bcrypt from 'bcrypt';
 import userModel from '../models/userModel.js';
 import jwt from 'jsonwebtoken';
-import {v2 as cloudinary} from 'cloudinary';
+import { v2 as cloudinary } from 'cloudinary';
 import doctorModel from '../models/doctorModel.js';
 import appointmentModel from '../models/appointmentModel.js';
 import nodemailer from 'nodemailer';
 import { redis } from '../lib/redis.js';
-import dotenv from "dotenv";
+import dotenv from 'dotenv';
 
 dotenv.config();
 
@@ -89,7 +89,7 @@ const registerUser = async (req, res) => {
                 name: user.name,
                 email: user.email,
             },
-            message: "Your account registered successfully!"
+            message: 'Your account registered successfully!',
         });
     } catch (error) {
         console.log('Error in registerUser:', error);
@@ -123,7 +123,7 @@ const loginUser = async (req, res) => {
                 name: user.name,
                 email: user.email,
             },
-            message: "Login successfully!"
+            message: 'Login successfully!',
         });
     } catch (error) {
         console.log('Error in loginUser:', error);
@@ -183,146 +183,80 @@ const refreshToken = async (req, res) => {
     }
 };
 
-
-
-//API to register user
-// const registerUser = async (req, res) => {
-//     try{
-//         const { name, email, password } = req.body
-//         if( !name || !password || !email ){
-//             return res.json({success:false, message: "Missing Details"})
-//         }
-
-//         if (!validator.isEmail(email)) {
-//             return res.json({success:false, message: "Missing Details"})
-//         }
-
-//         if (password.length < 8 ) {
-//             return res.json({success:false, message: "Your password must be at least 8 characters"})
-//         }
-
-//         const salt = await bcrypt.genSalt(10)
-//         const hashedPassword = await bcrypt.hash(password, salt)
-
-//         const userData = {
-//             name,
-//             email,
-//             password : hashedPassword
-//         }
-            
-//         const newUser = new userModel(userData)
-//         const user = await newUser.save()
-
-//         const token = jwt.sign({id:user._id}, process.env.JWT_SECRET )
-
-//         res.json({success:true, token})
-
-//     } catch (error){
-//         console.log(error);
-//         res.json({success: false, message: error.message})
-//     }
-// }
-
-// API for user login
-// const loginUser = async (req, res) => {
-
-//     try {
-
-//         const {email, password} = req.body
-//         const user = await userModel.findOne({email})
-
-//         if (!user) {
-//             return res.json({success: false, message: "User does not exist"})
-//         }
-
-//         const isMatch = await bcrypt.compare(password, user.password)
-
-//         if (isMatch) {
-//             const token = jwt.sign({id:user._id}, process.env.JWT_SECRET)
-//             res.json({success:true,token})
-//         }else {
-//             res.json({success:false, message:"Invalid credentails"})
-//         }
-
-//     }catch (error) {
-//         console.log(error);
-//         res.json({success: false, message: error.message})
-//     }
-
-// }
-
 // API to get user profile
 const getProfile = async (req, res) => {
     try {
-        const {userId} = req.body;
-        const userData = await userModel.findById(userId).select('-password');
-
-        res.json({success: true, userData})
-
+        const userData = await userModel.findById(req.user._id).select('-password');
+        if (!userData) {
+            return res.json({ success: false, message: 'User not found' });
+        }
+        res.json({ success: true, userData });
     } catch (error) {
-        console.log(error);
-        res.json({success: false, message: error.message})
+        console.log('Error in getProfile:', error);
+        res.json({ success: false, message: error.message });
     }
-}
+};
 
 // API to update user profile
 const updateProfile = async (req, res) => {
     try {
-
-        const {userId, name, phone, address, dob, gender} = req.body;
+        const { name, phone, address, dob, gender } = req.body;
         const imageFile = req.file;
 
         if (!name || !phone || !address || !dob || !gender) {
-            return res.json({success: false, message: 'Data Missing'});
+            return res.json({ success: false, message: 'Data Missing' });
         }
 
-        await userModel.findByIdAndUpdate(userId, {name, phone, address: JSON.parse(address), dob, gender});
+        await userModel.findByIdAndUpdate(req.user._id, {
+            name,
+            phone,
+            address: JSON.parse(address),
+            dob,
+            gender,
+        });
 
         if (imageFile) {
-            // upload image to cloudinary
-            const imageUpload = await cloudinary.uploader.upload(imageFile.path, {resource_type: 'image'});
+            const imageUpload = await cloudinary.uploader.upload(imageFile.path, { resource_type: 'image' });
             const imageURL = imageUpload.secure_url;
-
-            await userModel.findByIdAndUpdate(userId, {image: imageURL});
+            await userModel.findByIdAndUpdate(req.user._id, { image: imageURL });
         }
 
-        res.json({success: true, message: 'Profile Updated'});
-
+        res.json({ success: true, message: 'Profile Updated' });
     } catch (error) {
-        console.log(error);
-        res.json({success: false, message: error.message})
+        console.log('Error in updateProfile:', error);
+        res.json({ success: false, message: error.message });
     }
-}
+};
 
 const months = [
-    'January', 'February', 'March', 'April', 'May', 'June', 
-    'July', 'August', 'September', 'October', 'November', 'December'
-  ];
-  
-  const formatSlotDate = (slotDate) => {
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December',
+];
+
+const formatSlotDate = (slotDate) => {
     const dateArray = slotDate.split('_');
     const day = dateArray[0];
-    const month = months[Number(dateArray[1]) - 1]; // Преобразуем индекс месяца
+    const month = months[Number(dateArray[1]) - 1];
     const year = dateArray[2];
     return `${day} ${month} ${year}`;
-  };
+};
 
 const sendEmailNotification = async (recipient, subject, message) => {
     try {
         const transporter = nodemailer.createTransport({
-            service: 'gmail', // Можно заменить на другой почтовый сервис
+            service: 'gmail',
             auth: {
-                user: process.env.EMAIL, // Email отправителя
-                pass: process.env.EMAIL_PASSWORD // Пароль или токен
-            }
+                user: process.env.EMAIL,
+                pass: process.env.EMAIL_PASSWORD,
+            },
         });
 
         await transporter.sendMail({
-            from: '"Clinic Booking" <your-email@gmail.com>', // Имя отправителя
-            to: recipient, // Email получателя
-            subject, // Тема письма
-            text: message, // Текст письма
-            html: `<p>${message}</p>` // HTML-формат письма
+            from: '"Clinic Booking" <your-email@gmail.com>',
+            to: recipient,
+            subject,
+            text: message,
+            html: `<p>${message}</p>`,
         });
 
         console.log('Email успешно отправлен');
@@ -331,25 +265,21 @@ const sendEmailNotification = async (recipient, subject, message) => {
     }
 };
 
-
 // API to book appointment
 const bookAppointment = async (req, res) => {
     try {
-
-        const {userId, docId, slotDate, slotTime} = req.body;
+        const { docId, slotDate, slotTime } = req.body;
+        const userId = req.user._id;
 
         const docData = await doctorModel.findById(docId).select('-password');
-
         if (!docData.available) {
-            return res.json({success: false, message: 'Doctor not available'});
+            return res.json({ success: false, message: 'Doctor not available' });
         }
 
         let slots_booked = docData.slots_booked;
-
-        // checking for slot availablity
         if (slots_booked[slotDate]) {
             if (slots_booked[slotDate].includes(slotTime)) {
-                return res.json({success: false, message: 'Slot not available'});
+                return res.json({ success: false, message: 'Slot not available' });
             } else {
                 slots_booked[slotDate].push(slotTime);
             }
@@ -358,8 +288,7 @@ const bookAppointment = async (req, res) => {
             slots_booked[slotDate].push(slotTime);
         }
 
-        const userData = await userModel.findById(userId).select('-password');
-
+        const userData = await userModel.findquilById(userId).select('-password');
         delete docData.slots_booked;
 
         const appointmentData = {
@@ -370,18 +299,15 @@ const bookAppointment = async (req, res) => {
             amount: docData.fees,
             slotTime,
             slotDate,
-            date: Date.now()
-        }
+            date: Date.now(),
+        };
 
         const newAppointment = new appointmentModel(appointmentData);
         await newAppointment.save();
 
-        // save new slots data in docData
-        await doctorModel.findByIdAndUpdate(docId, {slots_booked});
+        await doctorModel.findByIdAndUpdate(docId, { slots_booked });
 
         const formattedSlotDate = formatSlotDate(slotDate);
-
-        // Отправляем email уведомление
         const message = `
             Здравствуйте, ${userData.name}!
             Вы записаны к врачу ${docData.name}.
@@ -390,60 +316,50 @@ const bookAppointment = async (req, res) => {
         `;
         await sendEmailNotification(userData.email, 'Запись к врачу подтверждена', message);
 
-        res.json({success: true, message: 'Appointment Booked'})
-
+        res.json({ success: true, message: 'Appointment Booked' });
     } catch (error) {
-        console.log(error);
-        res.json({success: false, message: error.message})
+        console.log('Error in bookAppointment:', error);
+        res.json({ success: false, message: error.message });
     }
-}
+};
 
-
-// api  to get user appointments for frontend page
-
+// API to get user appointments
 const listAppointment = async (req, res) => {
-        try {
-            
-            const {userId} = req.body
-            const appointments = await appointmentModel.find({userId})
+    try {
+        const userId = req.user._id;
+        const appointments = await appointmentModel.find({ userId });
+        res.json({ success: true, appointments });
+    } catch (error) {
+        console.log('Error in listAppointment:', error);
+        res.json({ success: false, message: error.message });
+    }
+};
 
-            res.json({success:true,appointments})
-            
-        } catch (error) {
-            console.log(error);
-        res.json({success: false, message: error.message})
-        }
-}
-
-//API to cancel appointment
+// API to cancel appointment
 const cancelAppointment = async (req, res) => {
     try {
+        const { appointmentId } = req.body;
+        const userId = req.user._id;
 
-        const {userId, appointmentId} = req.body
-        const appointmentData = await appointmentModel.findById(appointmentId)
-
-        //verify appointment user
-        if (appointmentData.userId !== userId) {
-            return res.json({success:false, message:'Unauthorized action'})
+        const appointmentData = await appointmentModel.findById(appointmentId);
+        if (appointmentData.userId.toString() !== userId.toString()) {
+            return res.json({ success: false, message: 'Unauthorized action' });
         }
 
-        await appointmentModel.findByIdAndUpdate(appointmentId, {cancelled:true})
+        await appointmentModel.findByIdAndUpdate(appointmentId, { cancelled: true });
 
-        //releasing doctor slot
-        const {docId, slotDate, slotTime} = appointmentData
-        const doctorData = await doctorModel.findById(docId)
+        const { docId, slotDate, slotTime } = appointmentData;
+        const doctorData = await doctorModel.findById(docId);
 
-        let slots_booked = doctorData.slots_booked
-        slots_booked[slotDate] = slots_booked[slotDate].filter(e=> e !== slotTime)
+        let slots_booked = doctorData.slots_booked;
+        slots_booked[slotDate] = slots_booked[slotDate].filter((e) => e !== slotTime);
 
-        await doctorModel.findByIdAndUpdate(docId, {slots_booked})
-        res.json({success:true, message:'Appointment Cancelled'})
-
+        await doctorModel.findByIdAndUpdate(docId, { slots_booked });
+        res.json({ success: true, message: 'Appointment Cancelled' });
     } catch (error) {
-        console.log(error);
-        res.json({success: false, message: error.message})
+        console.log('Error in cancelAppointment:', error);
+        res.json({ success: false, message: error.message });
     }
-}
+};
 
-
-export {registerUser, loginUser, getProfile, updateProfile, bookAppointment, listAppointment, cancelAppointment, logoutUser, refreshToken};
+export { registerUser, loginUser, getProfile, updateProfile, bookAppointment, listAppointment, cancelAppointment, logoutUser, refreshToken };

@@ -13,15 +13,10 @@ import { AppContext } from '../context/AppContext';
 
 const Navbar = () => {
   const navigate = useNavigate();
-  const { token, setToken, userData } = useContext(AppContext);
+  const { isAuthenticated, userData, logout } = useContext(AppContext);
   const { t, i18n } = useTranslation();
   const [showMenu, setShowMenu] = useState(false);
   const [showLanguageMenu, setShowLanguageMenu] = useState(false);
-
-  const logout = () => {
-    setToken(false);
-    localStorage.removeItem('token');
-  };
 
   const changeLanguage = (lng) => {
     i18n.changeLanguage(lng);
@@ -62,7 +57,7 @@ const Navbar = () => {
             onClick={() => setShowLanguageMenu(!showLanguageMenu)}
             className='flex items-center bg-white text-black text-sm font-sans font-medium border border-primary rounded-full px-4 py-2 pr-8 hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-primary transition-all duration-300 bg-[url("/src/assets/dropdown_icon.svg")] bg-no-repeat bg-[right_0.5rem_center]'
           >
-            {languages.find(lang => lang.code === i18n.language)?.name || t('navbar.english')}
+            {languages.find((lang) => lang.code === i18n.language)?.name || t('navbar.english')}
           </button>
           {showLanguageMenu && (
             <div className='absolute top-full left-0 mt-2 w-48 bg-white rounded-md shadow-sm z-20'>
@@ -79,26 +74,41 @@ const Navbar = () => {
             </div>
           )}
         </div>
-        {token && userData ? (
+        {isAuthenticated && userData ? (
           <div className='flex items-center gap-2 cursor-pointer group relative'>
-            <img className='w-8 rounded-full' src={userData.image} alt='profile_pic' />
+            <img className='w-8 rounded-full' src={userData.image || profile_pic} alt='profile_pic' />
             <img className='w-2.5' src={dropdown_icon} alt='dropdown_icon' />
             <div className='absolute top-0 right-0 pt-14 text-base font-sans font-medium text-gray-600 z-20 hidden group-hover:block'>
               <div className='min-w-48 bg-stone-100 rounded flex flex-col gap-4 p-4'>
-                <p onClick={() => navigate('/my-profile')} className='hover:text-black cursor-pointer'>{t('navbar.my_profile')}</p>
-                <p onClick={() => navigate('/my-appointments')} className='hover:text-black cursor-pointer'>{t('navbar.my_appointments')}</p>
-                <p onClick={logout} className='hover:text-black cursor-pointer'>{t('navbar.logout')}</p>
+                <p onClick={() => navigate('/my-profile')} className='hover:text-black cursor-pointer'>
+                  {t('navbar.my_profile')}
+                </p>
+                <p onClick={() => navigate('/my-appointments')} className='hover:text-black cursor-pointer'>
+                  {t('navbar.my_appointments')}
+                </p>
+                <p onClick={logout} className='hover:text-black cursor-pointer'>
+                  {t('navbar.logout')}
+                </p>
               </div>
             </div>
           </div>
         ) : (
-          <button onClick={() => navigate('/login')} className='bg-primary text-white px-8 py-3 rounded-full font-sans font-light hidden md:block'>{t('navbar.create_account')}</button>
+          <button
+            onClick={() => navigate('/login')}
+            className='bg-primary text-white px-8 py-3 rounded-full font-sans font-light hidden md:block'
+          >
+            {t('navbar.create_account')}
+          </button>
         )}
-        <img onClick={() => setShowMenu(true)} className='w-6 md:hidden' src={menu_icon} alt="menu_icon" />
-        <div className={`${showMenu ? 'fixed w-full' : 'h-0 w-0'} md:hidden right-0 top-0 bottom-0 z-20 overflow-hidden bg-white transition-all font-sans`}>
+        <img onClick={() => setShowMenu(true)} className='w-6 md:hidden' src={menu_icon} alt='menu_icon' />
+        <div
+          className={`${
+            showMenu ? 'fixed w-full' : 'h-0 w-0'
+          } md:hidden right-0 top-0 bottom-0 z-20 overflow-hidden bg-white transition-all font-sans`}
+        >
           <div className='flex items-center justify-between px-5 py-6'>
-            <img className='w-36' src={medLogo} alt="logo" />
-            <img className='w-7' onClick={() => setShowMenu(false)} src={cross_icon} alt="cross_icon" />
+            <img className='w-36' src={medLogo} alt='logo' />
+            <img className='w-7' onClick={() => setShowMenu(false)} src={cross_icon} alt='cross_icon' />
           </div>
           <ul className='flex flex-col items-center gap-2 mt-5 px-5 text-lg font-medium font-sans'>
             <NavLink onClick={() => setShowMenu(false)} to='/'>
@@ -113,6 +123,23 @@ const Navbar = () => {
             <NavLink onClick={() => setShowMenu(false)} to='/contact'>
               <p className='px-4 py-2 rounded inline-block'>{t('navbar.contact')}</p>
             </NavLink>
+            {isAuthenticated && userData ? (
+              <>
+                <NavLink onClick={() => setShowMenu(false)} to='/my-profile'>
+                  <p className='px-4 py-2 rounded inline-block'>{t('navbar.my_profile')}</p>
+                </NavLink>
+                <NavLink onClick={() => setShowMenu(false)} to='/my-appointments'>
+                  <p className='px-4 py-2 rounded inline-block'>{t('navbar.my_appointments')}</p>
+                </NavLink>
+                <p onClick={() => { logout(); setShowMenu(false); }} className='px-4 py-2 rounded inline-block cursor-pointer'>
+                  {t('navbar.logout')}
+                </p>
+              </>
+            ) : (
+              <NavLink onClick={() => setShowMenu(false)} to='/login'>
+                <p className='px-4 py-2 rounded inline-block'>{t('navbar.create_account')}</p>
+              </NavLink>
+            )}
           </ul>
         </div>
       </div>

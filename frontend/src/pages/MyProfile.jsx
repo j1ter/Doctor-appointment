@@ -8,7 +8,7 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 
 function MyProfile() {
-  const { userData, setUserData, token, backendUrl, loadUserProfileData } = useContext(AppContext);
+  const { userData, setUserData, backendUrl, loadUserProfileData } = useContext(AppContext);
   const { t } = useTranslation();
   const [isEdit, setIsEdit] = useState(false);
   const [image, setImage] = useState(false);
@@ -23,33 +23,35 @@ function MyProfile() {
       formData.append('dob', userData.dob);
       image && formData.append('image', image);
 
-      const { data } = await axios.post(backendUrl + '/api/user/update-profile', formData, { headers: { token } });
+      const { data } = await axios.post(backendUrl + '/api/user/update-profile', formData, {
+        withCredentials: true,
+      });
       if (data.success) {
         toast.success(t('my_profile.update_success'));
         await loadUserProfileData();
         setIsEdit(false);
         setImage(false);
       } else {
-        toast.error(t('my_profile.update_error'));
+        toast.error(data.message || t('my_profile.update_error'));
       }
     } catch (error) {
-      console.log(error);
-      toast.error(t('my_profile.update_error'));
+      console.log('Ошибка в updateUserProfileData:', error);
+      toast.error(error.response?.data?.message || t('my_profile.update_error'));
     }
   };
 
-  return userData && (
+  return userData ? (
     <div className='max-w-lg flex flex-col gap-2 text-sm'>
       {isEdit ? (
         <label htmlFor="image">
           <div className='inline-block relative cursor-pointer'>
-            <img className='w-36 rounded opacity-75' src={image ? URL.createObjectURL(image) : userData.image} alt="123" />
-            <img className='w-10 absolute bottom-12 right-12' src={image ? '' : upload_icon} alt="" />
+            <img className='w-36 rounded opacity-75' src={image ? URL.createObjectURL(image) : userData.image || profile_pic} alt="profile" />
+            <img className='w-10 absolute bottom-12 right-12' src={image ? '' : upload_icon} alt="upload" />
           </div>
           <input onChange={(e) => setImage(e.target.files[0])} type="file" id='image' hidden />
         </label>
       ) : (
-        <img className='w-36 rounded' src={userData.image} alt="user_ava" />
+        <img className='w-36 rounded' src={userData.image || profile_pic} alt="profile" />
       )}
       {isEdit ? (
         <input
@@ -72,11 +74,11 @@ function MyProfile() {
             <input
               className='bg-gray-100 max-w-52'
               onChange={(e) => setUserData((prev) => ({ ...prev, phone: e.target.value }))}
-              value={userData.phone}
+              value={userData.phone || ''}
               type="text"
             />
           ) : (
-            <p className='text-blue-400'>{userData.phone}</p>
+            <p className='text-blue-400'>{userData.phone || '-'}</p>
           )}
           <p className='font-medium'>{t('my_profile.address')}</p>
           {isEdit ? (
@@ -84,22 +86,22 @@ function MyProfile() {
               <input
                 className='bg-gray-50'
                 onChange={(e) => setUserData((prev) => ({ ...prev, address: { ...prev.address, line1: e.target.value } }))}
-                value={userData.address.line1}
+                value={userData.address?.line1 || ''}
                 type="text"
               />
               <br />
               <input
                 className='bg-gray-50'
                 onChange={(e) => setUserData((prev) => ({ ...prev, address: { ...prev.address, line2: e.target.value } }))}
-                value={userData.address.line2}
+                value={userData.address?.line2 || ''}
                 type="text"
               />
             </p>
           ) : (
             <p className='text-gray-500'>
-              {userData.address.line1}
+              {userData.address?.line1 || '-'}
               <br />
-              {userData.address.line2}
+              {userData.address?.line2 || '-'}
             </p>
           )}
         </div>
@@ -112,13 +114,13 @@ function MyProfile() {
             <select
               className='max-w-20 bg-gray-100'
               onChange={(e) => setUserData((prev) => ({ ...prev, gender: e.target.value }))}
-              value={userData.gender}
+              value={userData.gender || ''}
             >
               <option value="Male">{t('my_profile.male')}</option>
               <option value="Female">{t('my_profile.female')}</option>
             </select>
           ) : (
-            <p className='text-gray-400'>{userData.gender}</p>
+            <p className='text-gray-400'>{userData.gender || '-'}</p>
           )}
           <p className='font-medium'>{t('my_profile.birthday')}</p>
           {isEdit ? (
@@ -126,10 +128,10 @@ function MyProfile() {
               className='max-w-28 bg-gray-100'
               type="date"
               onChange={(e) => setUserData((prev) => ({ ...prev, dob: e.target.value }))}
-              value={userData.dob}
+              value={userData.dob || ''}
             />
           ) : (
-            <p className='text-gray-400'>{userData.dob}</p>
+            <p className='text-gray-400'>{userData.dob || '-'}</p>
           )}
         </div>
       </div>
@@ -151,6 +153,8 @@ function MyProfile() {
         )}
       </div>
     </div>
+  ) : (
+    <p>{t('my_profile.loading')}</p>
   );
 }
 
