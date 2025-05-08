@@ -1,24 +1,60 @@
 import jwt from 'jsonwebtoken';
+import doctorModel from '../models/doctorModel.js';
 
-// doctor authentication middleware
-const authDoctor = async (req, res, next) => {
+export const authDoctor = async (req, res, next) => {
     try {
+        const accessToken = req.cookies.accessToken;
 
-        const {dtoken} = req.headers
-        if (!dtoken) {
-            return res.json({success: false, message: 'Not Authorized Login Again'});
+        if (!accessToken) {
+            return res.status(401).json({ success: false, message: 'Unauthorized - No access token provided' });
         }
 
-        const token_decode = jwt.verify(dtoken, process.env.JWT_SECRET);
+        try {
+            const decoded = jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET);
+            const doctor = await doctorModel.findById(decoded.docId).select('-password');
 
-        req.body.docId = token_decode.id
+            if (!doctor) {
+                return res.status(401).json({ success: false, message: 'Doctor not found' });
+            }
 
-        next()
-
+            req.doctor = doctor;
+            next();
+        } catch (error) {
+            if (error.name === 'TokenExpiredError') {
+                return res.status(401).json({ success: false, message: 'Unauthorized - Access token expired' });
+            }
+            throw error;
+        }
     } catch (error) {
-        console.log(error)
-        res.json({success: false, message: error.message})
+        console.log('Error in authDoctor middleware:', error.message);
+        return res.status(401).json({ success: false, message: 'Unauthorized - Invalid access token' });
     }
-}
+};
 
 export default authDoctor;
+
+
+// import jwt from 'jsonwebtoken';
+
+// // doctor authentication middleware
+// const authDoctor = async (req, res, next) => {
+//     try {
+
+//         const {dtoken} = req.headers
+//         if (!dtoken) {
+//             return res.json({success: false, message: 'Not Authorized Login Again'});
+//         }
+
+//         const token_decode = jwt.verify(dtoken, process.env.JWT_SECRET);
+
+//         req.body.docId = token_decode.id
+
+//         next()
+
+//     } catch (error) {
+//         console.log(error)
+//         res.json({success: false, message: error.message})
+//     }
+// }
+
+// export default authDoctor;

@@ -1,17 +1,22 @@
 import { createContext, useEffect, useState } from "react";
 import axios from 'axios';
 import { toast } from 'react-toastify';
+import { io } from 'socket.io-client';
+import { useTranslation } from 'react-i18next';
 
 export const AppContext = createContext();
 
 const AppContextProvider = (props) => {
+    const { t } = useTranslation();
     const currencySymbol = '$';
-    const backendUrl = import.meta.env.VITE_BACKEND_URL;
+    const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:4000';
     const [doctors, setDoctors] = useState([]);
-    const [userData, setUserData] = useState(false);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [userData, setUserData] = useState(false);
+    const [conversations, setConversations] = useState([]);
+    const [currentConversation, setCurrentConversation] = useState(null);
+    const socket = io(backendUrl, { withCredentials: true });
 
-    // Настройка Axios для отправки cookies
     axios.defaults.withCredentials = true;
 
     const getDoctorsData = async () => {
@@ -35,15 +40,15 @@ const AppContextProvider = (props) => {
                 setUserData(data.userData);
                 setIsAuthenticated(true);
             } else {
+                toast.error(data.message);
                 setIsAuthenticated(false);
                 setUserData(false);
-                toast.error(data.message);
             }
         } catch (error) {
             console.log(error);
+            toast.error(error.message);
             setIsAuthenticated(false);
             setUserData(false);
-            toast.error(error.message);
         }
     };
 
@@ -57,7 +62,7 @@ const AppContextProvider = (props) => {
             if (data.success) {
                 setIsAuthenticated(false);
                 setUserData(false);
-                toast.success('Выход выполнен успешно');
+                toast.success(t('logout.success'));
             } else {
                 toast.error(data.message);
             }
@@ -66,6 +71,38 @@ const AppContextProvider = (props) => {
             toast.error(error.message);
         }
     };
+
+    const fetchConversations = async () => {
+        if (userData._id) {
+            try {
+                const { data } = await axios.get(backendUrl + `/api/conversations/${userData._id}`, { withCredentials: true });
+                setConversations(data);
+            } catch (error) {
+                console.log(error);
+                toast.error(t('chat.error'));
+            }
+        }
+    };
+
+    useEffect(() => {
+        getDoctorsData();
+        if (isAuthenticated) {
+            fetchConversations();
+        }
+    }, [isAuthenticated, userData]);
+
+    useEffect(() => {
+        socket.on('connect', () => {
+            console.log('Connected to socket');
+        });
+        socket.on('disconnect', () => {
+            console.log('Disconnected from socket');
+        });
+        return () => {
+            socket.off('connect');
+            socket.off('disconnect');
+        };
+    }, [socket]);
 
     const value = {
         doctors,
@@ -79,15 +116,13 @@ const AppContextProvider = (props) => {
         loadUserProfileData,
         handleAuthSuccess,
         logout,
+        conversations,
+        setConversations,
+        currentConversation,
+        setCurrentConversation,
+        socket,
+        fetchConversations,
     };
-
-    useEffect(() => {
-        getDoctorsData();
-    }, []);
-
-    useEffect(() => {
-        loadUserProfileData();
-    }, []);
 
     return (
         <AppContext.Provider value={value}>

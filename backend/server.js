@@ -9,9 +9,21 @@ import userRouter from './routes/userRoutes.js';
 import conversationsRouter from './routes/conversationsRoute.js';
 import messageRouter from './routes/messagesRoute.js';
 import cookieParser from 'cookie-parser';
+import { Server } from 'socket.io';
+import http from 'http';
+import multer from 'multer';
 
 // app config
 const app = express();
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: ['http://localhost:5173', 'http://localhost:5174'],
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'atoken'],
+  },
+});
 const port = process.env.PORT || 4000;
 connectDB();
 connectCloudinary();
@@ -19,13 +31,37 @@ connectCloudinary();
 // middlewares
 app.use(
   cors({
-    origin: 'http://localhost:5173', // Указываем точный origin фронтенда
-    credentials: true, // Разрешаем отправку куки
+    origin: ['http://localhost:5173', 'http://localhost:5174'],
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'atoken'],
   })
 );
+app.options('*', cors());
 app.use(express.json());
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
+
+// multer for file uploads
+const upload = multer({ dest: 'uploads/' });
+app.use('/api/admin/add-doctor', upload.single('image'));
+
+// socket.io
+io.on('connection', (socket) => {
+  console.log('User connected:', socket.id);
+
+  socket.on('join_conversation', (conversationId) => {
+    socket.join(conversationId);
+    console.log(`User ${socket.id} joined conversation ${conversationId}`);
+  });
+
+  socket.on('disconnect', () => {
+    console.log('User disconnected:', socket.id);
+  });
+});
+
+// make io available to routes
+app.set('io', io);
 
 // api endpoints
 app.use('/api/admin', adminRouter);
@@ -38,4 +74,4 @@ app.get('/', (req, res) => {
   res.send('API WORKING');
 });
 
-app.listen(port, () => console.log("Server Started", port));
+server.listen(port, () => console.log('Server Started on port', port));
