@@ -11,7 +11,7 @@ const DoctorContextProvider = (props) => {
     const [dashData, setDashData] = useState(false);
     const [profileData, setProfileData] = useState(false);
 
-    // Проверяем авторизацию доктора (вызывается только при логине)
+    // Проверяем авторизацию доктора
     const checkAuth = async () => {
         try {
             const { data } = await axios.get(`${backendUrl}/api/doctor/dashboard`, {
@@ -23,6 +23,30 @@ const DoctorContextProvider = (props) => {
         } catch (error) {
             console.error('Doctor auth error:', error);
             setIsAuthenticated(false);
+            return false;
+        }
+    };
+
+    // Логаут доктора
+    const logout = async () => {
+        try {
+            const { data } = await axios.post(`${backendUrl}/api/doctor/logout`, {}, {
+                withCredentials: true,
+            });
+            if (data.success) {
+                toast.success(data.message);
+                setIsAuthenticated(false);
+                setAppointments([]);
+                setDashData(false);
+                setProfileData(false);
+                return true;
+            } else {
+                toast.error(data.message);
+                return false;
+            }
+        } catch (error) {
+            console.error('Error during logout:', error);
+            toast.error(error.response?.data?.message || 'Logout failed');
             return false;
         }
     };
@@ -142,6 +166,7 @@ const DoctorContextProvider = (props) => {
         isAuthenticated,
         setIsAuthenticated,
         checkAuth,
+        logout,
         appointments,
         setAppointments,
         getAppointments,

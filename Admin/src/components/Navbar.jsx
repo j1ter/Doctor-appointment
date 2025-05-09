@@ -6,19 +6,26 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 const Navbar = () => {
-    const { backendUrl, isAuthenticated: isAdminAuthenticated } = useContext(AdminContext);
-    const { isAuthenticated: isDoctorAuthenticated } = useContext(DoctorContext);
+    const { isAuthenticated: isAdminAuthenticated, logout: adminLogout } = useContext(AdminContext);
+    const { isAuthenticated: isDoctorAuthenticated, logout: doctorLogout } = useContext(DoctorContext);
     const navigate = useNavigate();
 
-    const logout = async () => {
+    const handleLogout = async () => {
         try {
-            const endpoint = isAdminAuthenticated
-                ? '/api/admin/logout'
-                : '/api/doctor/logout';
-            await axios.post(`${backendUrl}${endpoint}`, {}, { withCredentials: true });
-            navigate('/');
+            if (isAdminAuthenticated) {
+                const success = await adminLogout();
+                if (success) {
+                    navigate('/', { replace: true });
+                }
+            } else if (isDoctorAuthenticated) {
+                const success = await doctorLogout();
+                if (success) {
+                    navigate('/', { replace: true });
+                }
+            }
         } catch (error) {
-            console.error('Error during logout:', error);
+            console.error('Logout error:', error);
+            toast.error('Failed to logout');
         }
     };
 
@@ -32,7 +39,7 @@ const Navbar = () => {
             </div>
             {(isAdminAuthenticated || isDoctorAuthenticated) && (
                 <button
-                    onClick={logout}
+                    onClick={handleLogout}
                     className='bg-primary text-white text-sm px-10 py-2 rounded-full'
                 >
                     Logout

@@ -27,6 +27,30 @@ const AdminContextProvider = (props) => {
         }
     };
 
+    // Логаут админа
+    const logout = async () => {
+        try {
+            const { data } = await axios.post(`${backendUrl}/api/admin/logout`, {}, {
+                withCredentials: true,
+            });
+            if (data.success) {
+                toast.success(data.message);
+                setIsAuthenticated(false);
+                setDoctors([]);
+                setAppointments([]);
+                setDashData(false);
+                return true;
+            } else {
+                toast.error(data.message);
+                return false;
+            }
+        } catch (error) {
+            console.error('Error during logout:', error);
+            toast.error(error.response?.data?.message || 'Logout failed');
+            return false;
+        }
+    };
+
     useEffect(() => {
         checkAuth();
     }, []);
@@ -37,15 +61,17 @@ const AdminContextProvider = (props) => {
                 withCredentials: true,
             });
             console.log('Get all doctors response:', data);
-            if (data.success) {
+            if (data.success && Array.isArray(data.doctors)) {
                 setDoctors(data.doctors);
                 console.log('Doctors set:', data.doctors);
             } else {
-                toast.error(data.message);
+                toast.error(data.message || 'No doctors found');
+                setDoctors([]);
             }
         } catch (error) {
             console.error('Error fetching doctors:', error);
             toast.error(error.response?.data?.message || 'Failed to fetch doctors');
+            setDoctors([]);
         }
     };
 
@@ -126,6 +152,7 @@ const AdminContextProvider = (props) => {
         isAuthenticated,
         setIsAuthenticated,
         checkAuth,
+        logout,
         doctors,
         getAllDoctors,
         changeAvailability,
