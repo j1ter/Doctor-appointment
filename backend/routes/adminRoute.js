@@ -12,7 +12,7 @@ adminRouter.post('/add-doctor', debugMiddleware, authAdmin, upload.single('image
 adminRouter.post('/login', loginAdmin);
 adminRouter.post('/logout', logoutAdmin);
 adminRouter.post('/refresh-token', refreshTokenAdmin);
-adminRouter.post('/all-doctors', authAdmin, allDoctors);
+adminRouter.get('/all-doctors', authAdmin, allDoctors);
 adminRouter.post('/change-availability', authAdmin, changeAvailabity);
 adminRouter.get('/appointments', authAdmin, appointmentsAdmin);
 adminRouter.post('/cancel-appointment', authAdmin, appointmentCancel);
