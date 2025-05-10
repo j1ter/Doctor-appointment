@@ -9,24 +9,21 @@ export const authDoctor = async (req, res, next) => {
             return res.status(401).json({ success: false, message: 'Unauthorized - No access token provided' });
         }
 
-        try {
-            const decoded = jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET);
-            const doctor = await doctorModel.findById(decoded.docId).select('-password');
+        const decoded = jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET);
+        console.log('Decoded token (Doctor):', decoded); // Лог для отладки
+        const doctor = await doctorModel.findById(decoded._id).select('-password');
 
-            if (!doctor) {
-                return res.status(401).json({ success: false, message: 'Doctor not found' });
-            }
-
-            req.doctor = doctor;
-            next();
-        } catch (error) {
-            if (error.name === 'TokenExpiredError') {
-                return res.status(401).json({ success: false, message: 'Unauthorized - Access token expired' });
-            }
-            throw error;
+        if (!doctor) {
+            return res.status(401).json({ success: false, message: 'Doctor not found' });
         }
+
+        req.doctor = doctor;
+        next();
     } catch (error) {
         console.log('Error in authDoctor middleware:', error.message);
+        if (error.name === 'TokenExpiredError') {
+            return res.status(401).json({ success: false, message: 'Unauthorized - Access token expired' });
+        }
         return res.status(401).json({ success: false, message: 'Unauthorized - Invalid access token' });
     }
 };

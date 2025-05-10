@@ -1,10 +1,11 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
 const conversationSchema = new mongoose.Schema({
     members: {
-        type: [String],
-    }
-}, {timestamps: true});
+        type: [mongoose.Schema.Types.ObjectId],
+        required: true,
+    },
+}, { timestamps: true });
 
 const conversationModel = mongoose.models.conversation || mongoose.model('conversation', conversationSchema);
 
