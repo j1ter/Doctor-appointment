@@ -11,7 +11,6 @@ import messageRouter from './routes/messagesRoute.js';
 import cookieParser from 'cookie-parser';
 import { Server } from 'socket.io';
 import http from 'http';
-import multer from 'multer';
 
 // app config
 const app = express();
@@ -21,7 +20,7 @@ const io = new Server(server, {
     origin: ['http://localhost:5173', 'http://localhost:5174'],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'atoken'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
   },
 });
 const port = process.env.PORT || 4000;
@@ -34,17 +33,13 @@ app.use(
     origin: ['http://localhost:5173', 'http://localhost:5174'],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'atoken'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
   })
 );
 app.options('*', cors());
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(cookieParser());
-app.use(express.urlencoded({ extended: true }));
-
-// multer for file uploads
-const upload = multer({ dest: 'uploads/' });
-app.use('/api/admin/add-doctor', upload.single('image'));
 
 // socket.io
 io.on('connection', (socket) => {
