@@ -14,8 +14,7 @@ const Sidebar = () => {
                 <ul className='text-[#515151] mt-5'>
                     <NavLink
                         className={({ isActive }) =>
-                            `flex items-center gap-3 py-3.5 px-3 md:px-9 md:min-w-72 cursor-pointer ${
-                                isActive ? 'bg-[#F2F3FF] border-r-4 border-primary' : ''
+                            `flex items-center gap-3 py-3.5 px-3 md:px-9 md:min-w-72 cursor-pointer ${isActive ? 'bg-[#F2F3FF] border-r-4 border-primary' : ''
                             }`
                         }
                         to={'/admin-dashboard'}
@@ -25,8 +24,7 @@ const Sidebar = () => {
                     </NavLink>
                     <NavLink
                         className={({ isActive }) =>
-                            `flex items-center gap-3 py-3.5 px-3 md:px-9 md:min-w-72 cursor-pointer ${
-                                isActive ? 'bg-[#F2F3FF] border-r-4 border-primary' : ''
+                            `flex items-center gap-3 py-3.5 px-3 md:px-9 md:min-w-72 cursor-pointer ${isActive ? 'bg-[#F2F3FF] border-r-4 border-primary' : ''
                             }`
                         }
                         to={'/all-appointments'}
@@ -36,8 +34,7 @@ const Sidebar = () => {
                     </NavLink>
                     <NavLink
                         className={({ isActive }) =>
-                            `flex items-center gap-3 py-3.5 px-3 md:px-9 md:min-w-72 cursor-pointer ${
-                                isActive ? 'bg-[#F2F3FF] border-r-4 border-primary' : ''
+                            `flex items-center gap-3 py-3.5 px-3 md:px-9 md:min-w-72 cursor-pointer ${isActive ? 'bg-[#F2F3FF] border-r-4 border-primary' : ''
                             }`
                         }
                         to={'/add-doctor'}
@@ -47,8 +44,7 @@ const Sidebar = () => {
                     </NavLink>
                     <NavLink
                         className={({ isActive }) =>
-                            `flex items-center gap-3 py-3.5 px-3 md:px-9 md:min-w-72 cursor-pointer ${
-                                isActive ? 'bg-[#F2F3FF] border-r-4 border-primary' : ''
+                            `flex items-center gap-3 py-3.5 px-3 md:px-9 md:min-w-72 cursor-pointer ${isActive ? 'bg-[#F2F3FF] border-r-4 border-primary' : ''
                             }`
                         }
                         to={'/doctor-list'}
@@ -62,8 +58,7 @@ const Sidebar = () => {
                 <ul className='text-[#515151] mt-5'>
                     <NavLink
                         className={({ isActive }) =>
-                            `flex items-center gap-3 py-3.5 px-3 md:px-9 md:min-w-72 cursor-pointer ${
-                                isActive ? 'bg-[#F2F3FF] border-r-4 border-primary' : ''
+                            `flex items-center gap-3 py-3.5 px-3 md:px-9 md:min-w-72 cursor-pointer ${isActive ? 'bg-[#F2F3FF] border-r-4 border-primary' : ''
                             }`
                         }
                         to={'/doctor-dashboard'}
@@ -73,8 +68,7 @@ const Sidebar = () => {
                     </NavLink>
                     <NavLink
                         className={({ isActive }) =>
-                            `flex items-center gap-3 py-3.5 px-3 md:px-9 md:min-w-72 cursor-pointer ${
-                                isActive ? 'bg-[#F2F3FF] border-r-4 border-primary' : ''
+                            `flex items-center gap-3 py-3.5 px-3 md:px-9 md:min-w-72 cursor-pointer ${isActive ? 'bg-[#F2F3FF] border-r-4 border-primary' : ''
                             }`
                         }
                         to={'/doctor-appointments'}
@@ -84,14 +78,23 @@ const Sidebar = () => {
                     </NavLink>
                     <NavLink
                         className={({ isActive }) =>
-                            `flex items-center gap-3 py-3.5 px-3 md:px-9 md:min-w-72 cursor-pointer ${
-                                isActive ? 'bg-[#F2F3FF] border-r-4 border-primary' : ''
+                            `flex items-center gap-3 py-3.5 px-3 md:px-9 md:min-w-72 cursor-pointer ${isActive ? 'bg-[#F2F3FF] border-r-4 border-primary' : ''
                             }`
                         }
                         to={'/doctor-profile'}
                     >
                         <img src={assets.people_icon} alt='' />
                         <p className='hidden md:block'>Profile</p>
+                    </NavLink>
+                    <NavLink
+                        to='/doctor-messages'
+                        className={({ isActive }) =>
+                            `flex items-center gap-3 py-3.5 px-3 md:px-9 md:min-w-72 cursor-pointer ${isActive ? 'bg-[#F2F3FF] border-r-4 border-primary' : ''
+                            }`
+                        }
+                    >
+                        <img src={assets.message_icon} alt='Messages' className='w-6 mr-2' />
+                        Messages
                     </NavLink>
                 </ul>
             )}

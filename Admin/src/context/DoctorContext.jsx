@@ -1,4 +1,4 @@
-import { createContext, useState } from 'react';
+import { createContext, useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 
@@ -7,11 +7,25 @@ export const DoctorContext = createContext();
 const DoctorContextProvider = (props) => {
     const backendUrl = import.meta.env.VITE_BACKEND_URL;
     const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [loading, setLoading] = useState(true); // Добавляем состояние загрузки
     const [appointments, setAppointments] = useState([]);
     const [dashData, setDashData] = useState(false);
     const [profileData, setProfileData] = useState(false);
 
-    // Проверяем авторизацию доктора
+    // Проверяем авторизацию доктора при монтировании
+    useEffect(() => {
+        const initAuthCheck = async () => {
+            setLoading(true);
+            const isAuth = await checkAuth();
+            setIsAuthenticated(isAuth);
+            if (isAuth) {
+                await getProfileData(); // Загружаем данные профиля, чтобы иметь ID доктора
+            }
+            setLoading(false);
+        };
+        initAuthCheck();
+    }, []);
+
     const checkAuth = async () => {
         try {
             const { data } = await axios.get(`${backendUrl}/api/doctor/dashboard`, {
@@ -27,7 +41,62 @@ const DoctorContextProvider = (props) => {
         }
     };
 
-    // Логаут доктора
+    const getMessages = async () => {
+        try {
+            const { data } = await axios.get(`${backendUrl}/api/doctor/conversations`, {
+                withCredentials: true,
+            });
+            if (data.success) {
+                return data.conversations || [];
+            } else {
+                toast.error(data.message);
+                return [];
+            }
+        } catch (error) {
+            console.error('Error fetching conversations:', error);
+            toast.error(error.response?.data?.message || error.message);
+            return [];
+        }
+    };
+
+    const sendMessage = async (messageData) => {
+        try {
+            const { data } = await axios.post(
+                `${backendUrl}/api/doctor/messages`,
+                messageData,
+                { withCredentials: true }
+            );
+            if (data.success) {
+                toast.success('Message sent successfully');
+            } else {
+                toast.error(data.message);
+            }
+            return data; // Возвращаем данные от сервера
+        } catch (error) {
+            console.error('Error sending message:', error);
+            toast.error(error.response?.data?.message || error.message);
+            return { success: false, message: error.response?.data?.message || 'Network error' };
+        }
+    };
+
+    // const sendMessage = async (messageData) => {
+    //     try {
+    //         const { data } = await axios.post(
+    //             `${backendUrl}/api/doctor/messages`,
+    //             messageData,
+    //             { withCredentials: true }
+    //         );
+    //         if (data.success) {
+    //             toast.success('Message sent successfully');
+    //         } else {
+    //             toast.error(data.message);
+    //         }
+    //     } catch (error) {
+    //         console.error('Error sending message:', error);
+    //         toast.error(error.response?.data?.message || error.message);
+    //     }
+    // };
+
     const logout = async () => {
         try {
             const { data } = await axios.post(`${backendUrl}/api/doctor/logout`, {}, {
@@ -165,6 +234,7 @@ const DoctorContextProvider = (props) => {
         backendUrl,
         isAuthenticated,
         setIsAuthenticated,
+        loading, // Добавляем loading в контекст
         checkAuth,
         logout,
         appointments,
@@ -179,6 +249,8 @@ const DoctorContextProvider = (props) => {
         setProfileData,
         getProfileData,
         updateProfile,
+        getMessages,
+        sendMessage
     };
 
     return <DoctorContext.Provider value={value}>{props.children}</DoctorContext.Provider>;

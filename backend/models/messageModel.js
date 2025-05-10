@@ -8,11 +8,25 @@ const messageSchema = new mongoose.Schema({
     },
     sender: {
         type: mongoose.Schema.Types.ObjectId,
+        refPath: 'senderModel',
         required: true,
+    },
+    senderModel: {
+        type: String,
+        required: true,
+        enum: ['user', 'doctor'], // Исправляем на реальные имена моделей
+        default: 'user',
     },
     receiver: {
         type: mongoose.Schema.Types.ObjectId,
+        refPath: 'receiverModel',
         required: true,
+    },
+    receiverModel: {
+        type: String,
+        required: true,
+        enum: ['user', 'doctor'], // Исправляем на реальные имена моделей
+        default: 'user',
     },
     text: {
         type: String,

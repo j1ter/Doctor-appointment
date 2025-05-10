@@ -1,7 +1,19 @@
 import express from 'express';
-import { registerUser, loginUser, getProfile, updateProfile, bookAppointment, listAppointment, cancelAppointment, logoutUser, refreshToken } from '../controllers/userController.js';
+import {
+    registerUser,
+    loginUser,
+    getProfile,
+    updateProfile,
+    bookAppointment,
+    listAppointment,
+    cancelAppointment,
+    logoutUser,
+    refreshToken,
+} from '../controllers/userController.js';
 import { authUser } from '../middlewares/authUser.js';
 import upload from '../middlewares/multer.js';
+import { newConversation, getConversations } from '../controllers/conversationsController.js';
+import { sendMessage, getMessages } from '../controllers/messageController.js';
 
 const userRouter = express.Router();
 
@@ -15,6 +27,12 @@ userRouter.post('/update-profile', upload.single('image'), authUser, updateProfi
 userRouter.post('/book-appointment', authUser, bookAppointment);
 userRouter.get('/appointments', authUser, listAppointment);
 userRouter.post('/cancel-appointment', authUser, cancelAppointment);
+
+// Чат маршруты
+userRouter.post('/conversations', authUser, newConversation);
+userRouter.get('/conversations', authUser, getConversations);
+userRouter.post('/messages', authUser, sendMessage);
+userRouter.get('/messages/:conversationId', authUser, getMessages);
 
 console.log('Registered user routes, including GET /api/user/profile');
 

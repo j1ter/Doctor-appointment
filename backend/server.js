@@ -6,8 +6,6 @@ import connectCloudinary from './config/cloudinary.js';
 import adminRouter from './routes/adminRoute.js';
 import doctorRouter from './routes/doctorRoute.js';
 import userRouter from './routes/userRoutes.js';
-import conversationsRouter from './routes/conversationsRoute.js';
-import messageRouter from './routes/messagesRoute.js';
 import cookieParser from 'cookie-parser';
 import { Server } from 'socket.io';
 import http from 'http';
@@ -20,7 +18,7 @@ const io = new Server(server, {
     origin: ['http://localhost:5173', 'http://localhost:5174'],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'access-control-allow-origin'], // Добавляем заголовок
   },
 });
 const port = process.env.PORT || 4000;
@@ -33,7 +31,7 @@ app.use(
     origin: ['http://localhost:5173', 'http://localhost:5174'],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'access-control-allow-origin'],
   })
 );
 app.options('*', cors());
@@ -55,15 +53,12 @@ io.on('connection', (socket) => {
   });
 });
 
-// make io available to routes
 app.set('io', io);
 
 // api endpoints
 app.use('/api/admin', adminRouter);
 app.use('/api/doctor', doctorRouter);
 app.use('/api/user', userRouter);
-app.use('/api/conversations', conversationsRouter);
-app.use('/api/messages', messageRouter);
 
 app.get('/', (req, res) => {
   res.send('API WORKING');
