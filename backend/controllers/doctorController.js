@@ -220,23 +220,20 @@ const appointmentCancel = async (req, res) => {
 
 const doctorDashboard = async (req, res) => {
     try {
-        const {docId} = req.body;
-
-        const appointments = await appointmentModel.find({docId});
+        const doctor = req.doctor; // Используем данные из токена
+        const appointments = await appointmentModel.find({ docId: doctor._id });
 
         let earnings = 0;
-
-        appointments.map((item) => {
+        appointments.forEach((item) => {
             if (item.isCompleted || item.payment) {
-                earnings += item.amount
+                earnings += item.amount;
             }
         });
 
         let patients = [];
-
-        appointments.map((item) => {
-            if(!patients.includes(item.userId)) {
-                patients.push(item.userId)
+        appointments.forEach((item) => {
+            if (!patients.includes(item.userId)) {
+                patients.push(item.userId);
             }
         });
 
@@ -244,29 +241,29 @@ const doctorDashboard = async (req, res) => {
             earnings,
             appointments: appointments.length,
             patients: patients.length,
-            latestAppointments: appointments.reverse().slice(0, 5)
-        }
+            latestAppointments: appointments.reverse().slice(0, 5),
+        };
 
-        res.json({success: true, dashData});
+        res.json({ success: true, dashData });
     } catch (error) {
         console.log(error);
-        res.json({success: false, message: error.message});
+        res.json({ success: false, message: error.message });
     }
-}
+};
 
 // API to get doctor profile for Doctor Panel
 
 const doctorProfile = async (req, res) => {
     try {
-        const {docId} = req.body;
-        const profileData = await doctorModel.findById(docId).select('-password');
+        const doctor = req.doctor; // Используем данные из токена
+        const profileData = await doctorModel.findById(doctor._id).select('-password');
 
-        res.json({success: true, profileData});
+        res.json({ success: true, profileData });
     } catch (error) {
         console.log(error);
-        res.json({success: false, message: error.message});
+        res.json({ success: false, message: error.message });
     }
-}
+};
 
 // API to update doctor profile data from Doctor Panel
 

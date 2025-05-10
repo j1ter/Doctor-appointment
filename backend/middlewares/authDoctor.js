@@ -11,7 +11,7 @@ export const authDoctor = async (req, res, next) => {
 
         const decoded = jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET);
         console.log('Decoded token (Doctor):', decoded); // Лог для отладки
-        const doctor = await doctorModel.findById(decoded._id).select('-password');
+        const doctor = await doctorModel.findById(decoded.docId).select('-password');
 
         if (!doctor) {
             return res.status(401).json({ success: false, message: 'Doctor not found' });
