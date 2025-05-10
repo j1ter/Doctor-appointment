@@ -11,6 +11,7 @@ export const authUser = async (req, res, next) => {
 
         try {
             const decoded = jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET);
+            console.log('Decoded token (User):', decoded); // Лог для отладки
             const user = await userModel.findById(decoded.userId).select('-password');
 
             if (!user) {
