@@ -10,7 +10,7 @@ import axios from 'axios';
 
 const Appointment = () => {
   const { docId } = useParams();
-  const { doctors, currencySymbol, backendUrl, token, getDoctorsData } = useContext(AppContext);
+  const { doctors, currencySymbol, backendUrl, getDoctorsData, userData, fetchConversations, setCurrentConversation } = useContext(AppContext);
   const daysOfWeek = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -101,7 +101,7 @@ const Appointment = () => {
   };
 
   const bookAppointment = async () => {
-    if (!token) {
+    if (!userData) {
       toast.warn(t('appointment.login_to_book'));
       return navigate('/login');
     }
@@ -120,21 +120,31 @@ const Appointment = () => {
 
       const slotDate = day + '_' + month + '_' + year;
 
-      const { data } = await axios.post(
+      const { data: bookingData } = await axios.post(
         backendUrl + '/api/user/book-appointment',
         { docId, slotDate, slotTime },
-        { headers: { token } }
+        { withCredentials: true }
       );
-      if (data.success) {
+      if (bookingData.success) {
         toast.success(t('appointment.success'));
         getDoctorsData();
+        await fetchConversations();
+        if (bookingData.conversationId) {
+          // Находим созданный диалог
+          const updatedConversations = await fetchConversations();
+          const newConversation = updatedConversations.find(conv => conv._id === bookingData.conversationId);
+          if (newConversation) {
+            setCurrentConversation(newConversation);
+            navigate('/messages'); // Перенаправляем в чат
+          }
+        }
         navigate('/my-appointments');
       } else {
         toast.error(t('appointment.error'));
       }
     } catch (error) {
       console.error('Error booking appointment:', error);
-      toast.error(t('appointment.error'));
+      toast.error(error.response?.data?.message || t('appointment.error'));
     }
   };
 
@@ -162,14 +172,12 @@ const Appointment = () => {
 
   return (
     <div>
-      {/* Doctor Details */}
       <div className='flex flex-col sm:flex-row gap-4'>
         <div>
           <img className='bg-primary w-full sm:max-w-72 rounded-lg' src={docInfo.image} alt="" />
         </div>
 
         <div className='flex-1 border border-gray-400 rounded-lg p-8 py-7 bg-white mx-2 sm:mx-0 mt-[-80px] sm:mt-0'>
-          {/* Doc info: name, degree, experience */}
           <p className='flex items-center gap-2 text-2xl font-medium text-gray-900'>
             {docInfo.name}
             <img className='w-5' src={verified_icon} alt="verified_icon" />
@@ -179,7 +187,6 @@ const Appointment = () => {
             <button className='py-0.5 px-2 border text-xs rounded-full'>{docInfo.experience}</button>
           </div>
 
-          {/* Doctor About */}
           <div>
             <p className='flex items-center gap-1 text-sm font-medium text-gray-900 mt-3'>
               {t('appointment.about')}
@@ -193,7 +200,6 @@ const Appointment = () => {
         </div>
       </div>
 
-      {/* Booking slots */}
       <div className='sm:ml-72 sm:pl-4 mt-4 font-medium text-gray-700'>
         <p>{t('appointment.booking_slots')}</p>
         <div className='flex gap-3 items-center w-full overflow-x-scroll mt-4'>
@@ -240,7 +246,6 @@ const Appointment = () => {
         </button>
       </div>
 
-      {/* Listing Related Doctors */}
       <RelatedDoctors docId={docId} speciality={docInfo.speciality} />
     </div>
   );

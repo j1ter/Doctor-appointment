@@ -9,6 +9,7 @@ import userRouter from './routes/userRoutes.js';
 import cookieParser from 'cookie-parser';
 import { Server } from 'socket.io';
 import http from 'http';
+import { sendMessage } from './controllers/messageController.js';
 
 // app config
 const app = express();
@@ -46,6 +47,39 @@ io.on('connection', (socket) => {
   socket.on('join_conversation', (conversationId) => {
     socket.join(conversationId);
     console.log(`User ${socket.id} joined conversation ${conversationId}`);
+  });
+
+  socket.on('send_message', async (data) => {
+    const { conversationId, senderId, receiverId, text } = data;
+    try {
+      // Находим беседу
+      const conversation = await conversationModel.findById(conversationId);
+      if (!conversation) {
+        socket.emit('error', { message: 'Conversation not found' });
+        return;
+      }
+
+      // Добавляем сообщение в беседу
+      const newMessage = {
+        sender: senderId,
+        receiver: receiverId,
+        text,
+        createdAt: new Date(),
+      };
+      conversation.messages.push(newMessage);
+      conversation.lastMessage = newMessage;
+      await conversation.save();
+
+      // Отправляем обновлённую беседу всем участникам
+      io.to(conversationId).emit('new_message', {
+        conversationId,
+        messages: conversation.messages,
+        lastMessage: newMessage,
+      });
+    } catch (error) {
+      console.error('Error in send_message:', error);
+      socket.emit('error', { message: 'Failed to send message' });
+    }
   });
 
   socket.on('disconnect', () => {

@@ -6,7 +6,7 @@ import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 
 function MyAppointments() {
-  const { backendUrl, token, getDoctorsData } = useContext(AppContext);
+  const { backendUrl, getDoctorsData, userData } = useContext(AppContext);
   const { t } = useTranslation();
   const [appointments, setAppointments] = useState([]);
   const months = [" ", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -28,37 +28,43 @@ function MyAppointments() {
 
   const getUserAppointments = async () => {
     try {
-      const { data } = await axios.get(backendUrl + '/api/user/appointments', { headers: { token } });
+      const { data } = await axios.get(backendUrl + '/api/user/appointments', { withCredentials: true });
       if (data.success) {
         setAppointments(data.appointments.reverse());
+      } else {
+        toast.error(data.message || t('my_appointments.load_error'));
       }
     } catch (error) {
       console.log(error);
-      toast.error(t('my_appointments.cancel_error'));
+      toast.error(t('my_appointments.load_error') || 'Failed to load appointments');
     }
   };
 
   const cancelAppointment = async (appointmentId) => {
     try {
-      const { data } = await axios.post(backendUrl + '/api/user/cancel-appointment', { appointmentId }, { headers: { token } });
+      const { data } = await axios.post(
+        backendUrl + '/api/user/cancel-appointment',
+        { appointmentId },
+        { withCredentials: true }
+      );
       if (data.success) {
         toast.success(t('my_appointments.cancel_success'));
         getUserAppointments();
         getDoctorsData();
       } else {
-        toast.error(t('my_appointments.cancel_error'));
+        toast.error(data.message || t('my_appointments.cancel_error'));
       }
     } catch (error) {
       console.log(error);
-      toast.error(t('my_appointments.cancel_error'));
+      toast.error(t('my_appointments.cancel_error') || 'Failed to cancel appointment');
     }
   };
 
   useEffect(() => {
-    if (token) {
+    if (userData) {
       getUserAppointments();
     }
-  }, [token]);
+  }, [userData]);
 
   return (
     <div>
