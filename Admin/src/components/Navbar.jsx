@@ -9,7 +9,7 @@ const Navbar = () => {
     const { isAuthenticated: isAdminAuthenticated, logout: adminLogout } = useContext(AdminContext);
     const { isAuthenticated: isDoctorAuthenticated, logout: doctorLogout } = useContext(DoctorContext);
     const navigate = useNavigate();
-
+// hello
     const handleLogout = async () => {
         try {
             if (isAdminAuthenticated) {

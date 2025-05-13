@@ -18,7 +18,7 @@ function Doctors() {
       setFilterDoc(doctors);
     }
   };
-
+// hello
   useEffect(() => {
     applyFilter();
   }, [doctors, speciality]);

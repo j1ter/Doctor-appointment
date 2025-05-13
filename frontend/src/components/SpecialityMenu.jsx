@@ -14,7 +14,7 @@ function SpecialityMenu() {
     'Neurologist': 'doctors.neurologist',
     'Gastroenterologist': 'doctors.gastroenterologist'
   };
-
+// hello
   return (
     <div className='flex flex-col items-center gap-4 py-16 text-gray-800' id='speciality'>
       <h1 className='text-3xl font-medium'>{t('speciality_menu.title')}</h1>

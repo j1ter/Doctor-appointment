@@ -8,7 +8,7 @@ export const authDoctor = async (req, res, next) => {
         if (!accessToken) {
             return res.status(401).json({ success: false, message: 'Unauthorized - No access token provided' });
         }
-
+// hello
         const decoded = jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET);
         console.log('Decoded token (Doctor):', decoded); // Лог для отладки
         const doctor = await doctorModel.findById(decoded.docId).select('-password');

@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 function Banner() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-
+// hello
   return (
     <div className='flex bg-primary rounded-lg px-6 sm:px-10 md:px-14 lg:px-12 my-20 md:mx-10'>
       <div className='flex-1 py-8 sm:py-10 md:py-16 lg:py-24 lg:pl-5'>

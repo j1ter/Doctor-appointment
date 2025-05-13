@@ -17,7 +17,7 @@ function RelatedDoctors({ docId, speciality }) {
     'Neurologist': 'doctors.neurologist',
     'Gastroenterologist': 'doctors.gastroenterologist'
   };
-
+// hello
   useEffect(() => {
     if (doctors.length > 0 && speciality) {
       const doctorsData = doctors.filter((doc) => doc.speciality === speciality && doc._id !== docId);

@@ -10,7 +10,7 @@ const AllAppointments = () => {
     useEffect(() => {
         getAllAppointments();
     }, []);
-
+// hello
     return (
         <div className='w-full max-w-6xl m-5'>
             <p className='mb-3 text-lg font-medium'>All Appointments</p>

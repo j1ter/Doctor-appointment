@@ -7,7 +7,7 @@ import multerErrorHandler from '../middlewares/multerErrorHandler.js';
 import { changeAvailabity } from '../controllers/doctorController.js';
 
 const adminRouter = express.Router();
-
+// hello
 adminRouter.post('/add-doctor', debugMiddleware, authAdmin, upload.single('image'), multerErrorHandler, addDoctor);
 adminRouter.post('/login', loginAdmin);
 adminRouter.post('/logout', logoutAdmin);

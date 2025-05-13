@@ -8,7 +8,7 @@ export const authUser = async (req, res, next) => {
         if (!accessToken) {
             return res.status(401).json({ success: false, message: 'Unauthorized - No access token provided' });
         }
-
+// hello
         try {
             const decoded = jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET);
             console.log('Decoded token (User):', decoded); // Лог для отладки

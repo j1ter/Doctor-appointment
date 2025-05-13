@@ -24,7 +24,7 @@ const AddDoctor = () => {
             if (!docImg) {
                 return toast.error('Image not selected');
             }
-
+// hello
             const formData = new FormData();
             formData.append('image', docImg);
             formData.append('name', name);
