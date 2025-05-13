@@ -1,12 +1,11 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AppContext } from '../context/AppContext';
-import axios from 'axios';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 
 function MyAppointments() {
-  const { backendUrl, getDoctorsData, userData } = useContext(AppContext);
+  const { getDoctorsData, userData, fetchConversations, setCurrentConversation, conversations, loading, startConversation, fetchUserAppointments, cancelAppointment } = useContext(AppContext);
   const { t } = useTranslation();
   const [appointments, setAppointments] = useState([]);
   const months = [" ", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -28,35 +27,58 @@ function MyAppointments() {
 
   const getUserAppointments = async () => {
     try {
-      const { data } = await axios.get(backendUrl + '/api/user/appointments', { withCredentials: true });
-      if (data.success) {
-        setAppointments(data.appointments.reverse());
-      } else {
-        toast.error(data.message || t('my_appointments.load_error'));
-      }
+      const appointments = await fetchUserAppointments();
+      setAppointments(appointments);
     } catch (error) {
-      console.log(error);
+      console.error('Error in getUserAppointments:', error);
       toast.error(t('my_appointments.load_error') || 'Failed to load appointments');
     }
   };
 
-  const cancelAppointment = async (appointmentId) => {
+  const handleCancelAppointment = async (appointmentId) => {
     try {
-      const { data } = await axios.post(
-        backendUrl + '/api/user/cancel-appointment',
-        { appointmentId },
-        { withCredentials: true }
-      );
-      if (data.success) {
-        toast.success(t('my_appointments.cancel_success'));
-        getUserAppointments();
-        getDoctorsData();
-      } else {
-        toast.error(data.message || t('my_appointments.cancel_error'));
+      const success = await cancelAppointment(appointmentId);
+      if (success) {
+        await getUserAppointments(); // Обновляем список записей
       }
     } catch (error) {
-      console.log(error);
+      console.error('Error in handleCancelAppointment:', error);
       toast.error(t('my_appointments.cancel_error') || 'Failed to cancel appointment');
+    }
+  };
+
+  const startChat = async (docId) => {
+    try {
+      if (loading || !userData || !userData._id) {
+        toast.warn(t('chat.loading') || 'Please wait, loading user data...');
+        return;
+      }
+
+      // Проверяем, есть ли уже диалог с этим доктором
+      const existingConversation = conversations && Array.isArray(conversations)
+        ? conversations.find((conv) => 
+            conv && conv.members && Array.isArray(conv.members) &&
+            conv.members.includes(userData._id) && conv.members.includes(docId)
+          )
+        : null;
+
+      if (existingConversation) {
+        setCurrentConversation(existingConversation);
+        navigate('/messages');
+        return;
+      }
+
+      // Создаем новый диалог через контекст
+      const conversation = await startConversation(docId);
+
+      if (conversation) {
+        setCurrentConversation(conversation);
+        navigate('/messages');
+        toast.success(t('chat.started') || 'Chat started successfully');
+      }
+    } catch (error) {
+      console.error('Error starting chat:', error);
+      toast.error(error.message || t('chat.start_error') || 'Failed to start chat');
     }
   };
 
@@ -89,12 +111,20 @@ function MyAppointments() {
             <div></div>
             <div className='flex flex-col gap-2 justify-end'>
               {!item.cancelled && !item.isCompleted && (
-                <button
-                  onClick={() => cancelAppointment(item._id)}
-                  className='text-sm text-stone-500 text-center sm:min-w-48 py-2 border rounded hover:bg-primary hover:text-white transition-all duration-300'
-                >
-                  {t('my_appointments.cancel_appointment')}
-                </button>
+                <>
+                  <button
+                    onClick={() => startChat(item.docId)}
+                    className='text-sm text-blue-500 text-center sm:min-w-48 py-2 border rounded hover:bg-blue-500 hover:text-white transition-all duration-300'
+                  >
+                    {t('my_appointments.start_chat') || 'Start Chat'}
+                  </button>
+                  <button
+                    onClick={() => handleCancelAppointment(item._id)}
+                    className='text-sm text-stone-500 text-center sm:min-w-48 py-2 border rounded hover:bg-primary hover:text-white transition-all duration-300'
+                  >
+                    {t('my_appointments.cancel_appointment')}
+                  </button>
+                </>
               )}
               {item.cancelled && !item.isCompleted && (
                 <button className='sm:min-w-48 py-2 border border-red-500 rounded text-red-500'>

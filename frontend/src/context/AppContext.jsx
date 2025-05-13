@@ -134,14 +134,80 @@ const AppContextProvider = (props) => {
                 const { data } = await axios.get(backendUrl + `/api/user/conversations`, { withCredentials: true });
                 if (data.success) {
                     setConversations(data.conversations || []);
+                    return data.conversations || [];
                 } else {
                     console.log('Fetch conversations failed:', data.message);
                     toast.error(t('chat.error') || 'Failed to load conversations');
+                    return [];
                 }
             } catch (error) {
                 console.log('Error in fetchConversations:', error);
                 toast.error(t('chat.error') || 'Failed to load conversations');
+                return [];
             }
+        }
+        return [];
+    };
+
+    const startConversation = async (receiverId) => {
+        try {
+            if (!userData?._id) {
+                throw new Error(t('chat.no_user') || 'User not authenticated');
+            }
+
+            // Создаем новый диалог
+            const { data } = await axios.post(
+                backendUrl + '/api/user/conversations',
+                { receiverId },
+                { withCredentials: true }
+            );
+
+            if (data.success) {
+                await fetchConversations();
+                return data.conversation;
+            } else {
+                throw new Error(data.message || t('chat.start_error') || 'Failed to start chat');
+            }
+        } catch (error) {
+            console.error('Error starting conversation:', error);
+            toast.error(error.message || t('chat.start_error') || 'Failed to start chat');
+            return null;
+        }
+    };
+
+    const fetchUserAppointments = async () => {
+        try {
+            const { data } = await axios.get(backendUrl + '/api/user/appointments', { withCredentials: true });
+            if (data.success) {
+                return data.appointments.reverse();
+            } else {
+                throw new Error(data.message || t('my_appointments.load_error') || 'Failed to load appointments');
+            }
+        } catch (error) {
+            console.error('Error fetching appointments:', error);
+            toast.error(error.message || t('my_appointments.load_error') || 'Failed to load appointments');
+            return [];
+        }
+    };
+
+    const cancelAppointment = async (appointmentId) => {
+        try {
+            const { data } = await axios.post(
+                backendUrl + '/api/user/cancel-appointment',
+                { appointmentId },
+                { withCredentials: true }
+            );
+            if (data.success) {
+                toast.success(t('my_appointments.cancel_success') || 'Appointment cancelled successfully');
+                await getDoctorsData(); // Обновляем данные врачей
+                return true;
+            } else {
+                throw new Error(data.message || t('my_appointments.cancel_error') || 'Failed to cancel appointment');
+            }
+        } catch (error) {
+            console.error('Error cancelling appointment:', error);
+            toast.error(error.message || t('my_appointments.cancel_error') || 'Failed to cancel appointment');
+            return false;
         }
     };
 
@@ -185,14 +251,8 @@ const AppContextProvider = (props) => {
             console.log('Disconnected from socket (user)');
         });
         socket.on('new_message', (data) => {
-            if (userData?._id) {
-                setConversations((prev) =>
-                    prev.map((conv) =>
-                        conv._id === data.conversationId
-                            ? { ...conv, messages: data.messages, lastMessage: data.lastMessage }
-                            : conv
-                    )
-                );
+            if (userData?._id && data.conversationId) {
+                // Обновляем только текущий диалог, если он активен
                 if (currentConversation?._id === data.conversationId) {
                     setCurrentConversation((prev) => ({
                         ...prev,
@@ -200,6 +260,14 @@ const AppContextProvider = (props) => {
                         lastMessage: data.lastMessage,
                     }));
                 }
+                // Обновляем список диалогов для отображения последнего сообщения
+                setConversations((prev) =>
+                    prev.map((conv) =>
+                        conv._id === data.conversationId
+                            ? { ...conv, lastMessage: data.lastMessage }
+                            : conv
+                    )
+                );
             }
         });
         return () => {
@@ -227,6 +295,9 @@ const AppContextProvider = (props) => {
         setCurrentConversation,
         socket,
         fetchConversations,
+        startConversation,
+        fetchUserAppointments,
+        cancelAppointment,
         sendMessage,
         loading,
     };

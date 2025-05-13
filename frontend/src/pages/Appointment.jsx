@@ -10,7 +10,7 @@ import axios from 'axios';
 
 const Appointment = () => {
   const { docId } = useParams();
-  const { doctors, currencySymbol, backendUrl, getDoctorsData, userData, fetchConversations, setCurrentConversation } = useContext(AppContext);
+  const { doctors, currencySymbol, backendUrl, getDoctorsData, userData } = useContext(AppContext);
   const daysOfWeek = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -126,25 +126,15 @@ const Appointment = () => {
         { withCredentials: true }
       );
       if (bookingData.success) {
-        toast.success(t('appointment.success'));
-        getDoctorsData();
-        await fetchConversations();
-        if (bookingData.conversationId) {
-          // Находим созданный диалог
-          const updatedConversations = await fetchConversations();
-          const newConversation = updatedConversations.find(conv => conv._id === bookingData.conversationId);
-          if (newConversation) {
-            setCurrentConversation(newConversation);
-            navigate('/messages'); // Перенаправляем в чат
-          }
-        }
+        toast.success(t('appointment.success') || 'Appointment booked successfully');
+        await getDoctorsData();
         navigate('/my-appointments');
       } else {
-        toast.error(t('appointment.error'));
+        toast.error(bookingData.message || t('appointment.error') || 'Failed to book appointment');
       }
     } catch (error) {
       console.error('Error booking appointment:', error);
-      toast.error(error.response?.data?.message || t('appointment.error'));
+      toast.error(error.response?.data?.message || t('appointment.error') || 'Failed to book appointment');
     }
   };
 

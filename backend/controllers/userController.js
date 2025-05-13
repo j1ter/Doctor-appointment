@@ -311,37 +311,81 @@ const bookAppointment = async (req, res) => {
 
         await doctorModel.findByIdAndUpdate(docId, { slots_booked });
 
-        // Создаем диалог между пользователем и доктором
-        const conversationData = {
-            members: [userId, docId],
-            userModel: 'user',
-            doctorModel: 'doctor',
-        };
-        req.body = conversationData;
-        req.user = { _id: userId }; // Имитируем аутентификацию пользователя
-        const conversationResponse = await newConversation(req, res);
-
-        if (!conversationResponse.success) {
-            console.log('Failed to create conversation:', conversationResponse.message);
-            // Не отменяем запись, но логируем ошибку
-        }
-
         const formattedSlotDate = formatSlotDate(slotDate);
         const message = `
             Здравствуйте, ${userData.name}!
             Вы записаны к врачу ${docData.name}.
             Дата: ${formattedSlotDate}, Время: ${slotTime}.
-            Теперь вы можете начать чат с доктором в разделе "Messages".
             Спасибо за использование нашей системы!
         `;
         await sendEmailNotification(userData.email, 'Запись к врачу подтверждена', message);
 
-        res.json({ success: true, message: 'Appointment Booked', conversationId: conversationResponse?.conversation?._id });
+        res.json({ success: true, message: 'Appointment Booked' });
     } catch (error) {
         console.log('Error in bookAppointment:', error);
         res.json({ success: false, message: error.message });
     }
 };
+// const bookAppointment = async (req, res) => {
+//     try {
+//         const { docId, slotDate, slotTime } = req.body;
+//         const userId = req.user._id;
+
+//         const docData = await doctorModel.findById(docId).select('-password');
+//         if (!docData) {
+//             return res.json({ success: false, message: 'Doctor not found' });
+//         }
+//         if (!docData.available) {
+//             return res.json({ success: false, message: 'Doctor not available' });
+//         }
+
+//         let slots_booked = docData.slots_booked;
+//         if (slots_booked[slotDate]) {
+//             if (slots_booked[slotDate].includes(slotTime)) {
+//                 return res.json({ success: false, message: 'Slot not available' });
+//             } else {
+//                 slots_booked[slotDate].push(slotTime);
+//             }
+//         } else {
+//             slots_booked[slotDate] = [];
+//             slots_booked[slotDate].push(slotTime);
+//         }
+
+//         const userData = await userModel.findById(userId).select('-password');
+//         delete docData.slots_booked;
+
+//         const appointmentData = {
+//             userId,
+//             docId,
+//             userData,
+//             docData,
+//             amount: docData.fees,
+//             slotTime,
+//             slotDate,
+//             date: Date.now(),
+//         };
+
+//         const newAppointment = new appointmentModel(appointmentData);
+//         await newAppointment.save();
+
+//         await doctorModel.findByIdAndUpdate(docId, { slots_booked });
+
+
+//         const formattedSlotDate = formatSlotDate(slotDate);
+//         const message = `
+//             Здравствуйте, ${userData.name}!
+//             Вы записаны к врачу ${docData.name}.
+//             Дата: ${formattedSlotDate}, Время: ${slotTime}.
+//             Спасибо за использование нашей системы!
+//         `;
+//         await sendEmailNotification(userData.email, 'Запись к врачу подтверждена', message);
+
+//         res.json({ success: true, message: 'Appointment Booked', conversationId: conversationResponse?.conversation?._id });
+//     } catch (error) {
+//         console.log('Error in bookAppointment:', error);
+//         res.json({ success: false, message: error.message });
+//     }
+// };
 // const bookAppointment = async (req, res) => {
 //     try {
 //         const { docId, slotDate, slotTime } = req.body;
