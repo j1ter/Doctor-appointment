@@ -9,12 +9,10 @@ function TopDoctors() {
   const { t } = useTranslation();
 
   const specialityMap = {
-    'General physician': 'doctors.general_physician',
-    'Gynecologist': 'doctors.gynecologist',
-    'Dermatologist': 'doctors.dermatologist',
-    'Pediatricians': 'doctors.pediatricians',
-    'Neurologist': 'doctors.neurologist',
-    'Gastroenterologist': 'doctors.gastroenterologist'
+    'Therapist': 'doctors.therapist',
+    'Pediatrician': 'doctors.pediatrician',
+    'Psychologist': 'doctors.psychologist',
+    'Nurse': 'doctors.nurse'
   };
 // hello
   return (

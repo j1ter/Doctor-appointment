@@ -13,38 +13,28 @@ import doc12 from './doc12.png'
 import doc13 from './doc13.png'
 import doc14 from './doc14.png'
 import doc15 from './doc15.png'
-import Dermatologist from './Dermatologist.svg'
-import Gastroenterologist from './Gastroenterologist.svg'
-import General_physician from './General_physician.svg'
-import Gynecologist from './Gynecologist.svg'
-import Neurologist from './Neurologist.svg'
-import Pediatricians from './Pediatricians.svg'
+import therapist_img from './therapist_img.svg';
+import pediatrician_img from './pediatrician_img.svg';
+import psychologist_img from './psychologist_img.svg';
+import nurse_img from './nurse_img.svg';
 
 export const specialityData = [
-    {
-        speciality: 'General physician',
-        image: General_physician
-    },
-    {
-        speciality: 'Gynecologist',
-        image: Gynecologist
-    },
-    {
-        speciality: 'Dermatologist',
-        image: Dermatologist
-    },
-    {
-        speciality: 'Pediatricians',
-        image: Pediatricians
-    },
-    {
-        speciality: 'Neurologist',
-        image: Neurologist
-    },
-    {
-        speciality: 'Gastroenterologist',
-        image: Gastroenterologist
-    },
+  {
+    speciality: 'Therapist',
+    image: therapist_img
+  },
+  {
+    speciality: 'Pediatrician',
+    image: pediatrician_img
+  },
+  {
+    speciality: 'Psychologist',
+    image: psychologist_img
+  },
+  {
+    speciality: 'Nurse',
+    image: nurse_img
+  },
 ]
 
 export const doctors = [

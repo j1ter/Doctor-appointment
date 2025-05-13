@@ -15,6 +15,16 @@ const Appointment = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
 
+  const dayTranslations = {
+    SUN: t('appointment.day_sun'),
+    MON: t('appointment.day_mon'),
+    TUE: t('appointment.day_tue'),
+    WED: t('appointment.day_wed'),
+    THU: t('appointment.day_thu'),
+    FRI: t('appointment.day_fri'),
+    SAT: t('appointment.day_sat')
+  };
+
   const [docInfo, setDocInfo] = useState(null);
   const [docSlots, setDocSlots] = useState([]);
   const [slotIndex, setSlotIndex] = useState(0);
@@ -23,12 +33,10 @@ const Appointment = () => {
   const [error, setError] = useState(null);
 
   const specialityMap = {
-    'General physician': 'doctors.general_physician',
-    'Gynecologist': 'doctors.gynecologist',
-    'Dermatologist': 'doctors.dermatologist',
-    'Pediatricians': 'doctors.pediatricians',
-    'Neurologist': 'doctors.neurologist',
-    'Gastroenterologist': 'doctors.gastroenterologist'
+    'Therapist': 'doctors.therapist',
+    'Pediatrician': 'doctors.pediatrician',
+    'Psychologist': 'doctors.psychologist',
+    'Nurse': 'doctors.nurse'
   };
 
   const fetchDocInfo = async () => {
@@ -202,7 +210,7 @@ const Appointment = () => {
                 }`}
                 key={index}
               >
-                <p>{item[0] && daysOfWeek[item[0].dateTime.getDay()]}</p>
+                <p>{item[0] && dayTranslations[daysOfWeek[item[0].dateTime.getDay()]]}</p>
                 <p>{item[0] && item[0].dateTime.getDate()}</p>
               </div>
             ))

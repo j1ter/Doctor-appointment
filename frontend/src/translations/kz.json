@@ -1,18 +1,25 @@
 {
-  "appointment": {
-    "about": "Дәрігер туралы",
-    "appointment_fee": "Жазылу ақысы: {{currencySymbol}}{{fee}}",
-    "booking_slots": "Жазылу слоттары",
-    "book_appointment": "Дәрігерге жазылу",
-    "login_to_book": "Жазылу үшін кіріңіз",
-    "success": "Жазылу сәтті өтті",
-    "error": "Жазылу сәтсіз аяқталды",
-    "error_doctor_not_found": "Дәрігер табылмады",
-    "error_loading": "Дәрігер туралы ақпаратты жүктеу қатесі",
-    "loading": "Жүктелуде...",
-    "no_slots": "Қолжетімді слоттар жоқ",
-    "error_select_slot": "Уақыт слотын таңдаңыз"
-  },
+"appointment": {
+  "about": "Дәрігер туралы",
+  "appointment_fee": "Жазылу ақысы: {{currencySymbol}}{{fee}}",
+  "booking_slots": "Жазылу слоттары",
+  "book_appointment": "Дәрігерге жазылу",
+  "login_to_book": "Жазылу үшін кіріңіз",
+  "success": "Жазылу сәтті өтті",
+  "error": "Жазылу сәтсіз аяқталды",
+  "error_doctor_not_found": "Дәрігер табылмады",
+  "error_loading": "Дәрігер туралы ақпаратты жүктеу қатесі",
+  "loading": "Жүктелуде...",
+  "no_slots": "Қолжетімді слоттар жоқ",
+  "error_select_slot": "Уақыт слотын таңдаңыз",
+  "day_sun": "ЖК",
+  "day_mon": "ДС",
+  "day_tue": "СС",
+  "day_wed": "СР",
+  "day_thu": "БС",
+  "day_fri": "ЖМ",
+  "day_sat": "СН"
+},
   "header": {
     "title": "Сенімді дәрігерлермен жазылу",
     "description": "Біздің сенімді дәрігерлердің кең тізімін шолыңыз, жазылуды қиындықсыз жоспарлаңыз.",
@@ -48,6 +55,7 @@
     "russian": "Русский",
     "kazakh": "Қазақша"
   },
+    "my-messages": "Хабарламалар",
   "related_doctors": {
     "title": "Қатысты дәрігерлер",
     "description": "Біздің сенімді дәрігерлердің кең тізімін шолыңыз.",
@@ -147,5 +155,9 @@
     "signup_success": "Сіз сәтті тіркелдіңіз",
     "login_success": "Сіз сәтті кірдіңіз",
     "error": "Аутентификация сәтсіз аяқталды"
-  }
+  },
+    "therapist": "Терапевт",
+  "pediatrician": "Педиатр",
+  "psychologist": "Психолог",
+  "nurse": "Медбике"
 }

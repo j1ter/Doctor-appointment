@@ -87,7 +87,7 @@ import React, { useState, useContext } from 'react';
                      {t('navbar.my_appointments')}
                    </p>
                    <p onClick={() => navigate('/my-messages')} className='hover:text-black cursor-pointer'>
-                     {t('navbar.my_messages')}
+                     {t('my-messages')}
                    </p>
                    <p onClick={logout} className='hover:text-black cursor-pointer'>
                      {t('navbar.logout')}

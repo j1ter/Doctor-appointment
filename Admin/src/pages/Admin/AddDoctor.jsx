@@ -12,7 +12,7 @@ const AddDoctor = () => {
     const [password, setPassword] = useState('');
     const [experience, setExperience] = useState('1 Year');
     const [fees, setFees] = useState('');
-    const [speciality, setSpeciality] = useState('General Physician');
+    const [speciality, setSpeciality] = useState('Therapist');
     const [degree, setDegree] = useState('');
     const [address1, setAddress1] = useState('');
     const [address2, setAddress2] = useState('');
@@ -24,7 +24,7 @@ const AddDoctor = () => {
             if (!docImg) {
                 return toast.error('Image not selected');
             }
-// hello
+
             const formData = new FormData();
             formData.append('image', docImg);
             formData.append('name', name);
@@ -52,7 +52,7 @@ const AddDoctor = () => {
                 setPassword('');
                 setExperience('1 Year');
                 setFees('');
-                setSpeciality('General Physician');
+                setSpeciality('Therapist');
                 setDegree('');
                 setAddress1('');
                 setAddress2('');
@@ -161,12 +161,10 @@ const AddDoctor = () => {
                                 className='border rounded px-3 py-2 mt-1 w-full'
                                 value={speciality}
                             >
-                                <option value='General Physician'>General Physician</option>
-                                <option value='Gynecologist'>Gynecologist</option>
-                                <option value='Dermatologist'>Dermatologist</option>
-                                <option value='Pediatricians'>Pediatricians</option>
-                                <option value='Neurologist'>Neurologist</option>
-                                <option value='Gastroenterologist'>Gastroenterologist</option>
+                                <option value='Therapist'>Therapist</option>
+                                <option value='Pediatrician'>Pediatrician</option>
+                                <option value='Psychologist'>Psychologist</option>
+                                <option value='Nurse'>Nurse</option>
                             </select>
                         </div>
                     </div>

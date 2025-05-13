@@ -22,7 +22,7 @@ function Header() {
         </a>
       </div>
       <div className='md:w-1/2 relative'>
-        <img className='w-full px-2 mt-10 md:absolute bottom-0 h-auto rounded-lg' src={header_img} alt="header_img" />
+        <img className='w-full max-w-[800px] px-2 mt-10 md:absolute md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:scale-125 h-auto rounded-lg' src={header_img} alt="header_img" />
       </div>
     </div>
   );

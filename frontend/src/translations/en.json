@@ -1,18 +1,25 @@
 {
-    "appointment": {
-      "about": "About",
-      "appointment_fee": "Appointment fee: {{currencySymbol}}{{fee}}",
-      "booking_slots": "Booking slots",
-      "book_appointment": "Book an appointment",
-      "login_to_book": "Login to book appointment",
-      "success": "Appointment booked successfully",
-      "error": "Failed to book appointment",
-      "error_doctor_not_found": "Doctor not found",
-      "error_loading": "Error loading doctor information",
-      "loading": "Loading...",
-      "no_slots": "No available slots",
-      "error_select_slot": "Please select a time slot"
-    },
+"appointment": {
+  "about": "About",
+  "appointment_fee": "Appointment fee: {{currencySymbol}}{{fee}}",
+  "booking_slots": "Booking slots",
+  "book_appointment": "Book an appointment",
+  "login_to_book": "Login to book appointment",
+  "success": "Appointment booked successfully",
+  "error": "Failed to book appointment",
+  "error_doctor_not_found": "Doctor not found",
+  "error_loading": "Error loading doctor information",
+  "loading": "Loading...",
+  "no_slots": "No available slots",
+  "error_select_slot": "Please select a time slot",
+  "day_sun": "SUN",
+  "day_mon": "MON",
+  "day_tue": "TUE",
+  "day_wed": "WED",
+  "day_thu": "THU",
+  "day_fri": "FRI",
+  "day_sat": "SAT"
+},
     "header": {
       "title": "Book Appointment With Trusted Doctors",
       "description": "Simply browse through our extensive list of trusted doctors, schedule your appointment hassle-free.",
@@ -48,6 +55,7 @@
   "russian": "Russian",
   "kazakh": "Kazakh"
 },
+ "my-messages": "Messages",
     "related_doctors": {
       "title": "Related Doctors",
       "description": "Simply browse through our extensive list of trusted doctors.",
@@ -147,5 +155,9 @@
       "signup_success": "You have successfully registered",
       "login_success": "You have successfully logged in",
       "error": "Authentication failed"
-    }
+    },
+      "therapist": "Therapist",
+  "pediatrician": "Pediatrician",
+  "psychologist": "Psychologist",
+  "nurse": "Nurse"
   }

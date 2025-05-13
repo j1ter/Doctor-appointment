@@ -7,12 +7,10 @@ function SpecialityMenu() {
   const { t } = useTranslation();
 
   const specialityMap = {
-    'General physician': 'doctors.general_physician',
-    'Gynecologist': 'doctors.gynecologist',
-    'Dermatologist': 'doctors.dermatologist',
-    'Pediatricians': 'doctors.pediatricians',
-    'Neurologist': 'doctors.neurologist',
-    'Gastroenterologist': 'doctors.gastroenterologist'
+    'Therapist': 'therapist',
+    'Pediatrician': 'pediatrician',
+    'Psychologist': 'psychologist',
+    'Nurse': 'nurse'
   };
 // hello
   return (

@@ -1,8 +1,10 @@
 import React, { useContext, useEffect, useState, useRef } from 'react';
 import { AppContext } from '../context/AppContext';
 import upload_area from '../assets/upload_area.png';
+import { useTranslation } from 'react-i18next';
 
 const UserMessages = () => {
+    const { t } = useTranslation();
     const {
         backendUrl,
         conversations,
@@ -57,7 +59,7 @@ const UserMessages = () => {
 
     return (
         <div className='w-full max-w-6xl m-5'>
-            <p className='mb-3 text-lg font-medium'>Messages</p>
+            <p className='mb-3 text-lg font-medium'>{t('my-messages')}</p>
             <div className='flex h-[80vh] bg-white border rounded overflow-hidden'>
                 <div className='w-1/3 border-r p-4 overflow-y-auto'>
                     {conversations.map((conv) => (

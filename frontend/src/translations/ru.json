@@ -1,18 +1,25 @@
 {
-    "appointment": {
-      "about": "О враче",
-      "appointment_fee": "Стоимость приема: {{currencySymbol}}{{fee}}",
-      "booking_slots": "Слоты для записи",
-      "book_appointment": "Записаться на прием",
-      "login_to_book": "Войдите, чтобы записаться на прием",
-      "success": "Прием успешно записан",
-      "error": "Не удалось записаться на прием",
-      "error_doctor_not_found": "Врач не найден",
-      "error_loading": "Ошибка загрузки информации о враче",
-      "loading": "Загрузка...",
-      "no_slots": "Нет доступных слотов",
-      "error_select_slot": "Пожалуйста, выберите временной слот"
-    },
+"appointment": {
+  "about": "О враче",
+  "appointment_fee": "Стоимость приема: {{currencySymbol}}{{fee}}",
+  "booking_slots": "Слоты для записи",
+  "book_appointment": "Записаться на прием",
+  "login_to_book": "Войдите, чтобы записаться на прием",
+  "success": "Прием успешно записан",
+  "error": "Не удалось записаться на прием",
+  "error_doctor_not_found": "Врач не найден",
+  "error_loading": "Ошибка загрузки информации о враче",
+  "loading": "Загрузка...",
+  "no_slots": "Нет доступных слотов",
+  "error_select_slot": "Пожалуйста, выберите временной слот",
+  "day_sun": "ВС",
+  "day_mon": "ПН",
+  "day_tue": "ВТ",
+  "day_wed": "СР",
+  "day_thu": "ЧТ",
+  "day_fri": "ПТ",
+  "day_sat": "СБ"
+},
     "header": {
       "title": "Запишитесь на прием к доверенным врачам",
       "description": "Просто просмотрите наш обширный список доверенных врачей, запишитесь на прием без лишних хлопот.",
@@ -47,7 +54,9 @@
   "english": "Английский",
   "russian": "Русский",
   "kazakh": "Казахский"
+  
 },
+  "my-messages": "Сообщения",
     "related_doctors": {
       "title": "Связанные врачи",
       "description": "Просто просмотрите наш обширный список доверенных врачей.",
@@ -66,16 +75,17 @@
       "available": "Доступен",
       "not_available": "Недоступен"
     },
-    "my_appointments": {
-      "title": "Мои записи",
-      "address": "Адрес:",
-      "date_time": "Дата и время:",
-      "cancel_appointment": "Отменить запись",
-      "appointment_cancelled": "Запись отменена",
-      "completed": "Завершено",
-      "cancel_success": "Запись успешно отменена",
-      "cancel_error": "Не удалось отменить запись"
-    },
+  "my_appointments": {
+    "title": "Мои записи",
+    "address": "Адрес:",
+    "date_time": "Дата и время:",
+    "cancel_appointment": "Отменить запись",
+    "appointment_cancelled": "Запись отменена",
+    "completed": "Завершено",
+    "cancel_success": "Запись успешно отменена",
+    "cancel_error": "Не удалось отменить запись",
+    "start_chat": "Начать чат"
+  },
     "my_profile": {
       "contact_info": "Контактная информация",
       "email": "Эл. почта:",
@@ -122,18 +132,16 @@
       "careers": "Узнайте больше о наших командах и вакансиях.",
       "explore_jobs": "Посмотреть вакансии"
     },
-    "doctors": {
-      "browse": "Просмотрите специалистов.",
-      "filters": "Фильтры",
-      "general_physician": "Терапевт",
-      "gynecologist": "Гинеколог",
-      "dermatologist": "Дерматолог",
-      "pediatricians": "Педиатр",
-      "neurologist": "Невролог",
-      "gastroenterologist": "Гастроэнтеролог",
-      "available": "Доступен",
-      "not_available": "Недоступен"
-    },
+  "doctors": {
+    "browse": "Просмотрите специалистов.",
+    "filters": "Фильтры",
+    "therapist": "Терапевт",
+    "pediatrician": "Педиатр",
+    "psychologist": "Психолог",
+    "nurse": "Медсестра",
+    "available": "Доступен",
+    "not_available": "Недоступен"
+  },
     "login": {
       "create_account": "Создать аккаунт",
       "login": "Войти",
@@ -147,5 +155,9 @@
       "signup_success": "Вы успешно зарегистрировались",
       "login_success": "Вы успешно вошли",
       "error": "Ошибка аутентификации"
-    }
+    },
+      "therapist": "Терапевт",
+  "pediatrician": "Педиатр",
+  "psychologist": "Психолог",
+  "nurse": "Медбике"
   }
