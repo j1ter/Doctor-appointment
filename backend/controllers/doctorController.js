@@ -159,62 +159,51 @@ const doctorList = async (req,res) => {
 // API to get doctor appointments for doctor panel
 const appointmentsDoctor = async (req, res) => {
     try {
-        const { docId } = req.body;
-        const appointments = await appointmentModel.find({docId});
-
+        const docId = req.doctor._id; // Используем ID из middleware authDoctor
+        const appointments = await appointmentModel.find({docId}).populate('userData', 'name image dob');
+        console.log('Appointments fetched for docId:', docId, appointments); // Лог для отладки
         res.json({success: true, appointments});
-
     } catch (error) {
-        console.log(error);
+        console.log('Error in appointmentsDoctor:', error);
         res.json({success: false, message: error.message});
     }
-}
+};
 
 // API to mark appointment completed for doctor panel
 const appointmentComplete = async (req, res) => {
     try {
-        const {docId, appointmentId} = req.body;
-        
+        const {appointmentId} = req.body;
+        const docId = req.doctor._id; // Используем ID из middleware authDoctor
         const appointmentData = await appointmentModel.findById(appointmentId);
-
-        if (appointmentData && appointmentData.docId === docId) {
+        if (appointmentData && appointmentData.docId.toString() === docId.toString()) {
             await appointmentModel.findByIdAndUpdate(appointmentId, {isCompleted: true});
-
             return res.json({success: true, message: 'Appointment Completed'});
         } else {
             return res.json({success: false, message: 'Mark Failed'});
         }
-
-
-
     } catch (error) {
-        console.log(error);
+        console.log('Error in appointmentComplete:', error);
         res.json({success: false, message: error.message});
     }
-}
+};
 
 // API to cancel appointment for doctor panel
 const appointmentCancel = async (req, res) => {
     try {
-        const {docId, appointmentId} = req.body;
-        
+        const {appointmentId} = req.body;
+        const docId = req.doctor._id; // Используем ID из middleware authDoctor
         const appointmentData = await appointmentModel.findById(appointmentId);
-
-        if (appointmentData && appointmentData.docId === docId) {
+        if (appointmentData && appointmentData.docId.toString() === docId.toString()) {
             await appointmentModel.findByIdAndUpdate(appointmentId, {cancelled: true});
-
             return res.json({success: true, message: 'Appointment Cancelled'});
         } else {
             return res.json({success: false, message: 'Cancellation Failed'});
         }
-
-
-
     } catch (error) {
-        console.log(error);
+        console.log('Error in appointmentCancel:', error);
         res.json({success: false, message: error.message});
     }
-}
+};
 
 // API to get dashboard data for doctor panel
 
@@ -222,13 +211,6 @@ const doctorDashboard = async (req, res) => {
     try {
         const doctor = req.doctor; // Используем данные из токена
         const appointments = await appointmentModel.find({ docId: doctor._id });
-
-        let earnings = 0;
-        appointments.forEach((item) => {
-            if (item.isCompleted || item.payment) {
-                earnings += item.amount;
-            }
-        });
 
         let patients = [];
         appointments.forEach((item) => {
@@ -238,7 +220,6 @@ const doctorDashboard = async (req, res) => {
         });
 
         const dashData = {
-            earnings,
             appointments: appointments.length,
             patients: patients.length,
             latestAppointments: appointments.reverse().slice(0, 5),
@@ -269,9 +250,9 @@ const doctorProfile = async (req, res) => {
 
 const updateDoctorProfile = async (req, res) => {
     try {
-        const {docId, fees, address, available} = req.body;
+        const {docId, address, available} = req.body;
 
-        await doctorModel.findByIdAndUpdate(docId, {fees, address, available});
+        await doctorModel.findByIdAndUpdate(docId, {address, available});
 
         res.json({success: true, message: 'Profile Updated'});
     } catch (error) {

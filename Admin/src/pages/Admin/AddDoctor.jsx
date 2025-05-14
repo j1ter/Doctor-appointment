@@ -11,7 +11,6 @@ const AddDoctor = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [experience, setExperience] = useState('1 Year');
-    const [fees, setFees] = useState('');
     const [speciality, setSpeciality] = useState('Therapist');
     const [degree, setDegree] = useState('');
     const [address1, setAddress1] = useState('');
@@ -31,7 +30,6 @@ const AddDoctor = () => {
             formData.append('email', email);
             formData.append('password', password);
             formData.append('experience', experience);
-            formData.append('fees', Number(fees));
             formData.append('speciality', speciality);
             formData.append('degree', degree);
             formData.append('address', JSON.stringify({ line1: address1, line2: address2 }));
@@ -51,7 +49,6 @@ const AddDoctor = () => {
                 setEmail('');
                 setPassword('');
                 setExperience('1 Year');
-                setFees('');
                 setSpeciality('Therapist');
                 setDegree('');
                 setAddress1('');
@@ -144,16 +141,6 @@ const AddDoctor = () => {
                         </div>
                     </div>
                     <div className='flex flex-col sm:flex-row items-start gap-3'>
-                        <div className='w-full sm:w-1/2'>
-                            <p>Fees</p>
-                            <input
-                                className='border rounded px-3 py-2 mt-1 w-full'
-                                type='number'
-                                onChange={(e) => setFees(e.target.value)}
-                                value={fees}
-                                required
-                            />
-                        </div>
                         <div className='w-full sm:w-1/2'>
                             <p>Speciality</p>
                             <select

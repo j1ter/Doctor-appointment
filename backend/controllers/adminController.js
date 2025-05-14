@@ -140,10 +140,10 @@ const addDoctor = async (req, res) => {
         console.log('addDoctor: Request body:', req.body);
         console.log('addDoctor: Request file:', req.file);
 
-        const { name, email, password, speciality, degree, experience, about, fees, address } = req.body;
+        const { name, email, password, speciality, degree, experience, about, address } = req.body;
         const imageFile = req.file;
 
-        if (!name || !email || !password || !speciality || !degree || !experience || !about || !fees || !address) {
+        if (!name || !email || !password || !speciality || !degree || !experience || !about || !address) {
             return res.status(400).json({ success: false, message: 'Missing required fields' });
         }
 
@@ -181,7 +181,6 @@ const addDoctor = async (req, res) => {
             degree,
             experience,
             about,
-            fees,
             address: JSON.parse(address),
             date: Date.now(),
         };

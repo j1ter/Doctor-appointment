@@ -11,6 +11,7 @@ import { Server } from 'socket.io';
 import http from 'http';
 import { sendMessage } from './controllers/messageController.js';
 
+
 // app config
 const app = express();
 const server = http.createServer(app);

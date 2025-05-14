@@ -5,7 +5,7 @@ import cancel_icon from '../../assets/cancel_icon.svg';
 
 const AllAppointments = () => {
     const { appointments, getAllAppointments, cancelAppointment } = useContext(AdminContext);
-    const { calculateAge, slotDateFormat, currency } = useContext(AppContext);
+    const { calculateAge, slotDateFormat } = useContext(AppContext);
 
     useEffect(() => {
         getAllAppointments();
@@ -21,7 +21,6 @@ const AllAppointments = () => {
                     <p>Age</p>
                     <p>Date & Time</p>
                     <p>Doctor</p>
-                    <p>Fees</p>
                     <p>Actions</p>
                 </div>
                 {appointments.map((item, index) => (
@@ -42,10 +41,6 @@ const AllAppointments = () => {
                             <img className='w-8 rounded-full bg-gray-200' src={item.docData.image} alt='' />
                             <p>{item.docData.name}</p>
                         </div>
-                        <p>
-                            {currency}
-                            {item.amount}
-                        </p>
                         {item.cancelled ? (
                             <p className='text-red-400 text-xs font-medium'>Cancelled</p>
                         ) : item.isCompleted ? (

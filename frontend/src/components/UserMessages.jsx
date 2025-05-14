@@ -17,6 +17,7 @@ const UserMessages = () => {
         fetchConversations,
     } = useContext(AppContext);
     const [message, setMessage] = useState('');
+    const [messages, setMessages] = useState([]); // Локальное состояние для сообщений
     const messagesEndRef = useRef(null);
 
     useEffect(() => {
@@ -26,12 +27,13 @@ const UserMessages = () => {
     useEffect(() => {
         if (currentConversation && socket) {
             socket.emit('join_conversation', currentConversation._id);
+            setMessages(currentConversation.messages || []);
         }
     }, [currentConversation, socket]);
 
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, [currentConversation?.messages]);
+    }, [messages]); // Обновляем скролл при изменении messages
 
     const handleSendMessage = async (e) => {
         e.preventDefault();
@@ -51,11 +53,99 @@ const UserMessages = () => {
                     text: message,
                 });
                 setMessage('');
+                if (response.messages) {
+                    setMessages(response.messages);
+                }
             } else {
                 console.error('Failed to send message:', response?.message || 'Unknown error');
             }
         }
     };
+
+    // Функция для отображения последнего сообщения в списке диалогов
+    const getLastMessageText = (conv) => {
+        if (conv.lastMessage?.text) {
+            return conv.lastMessage.text;
+        }
+        if (conv.messages && conv.messages.length > 0) {
+            return conv.messages[conv.messages.length - 1].text;
+        }
+        return 'No messages yet';
+    };
+
+    // Обработчик новых сообщений через сокет
+    useEffect(() => {
+        if (socket) {
+            const handleNewMessage = (data) => {
+                console.log('New message received:', data); // Временный лог для отладки
+                if (userData?._id && data.conversationId) {
+                    // Обновляем сообщения в текущем чате
+                    if (currentConversation?._id === data.conversationId) {
+                        if (data.messages) {
+                            setMessages(data.messages);
+                        } else {
+                            setMessages((prev) => [
+                                ...prev,
+                                {
+                                    ...data,
+                                    sender: {
+                                        _id: data.sender,
+                                        name: data.senderName,
+                                        email: data.senderEmail,
+                                        image: data.senderImage || '',
+                                    },
+                                    receiver: {
+                                        _id: data.receiver,
+                                        name: data.receiverName,
+                                        email: data.receiverEmail,
+                                        image: data.receiverImage || '',
+                                    },
+                                    createdAt: data.createdAt || new Date(),
+                                },
+                            ]);
+                        }
+                        setCurrentConversation((prev) => ({
+                            ...prev,
+                            messages: data.messages || [...prev.messages, data],
+                            lastMessage: data.lastMessage || data,
+                        }));
+                    }
+                    // Обновляем список диалогов
+                    setConversations((prev) =>
+                        prev.map((conv) =>
+                            conv._id === data.conversationId
+                                ? {
+                                      ...conv,
+                                      lastMessage: data.lastMessage || {
+                                          ...data,
+                                          sender: {
+                                              _id: data.sender,
+                                              name: data.senderName,
+                                              email: data.senderEmail,
+                                              image: data.senderImage || '',
+                                          },
+                                          receiver: {
+                                              _id: data.receiver,
+                                              name: data.receiverName,
+                                              email: data.receiverEmail,
+                                              image: data.receiverImage || '',
+                                          },
+                                          createdAt: data.createdAt || new Date(),
+                                      },
+                                  }
+                                : conv
+                        )
+                    );
+                }
+            };
+
+            socket.on('new_message', handleNewMessage);
+
+            return () => {
+                socket.off('new_message', handleNewMessage);
+            };
+        }
+    }, [socket, userData, currentConversation, setConversations]);
 
     return (
         <div className='w-full max-w-6xl m-5'>
@@ -76,7 +166,7 @@ const UserMessages = () => {
                             <div>
                                 <p className='font-medium'>{conv.userData?.name || 'Doctor'}</p>
                                 <p className='text-xs text-gray-500'>
-                                    {conv.lastMessage?.text || 'No messages yet'}
+                                    {getLastMessageText(conv)}
                                 </p>
                             </div>
                         </div>
@@ -89,8 +179,8 @@ const UserMessages = () => {
                                 {currentConversation.userData?.name || 'Doctor'}
                             </div>
                             <div className='flex-1 p-4 overflow-y-auto'>
-                                {currentConversation.messages && currentConversation.messages.length > 0 ? (
-                                    currentConversation.messages.map((msg, index) => {
+                                {messages.length > 0 ? (
+                                    messages.map((msg, index) => {
                                         const isUser = msg.sender?._id === userData?._id;
                                         return (
                                             <div
@@ -147,5 +237,5 @@ const UserMessages = () => {
         </div>
     );
 };
-// hello
+
 export default UserMessages;

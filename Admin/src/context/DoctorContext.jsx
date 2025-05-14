@@ -125,14 +125,15 @@ const DoctorContextProvider = (props) => {
             const { data } = await axios.get(`${backendUrl}/api/doctor/appointments`, {
                 withCredentials: true,
             });
+            console.log('getAppointments response:', data); // Лог для отладки
             if (data.success) {
                 setAppointments(data.appointments);
-                console.log(data.appointments);
+                console.log('Appointments set:', data.appointments);
             } else {
                 toast.error(data.message);
             }
         } catch (error) {
-            console.error(error);
+            console.error('Error fetching appointments:', error);
             toast.error(error.response?.data?.message || error.message);
         }
     };

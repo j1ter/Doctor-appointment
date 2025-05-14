@@ -20,13 +20,11 @@ const AppContextProvider = (props) => {
 
     axios.defaults.withCredentials = true;
 
-    // Перехватчик для обработки ошибок 401 и обновления токена
     useEffect(() => {
         const interceptor = axios.interceptors.response.use(
             (response) => response,
             async (error) => {
                 if (error.response?.status === 401) {
-                    // Проверяем, есть ли refreshToken в куках
                     const refreshToken = document.cookie
                         .split('; ')
                         .find(row => row.startsWith('refreshToken='))
@@ -133,8 +131,15 @@ const AppContextProvider = (props) => {
             try {
                 const { data } = await axios.get(backendUrl + `/api/user/conversations`, { withCredentials: true });
                 if (data.success) {
-                    setConversations(data.conversations || []);
-                    return data.conversations || [];
+                    const updatedConversations = (data.conversations || []).map(conv => {
+                        if (!conv.lastMessage && conv.messages && conv.messages.length > 0) {
+                            const lastMsg = conv.messages[conv.messages.length - 1];
+                            return { ...conv, lastMessage: lastMsg };
+                        }
+                        return conv;
+                    });
+                    setConversations(updatedConversations);
+                    return updatedConversations;
                 } else {
                     console.log('Fetch conversations failed:', data.message);
                     toast.error(t('chat.error') || 'Failed to load conversations');
@@ -155,7 +160,6 @@ const AppContextProvider = (props) => {
                 throw new Error(t('chat.no_user') || 'User not authenticated');
             }
 
-            // Создаем новый диалог
             const { data } = await axios.post(
                 backendUrl + '/api/user/conversations',
                 { receiverId },
@@ -199,7 +203,7 @@ const AppContextProvider = (props) => {
             );
             if (data.success) {
                 toast.success(t('my_appointments.cancel_success') || 'Appointment cancelled successfully');
-                await getDoctorsData(); // Обновляем данные врачей
+                await getDoctorsData();
                 return true;
             } else {
                 throw new Error(data.message || t('my_appointments.cancel_error') || 'Failed to cancel appointment');
@@ -250,32 +254,12 @@ const AppContextProvider = (props) => {
         socket.on('disconnect', () => {
             console.log('Disconnected from socket (user)');
         });
-        socket.on('new_message', (data) => {
-            if (userData?._id && data.conversationId) {
-                // Обновляем только текущий диалог, если он активен
-                if (currentConversation?._id === data.conversationId) {
-                    setCurrentConversation((prev) => ({
-                        ...prev,
-                        messages: data.messages,
-                        lastMessage: data.lastMessage,
-                    }));
-                }
-                // Обновляем список диалогов для отображения последнего сообщения
-                setConversations((prev) =>
-                    prev.map((conv) =>
-                        conv._id === data.conversationId
-                            ? { ...conv, lastMessage: data.lastMessage }
-                            : conv
-                    )
-                );
-            }
-        });
+        // Убираем обработчик new_message, чтобы избежать дублирования с UserMessages.jsx
         return () => {
             socket.off('connect');
             socket.off('disconnect');
-            socket.off('new_message');
         };
-    }, [socket, userData, currentConversation]);
+    }, [socket]);
 
     const value = {
         doctors,
@@ -308,5 +292,5 @@ const AppContextProvider = (props) => {
         </AppContext.Provider>
     );
 };
-// hello
+
 export default AppContextProvider;
