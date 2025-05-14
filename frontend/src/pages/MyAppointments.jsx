@@ -71,7 +71,7 @@ function MyAppointments() {
 
       if (conversation) {
         setCurrentConversation(conversation);
-        navigate('/messages');
+        navigate('/my-messages');
         toast.success(t('chat.started') || 'Chat started successfully');
       }
     } catch (error) {

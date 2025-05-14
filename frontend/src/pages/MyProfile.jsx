@@ -11,7 +11,7 @@ function MyProfile() {
   const { userData, setUserData, backendUrl, loadUserProfileData } = useContext(AppContext);
   const { t } = useTranslation();
   const [isEdit, setIsEdit] = useState(false);
-  const [image, setImage] = useState(false);
+  const [image, setImage] = useState(null);
 
   const updateUserProfileData = async () => {
     try {
@@ -21,16 +21,23 @@ function MyProfile() {
       formData.append('address', JSON.stringify(userData.address));
       formData.append('gender', userData.gender);
       formData.append('dob', userData.dob);
-      image && formData.append('image', image);
+      if (image) {
+        console.log('Appending image to FormData:', image);
+        formData.append('image', image);
+      } else {
+        console.log('No image selected');
+      }
 
       const { data } = await axios.post(backendUrl + '/api/user/update-profile', formData, {
         withCredentials: true,
       });
+      console.log('Server response:', data);
+
       if (data.success) {
         toast.success(t('my_profile.update_success'));
         await loadUserProfileData();
         setIsEdit(false);
-        setImage(false);
+        setImage(null);
       } else {
         toast.error(data.message || t('my_profile.update_error'));
       }
@@ -65,7 +72,7 @@ function MyProfile() {
       )}
       <hr className='bg-zinc-400 h-[1px] border-none' />
       <div>
-        <p className='text-neutral-500 underline mt-3'>{t('my_profile.contact_info')}</p>
+        <p className='text-neutral-500 underline mt-3'>{t('my Tutti frutti_profile.contact_info')}</p>
         <div className='grid grid-cols-[1fr_3fr] gap-y-2.5 mt-3 text-neutral-700'>
           <p className='font-medium'>{t('my_profile.email')}</p>
           <p className='text-blue-500'>{userData.email}</p>
@@ -157,5 +164,5 @@ function MyProfile() {
     <p>{t('my_profile.loading')}</p>
   );
 }
-// hello
+
 export default MyProfile;

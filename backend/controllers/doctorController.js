@@ -248,18 +248,32 @@ const doctorProfile = async (req, res) => {
 
 // API to update doctor profile data from Doctor Panel
 
+// API to update doctor profile data from Doctor Panel
 const updateDoctorProfile = async (req, res) => {
     try {
-        const {docId, address, available} = req.body;
+        const { docId, address, available } = req.body;
 
-        await doctorModel.findByIdAndUpdate(docId, {address, available});
+        // Логируем входные данные для отладки
+        console.log('Updating doctor profile:', { docId, address, available });
 
-        res.json({success: true, message: 'Profile Updated'});
+        // Проверяем, существует ли доктор
+        const doctor = await doctorModel.findById(docId);
+        if (!doctor) {
+            return res.json({ success: false, message: 'Doctor not found' });
+        }
+
+        // Обновляем данные
+        await doctorModel.findByIdAndUpdate(docId, {
+            address: address, // Сохраняем address как объект { line1, line2 }
+            available: available,
+        });
+
+        res.json({ success: true, message: 'Profile Updated' });
     } catch (error) {
-        console.log(error);
-        res.json({success: false, message: error.message});
+        console.log('Error in updateDoctorProfile:', error);
+        res.json({ success: false, message: error.message });
     }
-}
+};
 // hello
 
 export {

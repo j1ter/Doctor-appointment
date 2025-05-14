@@ -219,7 +219,7 @@ const DoctorContextProvider = (props) => {
             );
             if (data.success) {
                 toast.success(data.message);
-                getProfileData();
+                await getProfileData(); // Убедимся, что данные обновляются
                 return true;
             } else {
                 toast.error(data.message);

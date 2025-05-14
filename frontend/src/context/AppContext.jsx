@@ -30,6 +30,15 @@ const AppContextProvider = (props) => {
                         .find(row => row.startsWith('refreshToken='))
                         ?.split('=')[1];
 
+                        // Игнорируем ошибку "No access token provided" для неавторизованных пользователей
+                    if (error.response?.data?.message === 'Unauthorized - No access token provided') {
+                        console.log('No access token provided, skipping toast');
+                        setIsAuthenticated(false);
+                        setUserData(null);
+                        setConversations([]);
+                        return Promise.reject(error);
+                    }
+
                     if (!refreshToken) {
                         console.log('No refresh token found in cookies');
                         setIsAuthenticated(false);
@@ -44,7 +53,13 @@ const AppContextProvider = (props) => {
                         const { data } = await axios.post(backendUrl + '/api/user/refresh-token', {}, { withCredentials: true });
                         if (data.success) {
                             console.log('Token refreshed successfully');
-                            return axios(error.config);
+                            return axios({
+                                ...error.config,
+                                headers: {
+                                    ...error.config.headers,
+                                    'Cookie': `accessToken=${data.accessToken}; refreshToken=${refreshToken}`
+                                }
+                            });
                         } else {
                             console.log('Refresh token request failed:', data.message);
                             setIsAuthenticated(false);

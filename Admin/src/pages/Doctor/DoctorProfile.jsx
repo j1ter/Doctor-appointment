@@ -15,7 +15,8 @@ const DoctorProfile = () => {
 // hello
     const handleUpdateProfile = async () => {
         const updateData = {
-            address: profileData.address,
+            docId: profileData._id, // Добавляем docId
+            address: profileData.address, // Передаём объект address целиком
             available: profileData.available,
         };
 

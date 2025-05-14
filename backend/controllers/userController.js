@@ -204,22 +204,62 @@ const updateProfile = async (req, res) => {
         const { name, phone, address, dob, gender } = req.body;
         const imageFile = req.file;
 
+        console.log('Received file in updateProfile:', imageFile);
+        console.log('Received body in updateProfile:', req.body);
+
         if (!name || !phone || !address || !dob || !gender) {
             return res.json({ success: false, message: 'Data Missing' });
         }
 
-        await userModel.findByIdAndUpdate(req.user._id, {
+        const updateData = {
             name,
             phone,
             address: JSON.parse(address),
             dob,
             gender,
-        });
+        };
+
+        // Обновляем основные данные профиля
+        const updatedUser = await userModel.findByIdAndUpdate(req.user._id, updateData, { new: true });
+        console.log('Profile data updated:', updatedUser);
 
         if (imageFile) {
-            const imageUpload = await cloudinary.uploader.upload(imageFile.path, { resource_type: 'image' });
-            const imageURL = imageUpload.secure_url;
-            await userModel.findByIdAndUpdate(req.user._id, { image: imageURL });
+            console.log('Uploading buffer to Cloudinary:', imageFile.buffer);
+            try {
+                // Загружаем файл из буфера
+                const imageUpload = await new Promise((resolve, reject) => {
+                    const stream = cloudinary.uploader.upload_stream(
+                        {
+                            resource_type: 'image',
+                            folder: 'user_profiles',
+                        },
+                        (error, result) => {
+                            if (error) {
+                                reject(error);
+                            } else {
+                                resolve(result);
+                            }
+                        }
+                    );
+                    stream.end(imageFile.buffer);
+                });
+
+                const imageURL = imageUpload.secure_url;
+                console.log('Image uploaded to Cloudinary:', imageURL);
+
+                // Обновляем поле image в базе данных
+                const imageUpdate = await userModel.findByIdAndUpdate(
+                    req.user._id,
+                    { image: imageURL },
+                    { new: true }
+                );
+                console.log('Image field updated in DB:', imageUpdate);
+            } catch (cloudinaryError) {
+                console.log('Error uploading to Cloudinary:', cloudinaryError);
+                return res.json({ success: false, message: 'Failed to upload image to Cloudinary' });
+            }
+        } else {
+            console.log('No file uploaded, skipping Cloudinary');
         }
 
         res.json({ success: true, message: 'Profile Updated' });
