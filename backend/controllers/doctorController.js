@@ -2,7 +2,11 @@ import doctorModel from "../models/doctorModel.js";
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import appointmentModel from '../models/appointmentModel.js';
+import MedicalRecord from '../models/medicalRecordModel.js';
 import { redis } from '../lib/redis.js';
+import { uploadFile, downloadFile } from '../services/minioService.js';
+import upload from '../middlewares/multer.js';
+
 
 // Helper function to generate access and refresh tokens
 const generateTokens = (docId) => {
@@ -154,6 +158,41 @@ const doctorList = async (req,res) => {
     }
 }
 
+// API для загрузки справки после завершения назначения
+const uploadMedicalRecord = async (req, res) => {
+    try {
+        const { appointmentId } = req.params; // Изменили на params, так как передается в URL
+        const doctorId = req.doctor._id; // Из middleware authDoctor
+        const file = req.file;
+
+        if (!file) {
+            return res.json({ success: false, message: 'No file uploaded' });
+        }
+
+        const appointment = await appointmentModel.findById(appointmentId);
+        if (!appointment || appointment.docId.toString() !== doctorId.toString() || !appointment.isCompleted) {
+            return res.json({ success: false, message: 'Invalid or incomplete appointment' });
+        }
+
+        const fileName = await uploadFile(file);
+        const fileUrl = `/api/doctor/records/download/${fileName}`; // Исправлен путь
+
+        const medicalRecord = new MedicalRecord({
+            student: appointment.userId,
+            doctor: doctorId,
+            appointment: appointment._id,
+            fileName,
+            fileUrl
+        });
+
+        await medicalRecord.save();
+        res.json({ success: true, message: 'Medical record uploaded', medicalRecord });
+    } catch (error) {
+        console.log('Error in uploadMedicalRecord:', error);
+        res.json({ success: false, message: error.message });
+    }
+};
+
 
 
 // API to get doctor appointments for doctor panel
@@ -169,21 +208,50 @@ const appointmentsDoctor = async (req, res) => {
     }
 };
 
-// API to mark appointment completed for doctor panel
+// Обновляем appointmentComplete для активации загрузки
 const appointmentComplete = async (req, res) => {
     try {
-        const {appointmentId} = req.body;
-        const docId = req.doctor._id; // Используем ID из middleware authDoctor
+        const { appointmentId } = req.body;
+        const doctorId = req.doctor._id;
         const appointmentData = await appointmentModel.findById(appointmentId);
-        if (appointmentData && appointmentData.docId.toString() === docId.toString()) {
-            await appointmentModel.findByIdAndUpdate(appointmentId, {isCompleted: true});
-            return res.json({success: true, message: 'Appointment Completed'});
+        if (appointmentData && appointmentData.docId.toString() === doctorId.toString()) {
+            await appointmentModel.findByIdAndUpdate(appointmentId, { isCompleted: true });
+            return res.json({ success: true, message: 'Appointment Completed', canUpload: true });
         } else {
-            return res.json({success: false, message: 'Mark Failed'});
+            return res.json({ success: false, message: 'Mark Failed' });
         }
     } catch (error) {
         console.log('Error in appointmentComplete:', error);
-        res.json({success: false, message: error.message});
+        res.json({ success: false, message: error.message });
+    }
+};
+
+// Добавляем маршрут для скачивания файла
+
+const downloadMedicalRecord = async (req, res) => {
+    try {
+        const fileName = req.params.fileName;
+        console.log('Attempting to download file:', fileName); // Лог для отладки
+        const fileStream = await downloadFile(fileName);
+        // Устанавливаем заголовки для корректного скачивания
+        res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(fileName)}"`);
+        res.setHeader('Content-Type', 'application/octet-stream'); // Универсальный тип для файлов
+        // Пайпим поток с обработкой завершения
+        fileStream.pipe(res);
+        fileStream.on('error', (error) => {
+            console.log('Stream error:', error);
+            res.status(500).json({ success: false, message: 'Error streaming file' });
+        });
+        res.on('finish', () => {
+            console.log('File stream completed');
+        });
+        res.on('error', (error) => {
+            console.log('Response error:', error);
+            res.status(500).json({ success: false, message: 'Error in response' });
+        });
+    } catch (error) {
+        console.log('Error in downloadMedicalRecord:', error);
+        res.status(500).json({ success: false, message: error.message });
     }
 };
 
@@ -287,4 +355,6 @@ export {
     doctorProfile,
     updateDoctorProfile,
     logoutDoctor,
-    refreshTokenDoctor };
+    refreshTokenDoctor,
+    uploadMedicalRecord,
+    downloadMedicalRecord };

@@ -31,9 +31,7 @@ const UserMessages = () => {
         }
     }, [currentConversation, socket]);
 
-    useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, [messages]); // Обновляем скролл при изменении messages
+    
 
     const handleSendMessage = async (e) => {
         e.preventDefault();

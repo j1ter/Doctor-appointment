@@ -72,7 +72,7 @@ function MyProfile() {
       )}
       <hr className='bg-zinc-400 h-[1px] border-none' />
       <div>
-        <p className='text-neutral-500 underline mt-3'>{t('my Tutti frutti_profile.contact_info')}</p>
+        <p className='text-neutral-500 underline mt-3'>{t('my Tutti frutti profile contact info')}</p>
         <div className='grid grid-cols-[1fr_3fr] gap-y-2.5 mt-3 text-neutral-700'>
           <p className='font-medium'>{t('my_profile.email')}</p>
           <p className='text-blue-500'>{userData.email}</p>

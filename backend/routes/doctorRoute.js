@@ -10,10 +10,13 @@ import {
     updateDoctorProfile,
     logoutDoctor,
     refreshTokenDoctor,
+    uploadMedicalRecord,
+    downloadMedicalRecord
 } from '../controllers/doctorController.js';
 import authDoctor from '../middlewares/authDoctor.js';
 import { newConversation, getConversations } from '../controllers/conversationsController.js';
 import { sendMessage, getMessages } from '../controllers/messageController.js';
+import upload from '../middlewares/multer.js'; 
 
 const doctorRouter = express.Router();
 // hello
@@ -33,5 +36,11 @@ doctorRouter.post('/conversations', authDoctor, newConversation);
 doctorRouter.get('/conversations', authDoctor, getConversations);
 doctorRouter.post('/messages', authDoctor, sendMessage);
 doctorRouter.get('/messages/:conversationId', authDoctor, getMessages);
+
+// Новый маршрут для загрузки справки
+doctorRouter.post('/upload-medical-record/:appointmentId', authDoctor, upload.single('file'), uploadMedicalRecord);
+
+// Новый маршрут для скачивания файла
+doctorRouter.get('/records/download/:fileName', authDoctor, downloadMedicalRecord);
 
 export default doctorRouter;
