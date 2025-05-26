@@ -6,13 +6,14 @@ export default {
   ],
   theme: {
     extend: {
-      colors:{
-        'primary':"#DF1F32"
-        
-
+      colors: {
+        'primary': "#DF1F32"
       },
-      gridTemplateColumns:{
+      gridTemplateColumns: {
         'auto': 'repeat(auto-fill, minmax(200px, 1fr))'
+      },
+      fontFamily: {
+        sans: ['Roboto', 'sans-serif'],
       }
     },
   },

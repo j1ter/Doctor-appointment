@@ -31,7 +31,7 @@ function Doctors() {
           className={`py-1 px-3 border rounded text-sm transition-all sm:hidden ${showFilter ? 'bg-primary text-white' : ''}`}
           onClick={() => setShowFilter(prev => !prev)}
         >
-          {t('doctors.filters')}
+          {t('filters')}
         </button>
         <div className={`flex-col gap-4 text-sm text-gray-600 ${showFilter ? 'flex' : 'hidden sm:flex'}`}>
           <p
@@ -40,7 +40,7 @@ function Doctors() {
               speciality === 'Therapist' ? 'bg-red-50 text-black' : ''
             }`}
           >
-            {t('doctors.therapist')}
+            {t('therapist')}
           </p>
           <p
             onClick={() => (speciality === 'Pediatrician' ? navigate('/doctors') : navigate('/doctors/Pediatrician'))}
@@ -48,7 +48,7 @@ function Doctors() {
               speciality === 'Pediatrician' ? 'bg-red-50 text-black' : ''
             }`}
           >
-            {t('doctors.pediatrician')}
+            {t('pediatrician')}
           </p>
           <p
             onClick={() => (speciality === 'Psychologist' ? navigate('/doctors') : navigate('/doctors/Psychologist'))}
@@ -56,7 +56,7 @@ function Doctors() {
               speciality === 'Psychologist' ? 'bg-red-50 text-black' : ''
             }`}
           >
-            {t('doctors.psychologist')}
+            {t('psychologist')}
           </p>
           <p
             onClick={() => (speciality === 'Nurse' ? navigate('/doctors') : navigate('/doctors/Nurse'))}
@@ -64,7 +64,7 @@ function Doctors() {
               speciality === 'Nurse' ? 'bg-red-50 text-black' : ''
             }`}
           >
-            {t('doctors.nurse')}
+            {t('nurse')}
           </p>
         </div>
         <div className='w-full grid grid-cols-auto gap-4 gap-y-6'>
