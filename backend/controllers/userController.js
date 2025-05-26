@@ -8,6 +8,7 @@ import appointmentModel from '../models/appointmentModel.js';
 import nodemailer from 'nodemailer';
 import { redis } from '../lib/redis.js';
 import { newConversation } from '../controllers/conversationsController.js';
+import MedicalRecord from '../models/medicalRecordModel.js';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -522,4 +523,19 @@ const cancelAppointment = async (req, res) => {
     }
 };
 
-export { registerUser, loginUser, getProfile, updateProfile, bookAppointment, listAppointment, cancelAppointment, logoutUser, refreshToken };
+// API to get all medical records for the current user
+const getUserMedicalRecords = async (req, res) => {
+    try {
+        const userId = req.user._id;
+        const records = await MedicalRecord.find({ student: userId })
+            .populate('appointment', 'slotDate slotTime')
+            .populate('doctor', 'name')
+            .select('fileName fileUrl createdAt');
+        res.json({ success: true, records });
+    } catch (error) {
+        console.log('Error in getUserMedicalRecords:', error);
+        res.json({ success: false, message: error.message });
+    }
+};
+
+export { registerUser, loginUser, getProfile, updateProfile, bookAppointment, listAppointment, cancelAppointment, logoutUser, refreshToken, getUserMedicalRecords };

@@ -9,6 +9,7 @@ import {
     cancelAppointment,
     logoutUser,
     refreshToken,
+    getUserMedicalRecords
 } from '../controllers/userController.js';
 import { authUser } from '../middlewares/authUser.js';
 import upload from '../middlewares/multer.js';
@@ -33,6 +34,9 @@ userRouter.post('/conversations', authUser, newConversation);
 userRouter.get('/conversations', authUser, getConversations);
 userRouter.post('/messages', authUser, sendMessage);
 userRouter.get('/messages/:conversationId', authUser, getMessages);
+
+// Новый маршрут для получения медицинских записей пользователя
+userRouter.get('/medical-records', authUser, getUserMedicalRecords);
 
 console.log('Registered user routes, including GET /api/user/profile');
 

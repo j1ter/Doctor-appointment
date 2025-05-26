@@ -11,9 +11,14 @@ import {
     logoutDoctor,
     refreshTokenDoctor,
     uploadMedicalRecord,
-    downloadMedicalRecord
+    downloadMedicalRecord,
+    getMedicalRecords,
+    getUserProfile,
+    getStudentMedicalRecords,
+    getStudentAppointments
 } from '../controllers/doctorController.js';
 import authDoctor from '../middlewares/authDoctor.js';
+import authDoctorOrUser from '../middlewares/authDoctorOrUser.js';
 import { newConversation, getConversations } from '../controllers/conversationsController.js';
 import { sendMessage, getMessages } from '../controllers/messageController.js';
 import upload from '../middlewares/multer.js'; 
@@ -41,6 +46,13 @@ doctorRouter.get('/messages/:conversationId', authDoctor, getMessages);
 doctorRouter.post('/upload-medical-record/:appointmentId', authDoctor, upload.single('file'), uploadMedicalRecord);
 
 // Новый маршрут для скачивания файла
-doctorRouter.get('/records/download/:fileName', authDoctor, downloadMedicalRecord);
+doctorRouter.get('/records/download/:fileName', authDoctorOrUser, downloadMedicalRecord); // Используем новый middleware
+doctorRouter.get('/medical-records/:appointmentId', authDoctor, getMedicalRecords);
+// Новый маршрут для получения профиля пользователя
+doctorRouter.get('/user-profile/:userId', authDoctor, getUserProfile);
+
+// Новые маршруты для студента
+doctorRouter.get('/student-medical-records/:studentId', authDoctor, getStudentMedicalRecords);
+doctorRouter.get('/student-appointments/:studentId', authDoctor, getStudentAppointments);
 
 export default doctorRouter;

@@ -16,6 +16,7 @@ const AppContextProvider = (props) => {
     const [conversations, setConversations] = useState([]);
     const [currentConversation, setCurrentConversation] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [medicalRecords, setMedicalRecords] = useState([]); // Новое состояние для медицинских записей
     const socket = io(backendUrl, { withCredentials: true });
 
     axios.defaults.withCredentials = true;
@@ -30,12 +31,13 @@ const AppContextProvider = (props) => {
                         .find(row => row.startsWith('refreshToken='))
                         ?.split('=')[1];
 
-                        // Игнорируем ошибку "No access token provided" для неавторизованных пользователей
+                    // Игнорируем ошибку "No access token provided" для неавторизованных пользователей
                     if (error.response?.data?.message === 'Unauthorized - No access token provided') {
                         console.log('No access token provided, skipping toast');
                         setIsAuthenticated(false);
                         setUserData(null);
                         setConversations([]);
+                        setMedicalRecords([]); // Очищаем записи
                         return Promise.reject(error);
                     }
 
@@ -44,6 +46,7 @@ const AppContextProvider = (props) => {
                         setIsAuthenticated(false);
                         setUserData(null);
                         setConversations([]);
+                        setMedicalRecords([]); // Очищаем записи
                         toast.error(t('auth.session_expired') || 'Session expired, please log in again');
                         return Promise.reject(error);
                     }
@@ -65,6 +68,7 @@ const AppContextProvider = (props) => {
                             setIsAuthenticated(false);
                             setUserData(null);
                             setConversations([]);
+                            setMedicalRecords([]); // Очищаем записи
                             toast.error(t('auth.session_expired') || 'Session expired, please log in again');
                             return Promise.reject(error);
                         }
@@ -73,6 +77,7 @@ const AppContextProvider = (props) => {
                         setIsAuthenticated(false);
                         setUserData(null);
                         setConversations([]);
+                        setMedicalRecords([]); // Очищаем записи
                         toast.error(t('auth.session_expired') || 'Session expired, please log in again');
                         return Promise.reject(error);
                     }
@@ -131,6 +136,7 @@ const AppContextProvider = (props) => {
                 setIsAuthenticated(false);
                 setUserData(null);
                 setConversations([]);
+                setMedicalRecords([]); // Очищаем записи
                 toast.success(t('logout.success'));
             } else {
                 toast.error(data.message);
@@ -251,6 +257,37 @@ const AppContextProvider = (props) => {
         }
     };
 
+    // Новая функция для загрузки медицинских записей пользователя
+    const fetchUserMedicalRecords = async () => {
+        try {
+            const { data } = await axios.get(backendUrl + '/api/user/medical-records', { withCredentials: true });
+            if (data.success) {
+                setMedicalRecords(data.records);
+                return data.records;
+            } else {
+                throw new Error(data.message || t('my_profile.load_medical_records_error') || 'Failed to load medical records');
+            }
+        } catch (error) {
+            console.error('Error fetching medical records:', error);
+            toast.error(error.message || t('my_profile.load_medical_records_error') || 'Failed to load medical records');
+            return [];
+        }
+    };
+    const calculateAge = (dob) => {
+        const today = new Date()
+        const birtDate = new Date(dob)
+
+        let age = today.getFullYear() - birtDate.getFullYear()
+        return age
+    }
+
+    const months = [" ", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+
+    const slotDateFormat = (slotDate) => {
+        const dateArray = slotDate.split('_')
+        return dateArray[0] + " " + months[Number(dateArray[1])] + " " + dateArray[2]
+    }
+
     useEffect(() => {
         loadUserProfileData();
         getDoctorsData();
@@ -259,6 +296,7 @@ const AppContextProvider = (props) => {
     useEffect(() => {
         if (isAuthenticated && userData) {
             fetchConversations();
+            fetchUserMedicalRecords(); // Загружаем медицинские записи при аутентификации
         }
     }, [isAuthenticated, userData]);
 
@@ -299,6 +337,10 @@ const AppContextProvider = (props) => {
         cancelAppointment,
         sendMessage,
         loading,
+        medicalRecords, // Добавляем записи в контекст
+        fetchUserMedicalRecords, // Добавляем функцию в контекст
+        calculateAge,
+        slotDateFormat
     };
 
     return (

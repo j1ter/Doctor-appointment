@@ -15,6 +15,7 @@ import DoctorDashboard from './pages/Doctor/DoctorDashboard';
 import DoctorAppointments from './pages/Doctor/DoctorAppointments';
 import DoctorProfile from './pages/Doctor/DoctorProfile';
 import DoctorMessages from './pages/Doctor/DoctorMessages';
+import UserProfile from './pages/Doctor/UserProfile';
 
 const App = () => {
     const { isAuthenticated: isAdminAuthenticated, loading: adminLoading } = useContext(AdminContext);
@@ -52,6 +53,7 @@ const App = () => {
                             <Route path='/doctor-profile' element={<DoctorProfile />} />
                             <Route path='/doctor-messages' element={<DoctorMessages />} />
                             <Route path='*' element={<Navigate to='/doctor-dashboard' replace />} />
+                            <Route path="/doctor/user-profile/:userId" element={<UserProfile />} />
                         </>
                     ) : (
                         <Route path='*' element={<Navigate to='/' replace />} />
