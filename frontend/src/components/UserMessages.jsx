@@ -17,7 +17,8 @@ const UserMessages = () => {
         fetchConversations,
     } = useContext(AppContext);
     const [message, setMessage] = useState('');
-    const [messages, setMessages] = useState([]); // Локальное состояние для сообщений
+    const [messages, setMessages] = useState([]);
+    const [showConversations, setShowConversations] = useState(false);
     const messagesEndRef = useRef(null);
 
     useEffect(() => {
@@ -30,8 +31,6 @@ const UserMessages = () => {
             setMessages(currentConversation.messages || []);
         }
     }, [currentConversation, socket]);
-
-    
 
     const handleSendMessage = async (e) => {
         e.preventDefault();
@@ -52,7 +51,7 @@ const UserMessages = () => {
                 });
                 setMessage('');
                 if (response.messages) {
-                    setMessages(response.messages);
+                    setMessages(response.messages); // Исправлено
                 }
             } else {
                 console.error('Failed to send message:', response?.message || 'Unknown error');
@@ -60,7 +59,6 @@ const UserMessages = () => {
         }
     };
 
-    // Функция для отображения последнего сообщения в списке диалогов
     const getLastMessageText = (conv) => {
         if (conv.lastMessage?.text) {
             return conv.lastMessage.text;
@@ -68,16 +66,14 @@ const UserMessages = () => {
         if (conv.messages && conv.messages.length > 0) {
             return conv.messages[conv.messages.length - 1].text;
         }
-        return 'No messages yet';
+        return t('no-messages');
     };
 
-    // Обработчик новых сообщений через сокет
     useEffect(() => {
         if (socket) {
             const handleNewMessage = (data) => {
-                console.log('New message received:', data); // Временный лог для отладки
+                console.log('New message received:', data);
                 if (userData?._id && data.conversationId) {
-                    // Обновляем сообщения в текущем чате
                     if (currentConversation?._id === data.conversationId) {
                         if (data.messages) {
                             setMessages(data.messages);
@@ -108,7 +104,6 @@ const UserMessages = () => {
                             lastMessage: data.lastMessage || data,
                         }));
                     }
-                    // Обновляем список диалогов
                     setConversations((prev) =>
                         prev.map((conv) =>
                             conv._id === data.conversationId
@@ -146,14 +141,23 @@ const UserMessages = () => {
     }, [socket, userData, currentConversation, setConversations]);
 
     return (
-        <div className='w-full max-w-6xl m-5'>
+        <div className='w-full max-w-6xl m-5 flex flex-col md:flex-row'>
             <p className='mb-3 text-lg font-medium'>{t('my-messages')}</p>
-            <div className='flex h-[80vh] bg-white border rounded overflow-hidden'>
-                <div className='w-1/3 border-r p-4 overflow-y-auto'>
+            <div className='flex flex-col h-[80vh] bg-white border rounded overflow-hidden md:flex-row'>
+                <div className={`w-full md:w-1/3 border-b md:border-r p-4 overflow-y-auto md:block ${showConversations ? 'block' : 'hidden'} conversations-list`}>
+                    <button
+                        className='md:hidden bg-blue-500 text-white px-4 py-2 rounded mb-4'
+                        onClick={() => setShowConversations(!showConversations)}
+                    >
+                        {t(showConversations ? 'hide-conversations' : 'show-conversations')}
+                    </button>
                     {conversations.map((conv) => (
                         <div
                             key={conv._id}
-                            onClick={() => setCurrentConversation(conv)}
+                            onClick={() => {
+                                setCurrentConversation(conv);
+                                setShowConversations(false);
+                            }}
                             className='p-2 hover:bg-gray-100 cursor-pointer rounded flex items-center gap-2'
                         >
                             <img
@@ -162,7 +166,7 @@ const UserMessages = () => {
                                 alt='user'
                             />
                             <div>
-                                <p className='font-medium'>{conv.userData?.name || 'Doctor'}</p>
+                                <p className='font-medium'>{conv.userData?.name || t('doctor')}</p>
                                 <p className='text-xs text-gray-500'>
                                     {getLastMessageText(conv)}
                                 </p>
@@ -170,11 +174,17 @@ const UserMessages = () => {
                         </div>
                     ))}
                 </div>
-                <div className='w-2/3 flex flex-col'>
+                <div className='w-full md:w-2/3 flex flex-col chat-container'>
                     {currentConversation ? (
                         <>
-                            <div className='p-4 border-b font-semibold'>
-                                {currentConversation.userData?.name || 'Doctor'}
+                            <div className='p-4 border-b font-semibold flex items-center gap-2'>
+                                <button
+                                    className='md:hidden bg-gray-200 p-2 rounded'
+                                    onClick={() => setShowConversations(true)}
+                                >
+                                    {t('back')}
+                                </button>
+                                {currentConversation.userData?.name || t('doctor')}
                             </div>
                             <div className='flex-1 p-4 overflow-y-auto'>
                                 {messages.length > 0 ? (
@@ -185,7 +195,7 @@ const UserMessages = () => {
                                                 key={index}
                                                 className={`flex mb-3 ${isUser ? 'justify-end' : 'justify-start'}`}
                                             >
-                                                <div className={`max-w-[70%] ${isUser ? 'text-right' : 'text-left'}`}>
+                                                <div className={`max-w-[90%] md:max-w-[70%] ${isUser ? 'text-right' : 'text-left'}`}>
                                                     <p
                                                         className={`inline-block p-3 rounded-lg ${
                                                             isUser
@@ -203,7 +213,7 @@ const UserMessages = () => {
                                         );
                                     })
                                 ) : (
-                                    <p className='text-center text-gray-500'>No messages yet</p>
+                                    <p className='text-center text-gray-500'>{t('no-messages')}</p>
                                 )}
                                 <div ref={messagesEndRef} />
                             </div>
@@ -214,20 +224,20 @@ const UserMessages = () => {
                                         value={message}
                                         onChange={(e) => setMessage(e.target.value)}
                                         className='border border-[#DADADA] rounded w-full p-2'
-                                        placeholder='Type a message...'
+                                        placeholder={t('type-message')}
                                     />
                                     <button
                                         type='submit'
                                         className='bg-blue-500 text-white px-4 py-2 rounded'
                                     >
-                                        Send
+                                        {t('send')}
                                     </button>
                                 </div>
                             </form>
                         </>
                     ) : (
                         <div className='flex-1 flex items-center justify-center text-gray-500'>
-                            Select a conversation to start chatting
+                            {t('select-conversation')}
                         </div>
                     )}
                 </div>

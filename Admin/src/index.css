@@ -10,3 +10,9 @@
 * {
     font-family: Outfit;
 }
+
+@media (max-width: 739px) {
+  .messages-text {
+    display: none;
+  }
+}
