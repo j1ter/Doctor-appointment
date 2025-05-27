@@ -17,6 +17,7 @@ const AppContextProvider = (props) => {
     const [currentConversation, setCurrentConversation] = useState(null);
     const [loading, setLoading] = useState(true);
     const [medicalRecords, setMedicalRecords] = useState([]); // Новое состояние для медицинских записей
+    const [articles, setArticles] = useState([]); // Новый стейт для статей
     const socket = io(backendUrl, { withCredentials: true });
 
     axios.defaults.withCredentials = true;
@@ -288,6 +289,151 @@ const AppContextProvider = (props) => {
         return dateArray[0] + " " + months[Number(dateArray[1])] + " " + dateArray[2]
     }
 
+    // Новая функция: Получить все статьи
+    const getAllArticles = async (page = 1, limit = 6) => {
+        try {
+            const { data } = await axios.get(`${backendUrl}/api/user/articles?page=${page}&limit=${limit}`);
+            console.log('getAllArticles response:', data); // Логирование
+            if (data.success) {
+                setArticles(data.articles);
+                return {
+                    articles: data.articles,
+                    total: data.total,
+                    totalPages: data.totalPages,
+                    page: data.page
+                };
+            } else {
+                toast.error(data.message || t('article.error_load') || 'Не удалось загрузить статьи');
+                return { articles: [], total: 0, totalPages: 1, page: 1 };
+            }
+        } catch (error) {
+            console.error('Error fetching articles:', error);
+            toast.error(error.response?.data?.message || t('article.error_load') || 'Не удалось загрузить статьи');
+            return { articles: [], total: 0, totalPages: 1, page: 1 };
+        }
+    };
+
+    // Новая функция: Поиск статей
+    const searchArticles = async (query, page = 1, limit = 6) => {
+        try {
+            const { data } = await axios.get(`${backendUrl}/api/user/articles/search/${encodeURIComponent(query)}?page=${page}&limit=${limit}`);
+            console.log('searchArticles response:', data); // Логирование
+            if (data.success) {
+                return {
+                    articles: data.articles,
+                    total: data.total,
+                    totalPages: data.totalPages,
+                    page: data.page
+                };
+            } else {
+                toast.error(data.message || t('article.error_search') || 'Не удалось выполнить поиск');
+                return { articles: [], total: 0, totalPages: 1, page: 1 };
+            }
+        } catch (error) {
+            console.error('Error searching articles:', error);
+            toast.error(error.response?.data?.message || t('article.error_search') || 'Не удалось выполнить поиск');
+            return { articles: [], total: 0, totalPages: 1, page: 1 };
+        }
+    };
+
+    // Новая функция: Получить статью по ID
+    const getArticleById = async (articleId) => {
+        try {
+            const { data } = await axios.get(`${backendUrl}/api/user/articles/${articleId}`);
+            if (data.success) {
+                return data.article;
+            } else {
+                toast.error(data.message || t('article.error_load_single') || 'Не удалось загрузить статью');
+                return null;
+            }
+        } catch (error) {
+            console.error('Error fetching article:', error);
+            toast.error(error.response?.data?.message || t('article.error_load_single') || 'Не удалось загрузить статью');
+            return null;
+        }
+    };
+
+    // Новая функция: Создать комментарий
+    const createComment = async (articleId, content) => {
+        try {
+            const { data } = await axios.post(
+                `${backendUrl}/api/user/comments`,
+                { articleId, content },
+                { withCredentials: true }
+            );
+            if (data.success) {
+                toast.success(t('article.comment_created') || 'Комментарий добавлен');
+                return data.comment;
+            } else {
+                toast.error(data.message || t('article.error_comment') || 'Не удалось добавить комментарий');
+                return null;
+            }
+        } catch (error) {
+            console.error('Error creating comment:', error);
+            toast.error(error.response?.data?.message || t('article.error_comment') || 'Не удалось добавить комментарий');
+            return null;
+        }
+    };
+
+    // Новая функция: Обновить комментарий
+    const updateComment = async (commentId, content) => {
+        try {
+            const { data } = await axios.put(
+                `${backendUrl}/api/user/comments/${commentId}`,
+                { content },
+                { withCredentials: true }
+            );
+            if (data.success) {
+                toast.success(t('article.comment_updated') || 'Комментарий обновлен');
+                return data.comment;
+            } else {
+                toast.error(data.message || t('article.error_comment_update') || 'Не удалось обновить комментарий');
+                return null;
+            }
+        } catch (error) {
+            console.error('Error updating comment:', error);
+            toast.error(error.response?.data?.message || t('article.error_comment_update') || 'Не удалось обновить комментарий');
+            return null;
+        }
+    };
+
+    // Новая функция: Удалить комментарий
+    const deleteComment = async (commentId) => {
+        try {
+            const { data } = await axios.delete(`${backendUrl}/api/user/comments/${commentId}`, {
+                withCredentials: true,
+            });
+            if (data.success) {
+                toast.success(t('article.comment_deleted') || 'Комментарий удален');
+                return true;
+            } else {
+                toast.error(data.message || t('article.error_comment_delete') || 'Не удалось удалить комментарий');
+                return false;
+            }
+        } catch (error) {
+            console.error('Error deleting comment:', error);
+            toast.error(error.response?.data?.message || t('article.error_comment_delete') || 'Не удалось удалить комментарий');
+            return false;
+        }
+    };
+
+    // Новая функция: Получить комментарии для статьи
+    const getCommentsByArticle = async (articleId) => {
+        try {
+            const { data } = await axios.get(`${backendUrl}/api/user/comments/${articleId}`);
+            if (data.success) {
+                return data.comments;
+            } else {
+                toast.error(data.message || t('article.error_comments') || 'Не удалось загрузить комментарии');
+                return [];
+            }
+        } catch (error) {
+            console.error('Error fetching comments:', error);
+            toast.error(error.response?.data?.message || t('article.error_comments') || 'Не удалось загрузить комментарии');
+            return [];
+        }
+    };
+
     useEffect(() => {
         loadUserProfileData();
         getDoctorsData();
@@ -340,7 +486,15 @@ const AppContextProvider = (props) => {
         medicalRecords, // Добавляем записи в контекст
         fetchUserMedicalRecords, // Добавляем функцию в контекст
         calculateAge,
-        slotDateFormat
+        slotDateFormat,
+        articles, // Новый
+        getAllArticles, // Новый
+        searchArticles, // Новый
+        getArticleById, // Новый
+        createComment, // Новый
+        updateComment, // Новый
+        deleteComment, // Новый
+        getCommentsByArticle, // Новый
     };
 
     return (

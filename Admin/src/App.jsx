@@ -18,16 +18,18 @@ import DoctorMessages from './pages/Doctor/DoctorMessages';
 import UserProfile from './pages/Doctor/UserProfile';
 import AddUser from './pages/Admin/AddUser';
 import UsersList from './pages/Admin/UsersList';
+import AddArticle from './pages/Admin/AddArticle'; // Новый импорт
+import ArticlesList from './pages/Admin/ArticlesList'; // Новый импорт
+import ArticleDetails from './pages/Admin/ArticleDetails'; // Новый импорт
 
 const App = () => {
     const { isAuthenticated: isAdminAuthenticated, loading: adminLoading } = useContext(AdminContext);
     const { isAuthenticated: isDoctorAuthenticated, loading: doctorLoading } = useContext(DoctorContext);
 
-    // Если проверка аутентификации ещё не завершена, показываем индикатор загрузки
     if (adminLoading || doctorLoading) {
         return (
             <div className='bg-[#F8F9FD] h-screen flex items-center justify-center'>
-                <p className='text-lg text-gray-600'>Loading...</p>
+                <p className='text-lg text-gray-600'>Загрузка...</p>
             </div>
         );
     }
@@ -48,6 +50,9 @@ const App = () => {
                             <Route path='/doctor-list' element={<DoctorsList />} />
                             <Route path='/add-user' element={<AddUser />} />
                             <Route path='/users-list' element={<UsersList />} />
+                            <Route path='/add-article' element={<AddArticle />} />
+                            <Route path='/articles-list' element={<ArticlesList />} />
+                            <Route path='/article-details/:id' element={<ArticleDetails />} />
                             <Route path='*' element={<Navigate to='/admin-dashboard' replace />} />
                         </>
                     ) : isDoctorAuthenticated ? (
@@ -56,8 +61,8 @@ const App = () => {
                             <Route path='/doctor-appointments' element={<DoctorAppointments />} />
                             <Route path='/doctor-profile' element={<DoctorProfile />} />
                             <Route path='/doctor-messages' element={<DoctorMessages />} />
+                            <Route path='/doctor/user-profile/:userId' element={<UserProfile />} />
                             <Route path='*' element={<Navigate to='/doctor-dashboard' replace />} />
-                            <Route path="/doctor/user-profile/:userId" element={<UserProfile />} />
                         </>
                     ) : (
                         <Route path='*' element={<Navigate to='/' replace />} />
@@ -67,6 +72,5 @@ const App = () => {
         </div>
     );
 };
-// hello
 
 export default App;

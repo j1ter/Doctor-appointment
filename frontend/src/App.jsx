@@ -12,6 +12,8 @@ import Appointment from "./pages/Appointment";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import ChangePassword from "./pages/ChangePassword";
+import Article from "./pages/Article";
+import Articles from "./pages/Articles";
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import UserMessages from "./components/UserMessages";
@@ -19,13 +21,13 @@ import UserMessages from "./components/UserMessages";
 const App = () => {
   const { isAuthenticated, loading } = useContext(AppContext);
 
-    if (loading) {
-        return (
-            <div className='min-h-screen flex items-center justify-center bg-gray-100'>
-                <p className='text-lg text-gray-600'>Загрузка...</p>
-            </div>
-        );
-    }
+  if (loading) {
+    return (
+      <div className='min-h-screen flex items-center justify-center bg-gray-100'>
+        <p className='text-lg text-gray-600'>Загрузка...</p>
+      </div>
+    );
+  }
   return (
     <div className="mx-4 sm:mx-[10%]">
       <ToastContainer />
@@ -47,7 +49,7 @@ const App = () => {
         />
         <Route
           path="/appointment/:docId"
-          element={ <Appointment />}
+          element={<Appointment />}
         />
         <Route
           path="/my-messages"
@@ -56,6 +58,10 @@ const App = () => {
         <Route
           path="/change-password"
           element={isAuthenticated ? <ChangePassword /> : <Navigate to="/login" />}
+        />
+        <Route path='/articles' element={<Articles />}
+        />
+        <Route path='/articles/:id' element={<Article />}
         />
         <Route path="*" element={<Navigate to={isAuthenticated ? "/my-profile" : "/login"} />} />
       </Routes>

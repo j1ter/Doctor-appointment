@@ -10,8 +10,18 @@ import {
     refreshToken,
     getUserMedicalRecords,
     changePassword, // Новый маршрут
-    verifyCode // Новый маршрут
+    verifyCode, // Новый маршрут
+    getAllArticles,
+    getArticleById,
+    searchArticles
+
 } from '../controllers/userController.js';
+import {
+    createComment, // New
+    getCommentsByArticle, // New
+    updateComment, // New
+    deleteOwnComment // New
+} from '../controllers/commentController.js';
 import { authUser } from '../middlewares/authUser.js';
 import upload from '../middlewares/multer.js';
 import { newConversation, getConversations } from '../controllers/conversationsController.js';
@@ -39,6 +49,15 @@ userRouter.get('/messages/:conversationId', authUser, getMessages);
 
 // Новый маршрут для получения медицинских записей пользователя
 userRouter.get('/medical-records', authUser, getUserMedicalRecords);
+
+// New article and comment routes
+userRouter.get('/articles', getAllArticles); // Public
+userRouter.get('/articles/:id', getArticleById); // Public
+userRouter.get('/articles/search/:query', searchArticles); // Public
+userRouter.post('/comments', authUser, createComment);
+userRouter.get('/comments/:articleId', getCommentsByArticle); // Public
+userRouter.put('/comments/:id', authUser, updateComment);
+userRouter.delete('/comments/:id', authUser, deleteOwnComment);
 
 console.log('Registered user routes, including GET /api/user/profile');
 

@@ -9,6 +9,7 @@ import nodemailer from 'nodemailer';
 import { redis } from '../lib/redis.js';
 import { newConversation } from '../controllers/conversationsController.js';
 import MedicalRecord from '../models/medicalRecordModel.js';
+import articleModel from '../models/articleModel.js'; // New import
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -602,6 +603,74 @@ const getUserMedicalRecords = async (req, res) => {
     }
 };
 
+// API: Search articles by title
+const searchArticles = async (req, res) => {
+    try {
+        const { query } = req.params;
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 6;
+        const skip = (page - 1) * limit;
+
+        if (!query) {
+            return res.status(400).json({ success: false, message: 'Search query is required' });
+        }
+
+        const articles = await articleModel
+            .find({
+                title: { $regex: query, $options: 'i' } // Case-insensitive search
+            })
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit);
+
+        const total = await articleModel.countDocuments({
+            title: { $regex: query, $options: 'i' }
+        });
+
+        res.json({ success: true, articles, total, page, totalPages: Math.ceil(total / limit) });
+    } catch (error) {
+        console.log('Error in searchArticles:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// Обновленный API: Get all articles
+const getAllArticles = async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 6;
+        const skip = (page - 1) * limit;
+
+        const articles = await articleModel
+            .find({})
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit);
+
+        const total = await articleModel.countDocuments();
+
+        res.json({ success: true, articles, total, page, totalPages: Math.ceil(total / limit) });
+    } catch (error) {
+        console.log('Error in getAllArticles:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// New API: Get article by ID
+const getArticleById = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const article = await articleModel.findById(id);
+        if (!article) {
+            return res.status(404).json({ success: false, message: 'Article not found' });
+        }
+        res.json({ success: true, article });
+    } catch (error) {
+        console.log('Error in getArticleById:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
 export {
     loginUser,
     getProfile,
@@ -613,5 +682,8 @@ export {
     refreshToken,
     getUserMedicalRecords,
     verifyCode,
-    changePassword
+    changePassword,
+    searchArticles,
+    getAllArticles,
+    getArticleById
 };

@@ -1,10 +1,12 @@
 import validator from "validator";
 import bcrypt from 'bcrypt';
-import {v2 as cloudinary} from 'cloudinary';
+import { v2 as cloudinary } from 'cloudinary';
 import doctorModel from '../models/doctorModel.js';
 import jwt from 'jsonwebtoken';
 import appointmentModel from "../models/appointmentModel.js";
 import userModel from '../models/userModel.js';
+import articleModel from '../models/articleModel.js'; // New import
+import commentModel from '../models/commentModel.js'; // New import
 
 import { redis } from '../lib/redis.js';
 
@@ -326,10 +328,10 @@ const addDoctor = async (req, res) => {
 const allDoctors = async (req, res) => {
     try {
         const doctors = await doctorModel.find({}).select('-password');
-        res.json({success: true, doctors});
+        res.json({ success: true, doctors });
     } catch (error) {
         console.log(error);
-        res.json({success: false, message: error.message});
+        res.json({ success: false, message: error.message });
     }
 }
 
@@ -338,12 +340,12 @@ const appointmentsAdmin = async (req, res) => {
     try {
 
         const appointments = await appointmentModel.find({})
-        res.json({success:true,appointments})
-        
+        res.json({ success: true, appointments })
+
     } catch (error) {
         console.log(error);
-        res.json({success: false, message: error.message});
-        
+        res.json({ success: false, message: error.message });
+
     }
 }
 
@@ -352,26 +354,26 @@ const appointmentsAdmin = async (req, res) => {
 const appointmentCancel = async (req, res) => {
     try {
 
-        const { appointmentId} = req.body
+        const { appointmentId } = req.body
         const appointmentData = await appointmentModel.findById(appointmentId)
 
-       
 
-        await appointmentModel.findByIdAndUpdate(appointmentId, {cancelled:true})
+
+        await appointmentModel.findByIdAndUpdate(appointmentId, { cancelled: true })
 
         //releasing doctor slot
-        const {docId, slotDate, slotTime} = appointmentData
+        const { docId, slotDate, slotTime } = appointmentData
         const doctorData = await doctorModel.findById(docId)
 
         let slots_booked = doctorData.slots_booked
-        slots_booked[slotDate] = slots_booked[slotDate].filter(e=> e !== slotTime)
+        slots_booked[slotDate] = slots_booked[slotDate].filter(e => e !== slotTime)
 
-        await doctorModel.findByIdAndUpdate(docId, {slots_booked})
-        res.json({success:true, message:'Appointment Cancelled'})
+        await doctorModel.findByIdAndUpdate(docId, { slots_booked })
+        res.json({ success: true, message: 'Appointment Cancelled' })
 
     } catch (error) {
         console.log(error);
-        res.json({success: false, message: error.message})
+        res.json({ success: false, message: error.message })
     }
 }
 
@@ -385,18 +387,18 @@ const adminDashboard = async (req, res) => {
         const users = await userModel.find({})
         const appointments = await appointmentModel.find({})
 
-        const  dashData = {
+        const dashData = {
             doctors: doctors.length,
             appointments: appointments.length,
             patients: users.length,
-            latestAppointments: appointments.reverse().slice(0,5)
+            latestAppointments: appointments.reverse().slice(0, 5)
         }
 
-        res.json({success: true, dashData})
+        res.json({ success: true, dashData })
 
     } catch (error) {
         console.log(error);
-        res.json({success: false, message: error.message})
+        res.json({ success: false, message: error.message })
     }
 
 }
@@ -467,4 +469,177 @@ const getAllUsers = async (req, res) => {
     }
 };
 
-export {addDoctor, loginAdmin, allDoctors, appointmentsAdmin, appointmentCancel, adminDashboard, logoutAdmin, refreshTokenAdmin, registerUser, getAllUsers };
+// New API: Create an article
+const createArticle = async (req, res) => {
+    try {
+        console.log('createArticle: Request headers:', req.headers);
+        console.log('createArticle: Request body:', req.body);
+        console.log('createArticle: Request file:', req.file);
+
+        const { title, description } = req.body;
+        const imageFile = req.file;
+
+        if (!title || !description) {
+            return res.status(400).json({ success: false, message: 'Title and description are required' });
+        }
+
+        let imageUrl = '';
+        if (imageFile) {
+            console.log('Uploading image to Cloudinary');
+            const result = await new Promise((resolve, reject) => {
+                const uploadStream = cloudinary.uploader.upload_stream(
+                    { resource_type: 'image', folder: 'articles' },
+                    (error, result) => {
+                        if (error) reject(error);
+                        else resolve(result);
+                    }
+                );
+                uploadStream.end(imageFile.buffer);
+            });
+            imageUrl = result.secure_url;
+            console.log('Cloudinary upload success:', imageUrl);
+        }
+
+        const articleData = {
+            title,
+            description,
+            image: imageUrl,
+            author: process.env.ADMIN_EMAIL // Assuming admin email as author
+        };
+
+        const newArticle = new articleModel(articleData);
+        await newArticle.save();
+
+        res.status(201).json({ success: true, message: 'Article created successfully', article: newArticle });
+    } catch (error) {
+        console.log('Error in createArticle:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// New API: Get all articles
+const getAllArticles = async (req, res) => {
+    try {
+        const articles = await articleModel.find({}).sort({ createdAt: -1 });
+        res.json({ success: true, articles });
+    } catch (error) {
+        console.log('Error in getAllArticles:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// New API: Get article by ID
+const getArticleById = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const article = await articleModel.findById(id);
+        if (!article) {
+            return res.status(404).json({ success: false, message: 'Article not found' });
+        }
+        res.json({ success: true, article });
+    } catch (error) {
+        console.log('Error in getArticleById:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// New API: Update an article
+const updateArticle = async (req, res) => {
+    try {
+        console.log('updateArticle: Request headers:', req.headers);
+        console.log('updateArticle: Request body:', req.body);
+        console.log('updateArticle: Request file:', req.file);
+
+        const { id } = req.params;
+        const { title, description } = req.body;
+        const imageFile = req.file;
+
+        if (!title || !description) {
+            return res.status(400).json({ success: false, message: 'Title and description are required' });
+        }
+
+        const updateData = {
+            title,
+            description
+        };
+
+        if (imageFile) {
+            console.log('Uploading new image to Cloudinary');
+            const result = await new Promise((resolve, reject) => {
+                const uploadStream = cloudinary.uploader.upload_stream(
+                    { resource_type: 'image', folder: 'articles' },
+                    (error, result) => {
+                        if (error) reject(error);
+                        else resolve(result);
+                    }
+                );
+                uploadStream.end(imageFile.buffer);
+            });
+            updateData.image = result.secure_url;
+            console.log('Cloudinary upload success:', updateData.image);
+        }
+
+        const updatedArticle = await articleModel.findByIdAndUpdate(id, updateData, { new: true });
+        if (!updatedArticle) {
+            return res.status(404).json({ success: false, message: 'Article not found' });
+        }
+
+        res.json({ success: true, message: 'Article updated successfully', article: updatedArticle });
+    } catch (error) {
+        console.log('Error in updateArticle:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// New API: Delete an article
+const deleteArticle = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const article = await articleModel.findByIdAndDelete(id);
+        if (!article) {
+            return res.status(404).json({ success: false, message: 'Article not found' });
+        }
+
+        // Delete associated comments
+        await commentModel.deleteMany({ article: id });
+
+        res.json({ success: true, message: 'Article and associated comments deleted successfully' });
+    } catch (error) {
+        console.log('Error in deleteArticle:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// New API: Delete a comment (admin only)
+const deleteComment = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const comment = await commentModel.findByIdAndDelete(id);
+        if (!comment) {
+            return res.status(404).json({ success: false, message: 'Comment not found' });
+        }
+        res.json({ success: true, message: 'Comment deleted successfully' });
+    } catch (error) {
+        console.log('Error in deleteComment:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+export {
+    addDoctor,
+    loginAdmin,
+    allDoctors,
+    appointmentsAdmin,
+    appointmentCancel,
+    adminDashboard,
+    logoutAdmin,
+    refreshTokenAdmin,
+    registerUser,
+    getAllUsers,
+    createArticle,
+    getAllArticles,
+    getArticleById,
+    updateArticle,
+    deleteArticle,
+    deleteComment
+};

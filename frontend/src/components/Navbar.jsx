@@ -44,6 +44,10 @@ const Navbar = () => {
             <li className='py-1'>{t('navbar.all_doctors')}</li>
             <hr className='border-none outline-none h-0.5 bg-primary w-3/5 m-auto hidden' />
           </NavLink>
+          <NavLink to='/articles'>
+            <li className='py-1'>{t('navbar.articles')}</li>
+            <hr className='border-none outline-none h-0.5 bg-primary w-3/5 m-auto hidden' />
+          </NavLink>
           <NavLink to='/about'>
             <li className='py-1'>{t('navbar.about')}</li>
             <hr className='border-none outline-none h-0.5 bg-primary w-3/5 m-auto hidden' />
@@ -54,7 +58,7 @@ const Navbar = () => {
           </NavLink>
         </ul>
         <div className="relative flex items-center gap-2"> {/* Изменено */}
-          <button onClick={() => setShowLanguageMenu(!showLanguageMenu)} className="block"> 
+          <button onClick={() => setShowLanguageMenu(!showLanguageMenu)} className="block">
             <img src={hideLanguageIcon} alt="Toggle Language" className="h-8 w-8" />
           </button>
           {showLanguageMenu && (
@@ -115,6 +119,9 @@ const Navbar = () => {
             </NavLink>
             <NavLink onClick={() => setShowMenu(false)} to='/doctors'>
               <p className='px-4 py-2 rounded inline-block'>{t('navbar.all_doctors')}</p>
+            </NavLink>
+            <NavLink onClick={() => setShowMenu(false)} to='/articles'>
+              <p className='px-4 py-2 rounded inline-block'>{t('navbar.articles')}</p>
             </NavLink>
             <NavLink onClick={() => setShowMenu(false)} to='/about'>
               <p className='px-4 py-2 rounded inline-block'>{t('navbar.about')}</p>
