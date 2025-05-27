@@ -16,6 +16,8 @@ import DoctorAppointments from './pages/Doctor/DoctorAppointments';
 import DoctorProfile from './pages/Doctor/DoctorProfile';
 import DoctorMessages from './pages/Doctor/DoctorMessages';
 import UserProfile from './pages/Doctor/UserProfile';
+import AddUser from './pages/Admin/AddUser';
+import UsersList from './pages/Admin/UsersList';
 
 const App = () => {
     const { isAuthenticated: isAdminAuthenticated, loading: adminLoading } = useContext(AdminContext);
@@ -44,6 +46,8 @@ const App = () => {
                             <Route path='/all-appointments' element={<AllAppointments />} />
                             <Route path='/add-doctor' element={<AddDoctor />} />
                             <Route path='/doctor-list' element={<DoctorsList />} />
+                            <Route path='/add-user' element={<AddUser />} />
+                            <Route path='/users-list' element={<UsersList />} />
                             <Route path='*' element={<Navigate to='/admin-dashboard' replace />} />
                         </>
                     ) : isDoctorAuthenticated ? (

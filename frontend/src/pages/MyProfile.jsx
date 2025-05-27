@@ -1,17 +1,18 @@
 import React, { useContext, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import profile_pic from '../assets/profile_pic.png';
-import upload_area from '../assets/upload_area.png';
-import { AppContext } from '../context/AppContext';
 import upload_icon from '../assets/upload_icon.png';
+import { AppContext } from '../context/AppContext';
 import axios from 'axios';
 import { toast } from 'react-toastify';
+import { useNavigate } from 'react-router-dom';
 
-function MyProfile() {
+const MyProfile = () => {
   const { userData, setUserData, backendUrl, loadUserProfileData, medicalRecords, slotDateFormat } = useContext(AppContext);
   const { t } = useTranslation();
   const [isEdit, setIsEdit] = useState(false);
   const [image, setImage] = useState(null);
+  const navigate = useNavigate();
 
   const updateUserProfileData = async () => {
     try {
@@ -28,7 +29,7 @@ function MyProfile() {
         console.log('No image selected');
       }
 
-      const { data } = await axios.post(backendUrl + '/api/user/update-profile', formData, {
+      const { data } = await axios.post(`${backendUrl}/api/user/update-profile`, formData, {
         withCredentials: true,
       });
       console.log('Server response:', data);
@@ -42,7 +43,7 @@ function MyProfile() {
         toast.error(data.message || t('my_profile.update_error'));
       }
     } catch (error) {
-      console.log('Ошибка в updateUserProfileData:', error);
+      console.log('Error in updateUserProfileData:', error);
       toast.error(error.response?.data?.message || t('my_profile.update_error'));
     }
   };
@@ -51,10 +52,9 @@ function MyProfile() {
     try {
       const response = await axios.get(`${backendUrl}${fileUrl}`, {
         withCredentials: true,
-        responseType: 'blob', // Для скачивания файла
+        responseType: 'blob',
       });
 
-      // Создаем ссылку для скачивания
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
@@ -71,18 +71,35 @@ function MyProfile() {
 
   return userData ? (
     <div className='flex flex-col gap-2 text-sm'>
-      {/* Секция профиля */}
+      {/* Profile Section */}
       <div className='max-w-lg'>
         {isEdit ? (
           <label htmlFor="image">
             <div className='inline-block relative cursor-pointer'>
-              <img className='w-36 rounded opacity-75' src={image ? URL.createObjectURL(image) : userData.image || profile_pic} alt="profile" />
-              <img className='w-10 absolute bottom-12 right-12' src={image ? '' : upload_icon} alt="upload" />
+              <img
+                className='w-36 rounded opacity-75'
+                src={image ? URL.createObjectURL(image) : userData.image || profile_pic}
+                alt="profile"
+              />
+              <img
+                className='w-10 absolute bottom-12 right-12'
+                src={image ? '' : upload_icon}
+                alt="upload"
+              />
             </div>
-            <input onChange={(e) => setImage(e.target.files[0])} type="file" id='image' hidden />
+            <input
+              onChange={(e) => setImage(e.target.files[0])}
+              type="file"
+              id='image'
+              hidden
+            />
           </label>
         ) : (
-          <img className='w-36 rounded' src={userData.image || profile_pic} alt="profile" />
+          <img
+            className='w-36 rounded'
+            src={userData.image || profile_pic}
+            alt="profile"
+          />
         )}
         {isEdit ? (
           <input
@@ -167,35 +184,43 @@ function MyProfile() {
           </div>
         </div>
 
-        {/* Кнопка редактирования */}
-        <div className='mt-10'>
+        {/* Buttons */}
+        <div className='mt-10 flex gap-4'>
           {isEdit ? (
             <button
               className='border border-primary px-8 py-2 rounded-full hover:bg-primary hover:text-white transition-all duration-500'
               onClick={updateUserProfileData}
             >
-              {t('my_profile.save_information')}
+              {t('Save')}
             </button>
           ) : (
-            <button
-              className='border border-primary px-8 py-2 rounded-full hover:bg-primary hover:text-white transition-all duration-500'
-              onClick={() => setIsEdit(true)}
-            >
-              {t('my_profile.edit')}
-            </button>
+            <>
+              <button
+                className='border border-primary px-8 py-2 rounded-full hover:bg-primary hover:text-white transition-all duration-500'
+                onClick={() => setIsEdit(true)}
+              >
+                {t('Edit Profile')}
+              </button>
+              <button
+                onClick={() => navigate('/change-password')}
+                className='border border-primary px-8 py-2 rounded-full hover:bg-primary hover:text-white transition-all duration-500'
+              >
+                {t('Change password')}
+              </button>
+            </>
           )}
         </div>
       </div>
 
-      {/* Секция медицинских записей */}
+      {/* Medical Records Section */}
       <div className='m-5'>
-        <h3 className='text-md font-medium mt-5'>Medical History</h3>
+        <h3 className='text-lg font-medium mt-7'>{t('Medical history')}</h3>
         {medicalRecords.length > 0 ? (
           <div className='bg-white border rounded text-sm max-h-[40vh] overflow-y-scroll w-full'>
             <div className='grid grid-cols-[2fr_2fr_1fr] gap-1 py-3 px-6 border-b'>
-              <p>File</p>
-              <p>Appointment</p>
-              <p>Doctor</p>
+              <p>{t('file')}</p>
+              <p>{t('appointment')}</p>
+              <p>{t('doctor')}</p>
             </div>
             {medicalRecords.map((record, index) => (
               <div
@@ -213,18 +238,18 @@ function MyProfile() {
                     ? `${slotDateFormat(record.appointment.slotDate)}, ${record.appointment.slotTime}`
                     : 'N/A'}
                 </p>
-                <p>{record.doctor ? record.doctor.name : 'N/A'}</p>
+                <p>{record.doctor?.name || 'N/A'}</p>
               </div>
             ))}
           </div>
         ) : (
-          <p className='text-gray-500'>No medical records found.</p>
+          <p className='text-gray-500'>{t('No records')}</p>
         )}
       </div>
     </div>
   ) : (
-    <p className='text-gray-500'>{t('my_profile.loading') || 'Loading...'}</p>
+    <p className='text-gray-500'>{t('Loading') || 'Loading...'}</p>
   );
-}
+};
 
 export default MyProfile;

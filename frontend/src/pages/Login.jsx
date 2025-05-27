@@ -5,108 +5,126 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useTranslation } from 'react-i18next';
 
-function Login() {
+const Login = () => {
     const { backendUrl, isAuthenticated, handleAuthSuccess } = useContext(AppContext);
     const navigate = useNavigate();
     const { t } = useTranslation();
 
-    const [state, setState] = useState('Sign Up');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [name, setName] = useState('');
-// hello
+    const [code, setCode] = useState('');
+    const [showCodeInput, setShowCodeInput] = useState(false);
+    const [userId, setUserId] = useState(null);
+    const [loading, setLoading] = useState(false);
+
     const onSubmitHandler = async (event) => {
         event.preventDefault();
-        try {
-            let response;
-            if (state === 'Sign Up') {
-                response = await axios.post(backendUrl + '/api/user/register', { name, password, email }, { withCredentials: true });
-            } else {
-                response = await axios.post(backendUrl + '/api/user/login', { password, email }, { withCredentials: true });
-            }
+        setLoading(true);
 
-            const { data } = response;
-            if (data.success) {
-                toast.success(state === 'Sign Up' ? t('login.signup_success') : t('login.login_success'));
-                await handleAuthSuccess();
-                navigate('/');
+        try {
+            if (!showCodeInput) {
+                // Отправка email и пароля
+                const response = await axios.post(`${backendUrl}/api/user/login`, { email, password }, { withCredentials: true });
+                const { data } = response;
+
+                if (data.success) {
+                    toast.success(t('Code sent') || 'Код подтверждения отправлен на ваш email');
+                    setShowCodeInput(true);
+                    setUserId(data.userId);
+                } else {
+                    toast.error(data.message || t('Error') || 'Ошибка входа');
+                }
             } else {
-                toast.error(data.message || t('login.error'));
+                // Проверка кода подтверждения
+                const response = await axios.post(`${backendUrl}/api/user/verify-code`, { userId, code }, { withCredentials: true });
+                const { data } = response;
+
+                if (data.success) {
+                    toast.success(t('Login success') || 'Вход выполнен успешно');
+                    await handleAuthSuccess();
+                    navigate('/');
+                } else {
+                    toast.error(data.message || t('Invalid code') || 'Неверный или просроченный код');
+                }
             }
         } catch (error) {
-            console.log('Ошибка в onSubmitHandler:', error);
-            const errorMessage = error.response?.data?.message || error.message || t('login.error');
+            console.error('Error in onSubmitHandler:', error);
+            const errorMessage = error.response?.data?.message || t('Error') || 'Произошла ошибка';
             toast.error(errorMessage);
+        } finally {
+            setLoading(false);
         }
     };
 
     useEffect(() => {
         if (isAuthenticated) {
-            navigate('/');
+            navigate('/my-profile');
         }
     }, [isAuthenticated, navigate]);
 
     return (
-        <form onSubmit={onSubmitHandler} className='min-h-[80vh] flex items-center'>
-            <div className='flex flex-col gap-3 m-auto items-start p-8 min-w-[340px] sm:min-w-96 border rounded-xl text-zinc-600 text-sm shadow-lg'>
-                <p className='text-2xl font-semibold'>{state === 'Sign Up' ? t('login.create_account') : t('login.login')}</p>
-                <p>{state === 'Sign Up' ? t('login.signup_prompt') : t('login.login_prompt')}</p>
-                {state === 'Sign Up' && (
+        <div className='min-h-screen flex items-center justify-center'>
+            <form onSubmit={onSubmitHandler} className='flex flex-col gap-4 p-8 bg-white rounded-xl shadow-lg w-full max-w-md'>
+                <h3 className='text-2xl font-semibold text-center'>
+                    {showCodeInput ? t('Email Verify') : t('Login')}
+                </h3>
+                <p className='text-center text-gray-600'>
+                    {showCodeInput ? t('Verify Code') : t('Login')}
+                </p>
+
+                {!showCodeInput ? (
+                    <>
+                        <div className='w-full'>
+                            <label className='block text-sm font-medium text-gray-700'>{t('Email')}</label>
+                            <input
+                                className='mt-1 w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500'
+                                type="email"
+                                onChange={(event) => setEmail(event.target.value)}
+                                value={email}
+                                required
+                                placeholder="example@narxoz.kz"
+                                autoComplete="email"
+                            />
+                        </div>
+                        <div className='w-full'>
+                            <label className='block text-sm font-medium text-gray-700'>{t('Password')}</label>
+                            <input
+                                className='mt-1 w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500'
+                                type="password"
+                                onChange={(event) => setPassword(event.target.value)}
+                                value={password}
+                                required
+                                placeholder="Введите пароль"
+                                autoComplete="password"
+                            />
+                        </div>
+                    </>
+                ) : (
                     <div className='w-full'>
-                        <p>{t('login.full_name')}</p>
+                        <label className='block text-sm font-medium text-gray-700'>{t('Enter verification code')}</label>
                         <input
-                            className='border border-zinc-300 rounded w-full p-2 mt-1'
+                            className='mt-1 w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500'
                             type="text"
-                            onChange={(event) => setName(event.target.value)}
-                            value={name}
+                            onChange={(event) => setCode(event.target.value)}
+                            value={code}
+                            placeholder={t('Enter code') || 'Введите 6-значный код'}
                             required
+                            maxLength={6}
+                            autoComplete="one-time-code"
                         />
                     </div>
                 )}
 
-                <div className='w-full'>
-                    <p>{t('login.email')}</p>
-                    <input
-                        className='border border-zinc-300 rounded w-full p-2 mt-1'
-                        type="email"
-                        onChange={(event) => setEmail(event.target.value)}
-                        value={email}
-                        required
-                        autoComplete="email"
-                    />
-                </div>
-                <div className='w-full'>
-                    <p>{t('login.password')}</p>
-                    <input
-                        className='border border-zinc-300 rounded w-full p-2 mt-1'
-                        type="password"
-                        onChange={(event) => setPassword(event.target.value)}
-                        value={password}
-                        required
-                        autoComplete="current-password"
-                    />
-                </div>
-                <button type='submit' className='bg-primary text-white w-full py-2 rounded-md text-base'>
-                    {state === 'Sign Up' ? t('login.create_account') : t('login.login')}
+                <button
+                    type='submit'
+                    className='w-full bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-indigo'
+                    disabled={loading}
+                >
+                    {loading ? t('Loading') || 'Загрузка...' : (showCodeInput ? t('Verify') : t('Submit'))}
                 </button>
-                {state === 'Sign Up' ? (
-                    <p>
-                        {t('login.already_have_account')}{' '}
-                        <span onClick={() => setState('Login')} className='text-primary underline cursor-pointer'>
-                            {t('login.login')}
-                        </span>
-                    </p>
-                ) : (
-                    <p>
-                        {t('login.create_new_account')}{' '}
-                        <span onClick={() => setState('Sign Up')} className='text-primary underline cursor-pointer'>
-                            {t('login.create_account')}
-                        </span>
-                    </p>
-                )}
-            </div>
-        </form>
+            </form>
+        </div>
     );
-}
+};
 
 export default Login;

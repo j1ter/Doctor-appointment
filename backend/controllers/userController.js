@@ -47,64 +47,49 @@ const setCookies = (res, accessToken, refreshToken) => {
     });
 };
 
-// API to register user
-const registerUser = async (req, res) => {
+// Helper function to generate 6-digit code
+const generateVerificationCode = () => {
+    return Math.floor(100000 + Math.random() * 900000).toString();
+};
+
+// Helper function to send verification code via email
+const sendVerificationCode = async (email, code) => {
     try {
-        const { name, email, password } = req.body;
-        if (!name || !password || !email) {
-            return res.json({ success: false, message: 'Missing Details' });
-        }
-
-        if (!validator.isEmail(email)) {
-            return res.json({ success: false, message: 'Invalid Email' });
-        }
-
-        if (password.length < 8) {
-            return res.json({ success: false, message: 'Your password must be at least 8 characters' });
-        }
-
-        const userExists = await userModel.findOne({ email });
-        if (userExists) {
-            return res.json({ success: false, message: 'User already exists' });
-        }
-
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt);
-
-        const userData = {
-            name,
-            email,
-            password: hashedPassword,
-        };
-
-        const newUser = new userModel(userData);
-        const user = await newUser.save();
-
-        const { accessToken, refreshToken } = generateTokens(user._id);
-        await storeRefreshToken(user._id, refreshToken);
-        setCookies(res, accessToken, refreshToken);
-
-        res.status(201).json({
-            success: true,
-            user: {
-                _id: user._id,
-                name: user.name,
-                email: user.email,
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: process.env.EMAIL,
+                pass: process.env.EMAIL_PASSWORD,
             },
-            message: 'Your account registered successfully!',
         });
+
+        await transporter.sendMail({
+            from: '"Clinic Booking" <your-email@gmail.com>',
+            to: email,
+            subject: 'Verification Code for Login',
+            text: `Your verification code is: ${code}. It is valid for 10 minutes.`,
+            html: `<p>Your verification code is: <strong>${code}</strong>. It is valid for 10 minutes.</p>`,
+        });
+
+        console.log('Verification code sent to:', email);
     } catch (error) {
-        console.log('Error in registerUser:', error);
-        res.json({ success: false, message: error.message });
+        console.error('Error sending verification code:', error);
+        throw new Error('Failed to send verification code');
     }
 };
+
 
 // API for user login
 const loginUser = async (req, res) => {
     try {
         const { email, password } = req.body;
-        const user = await userModel.findOne({ email });
 
+        // Проверка email
+        if (!validator.isEmail(email) || !email.endsWith('@narxoz.kz')) {
+            return res.json({ success: false, message: 'Email must be a valid @narxoz.kz address' });
+        }
+
+        const user = await userModel.findOne({ email });
         if (!user) {
             return res.json({ success: false, message: 'User does not exist' });
         }
@@ -114,6 +99,45 @@ const loginUser = async (req, res) => {
             return res.json({ success: false, message: 'Invalid credentials' });
         }
 
+        // Генерация и отправка кода подтверждения
+        const code = generateVerificationCode();
+        await redis.set(`verify_code:${user._id}`, code, 'EX', 10 * 60); // 10 минут
+        await sendVerificationCode(email, code);
+
+        res.json({
+            success: true,
+            message: 'Verification code sent to your email',
+            userId: user._id,
+        });
+    } catch (error) {
+        console.log('Error in loginUser:', error);
+        res.json({ success: false, message: error.message });
+    }
+};
+
+// API to verify code and complete login
+const verifyCode = async (req, res) => {
+    try {
+        const { userId, code } = req.body;
+
+        if (!userId || !code) {
+            return res.status(400).json({ success: false, message: 'User ID and code are required' });
+        }
+
+        const storedCode = await redis.get(`verify_code:${userId}`);
+        if (!storedCode || storedCode !== code) {
+            return res.status(400).json({ success: false, message: 'Invalid or expired verification code' });
+        }
+
+        const user = await userModel.findById(userId);
+        if (!user) {
+            return res.status(400).json({ success: false, message: 'User not found' });
+        }
+
+        // Удаляем код после успешной проверки
+        await redis.del(`verify_code:${userId}`);
+
+        // Выдаем токены
         const { accessToken, refreshToken } = generateTokens(user._id);
         await storeRefreshToken(user._id, refreshToken);
         setCookies(res, accessToken, refreshToken);
@@ -125,10 +149,10 @@ const loginUser = async (req, res) => {
                 name: user.name,
                 email: user.email,
             },
-            message: 'Login successfully!',
+            message: 'Login successful!',
         });
     } catch (error) {
-        console.log('Error in loginUser:', error);
+        console.log('Error in verifyCode:', error);
         res.json({ success: false, message: error.message });
     }
 };
@@ -266,6 +290,46 @@ const updateProfile = async (req, res) => {
         res.json({ success: true, message: 'Profile Updated' });
     } catch (error) {
         console.log('Error in updateProfile:', error);
+        res.json({ success: false, message: error.message });
+    }
+};
+
+// API to change password
+const changePassword = async (req, res) => {
+    try {
+        const { oldPassword, newPassword, confirmPassword } = req.body;
+        const userId = req.user._id;
+
+        if (!oldPassword || !newPassword || !confirmPassword) {
+            return res.status(400).json({ success: false, message: 'All fields are required' });
+        }
+
+        if (newPassword !== confirmPassword) {
+            return res.status(400).json({ success: false, message: 'New passwords do not match' });
+        }
+
+        if (newPassword.length < 8) {
+            return res.status(400).json({ success: false, message: 'New password must be at least 8 characters' });
+        }
+
+        const user = await userModel.findById(userId);
+        if (!user) {
+            return res.status(400).json({ success: false, message: 'User not found' });
+        }
+
+        const isMatch = await bcrypt.compare(oldPassword, user.password);
+        if (!isMatch) {
+            return res.status(400).json({ success: false, message: 'Incorrect old password' });
+        }
+
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+        await userModel.findByIdAndUpdate(userId, { password: hashedPassword });
+
+        res.json({ success: true, message: 'Password changed successfully' });
+    } catch (error) {
+        console.log('Error in changePassword:', error);
         res.json({ success: false, message: error.message });
     }
 };
@@ -538,4 +602,16 @@ const getUserMedicalRecords = async (req, res) => {
     }
 };
 
-export { registerUser, loginUser, getProfile, updateProfile, bookAppointment, listAppointment, cancelAppointment, logoutUser, refreshToken, getUserMedicalRecords };
+export {
+    loginUser,
+    getProfile,
+    updateProfile,
+    bookAppointment,
+    listAppointment,
+    cancelAppointment,
+    logoutUser,
+    refreshToken,
+    getUserMedicalRecords,
+    verifyCode,
+    changePassword
+};

@@ -10,6 +10,7 @@ const AdminContextProvider = (props) => {
     const [doctors, setDoctors] = useState([]);
     const [appointments, setAppointments] = useState([]);
     const [dashData, setDashData] = useState(false);
+    const [users, setUsers] = useState([]);
 
     // Проверяем авторизацию админа
     const checkAuth = async () => {
@@ -39,6 +40,7 @@ const AdminContextProvider = (props) => {
                 setDoctors([]);
                 setAppointments([]);
                 setDashData(false);
+                setUsers([]);
                 return true;
             } else {
                 toast.error(data.message);
@@ -72,6 +74,25 @@ const AdminContextProvider = (props) => {
             console.error('Error fetching doctors:', error);
             toast.error(error.response?.data?.message || 'Failed to fetch doctors');
             setDoctors([]);
+        }
+    };
+
+    const getAllUsers = async () => {
+        try {
+            const { data } = await axios.get(`${backendUrl}/api/admin/all-users`, {
+                withCredentials: true,
+            });
+            if (data.success && Array.isArray(data.users)) {
+                setUsers(data.users);
+                console.log('Users set:', data.users);
+            } else {
+                toast.error(data.message || 'No users found');
+                setUsers([]);
+            }
+        } catch (error) {
+            console.error('Error fetching users:', error);
+            toast.error(error.response?.data?.message || 'Failed to fetch users');
+            setUsers([]);
         }
     };
 
@@ -121,6 +142,7 @@ const AdminContextProvider = (props) => {
             if (data.success) {
                 toast.success(data.message);
                 getAllAppointments();
+                getDashData();
             } else {
                 toast.error(data.message);
             }
@@ -147,6 +169,26 @@ const AdminContextProvider = (props) => {
         }
     };
 
+    const registerUser = async (userData) => {
+        try {
+            const { data } = await axios.post(`${backendUrl}/api/admin/register-user`, userData, {
+                withCredentials: true,
+            });
+            if (data.success) {
+                toast.success(data.message);
+                getAllUsers();
+                return true;
+            } else {
+                toast.error(data.message);
+                return false;
+            }
+        } catch (error) {
+            console.error('Error registering user:', error);
+            toast.error(error.response?.data?.message || 'Failed to register user');
+            return false;
+        }
+    };
+
     const value = {
         backendUrl,
         isAuthenticated,
@@ -162,9 +204,12 @@ const AdminContextProvider = (props) => {
         dashData,
         setDashData,
         getDashData,
+        users,
+        getAllUsers,
+        registerUser,
     };
 
     return <AdminContext.Provider value={value}>{props.children}</AdminContext.Provider>;
 };
-// hello
+
 export default AdminContextProvider;
