@@ -159,5 +159,10 @@
       "therapist": "Therapist",
   "pediatrician": "Pediatrician",
   "psychologist": "Psychologist",
-  "nurse": "Nurse"
+  "nurse": "Nurse",
+  "messages": "Messages",
+  "my-messages": "Messages",
+  "show-conversations": "Show Conversations", 
+  "hide-conversations": "Hide Conversations", 
+  "back": "Back"
   }

@@ -104,7 +104,7 @@ const Sidebar = () => {
                         }
                     >
                         <img src={assets.message_icon} alt='Messages' className='w-6 mr-2' />
-                        Messages
+                        <p className='messages-text'>Messages</p> {/* Изменено */}
                     </NavLink>
                 </ul>
             )}

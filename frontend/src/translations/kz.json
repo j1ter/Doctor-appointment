@@ -159,5 +159,9 @@
     "therapist": "Терапевт",
   "pediatrician": "Педиатр",
   "psychologist": "Психолог",
-  "nurse": "Медбике"
+  "nurse": "Медбике",
+  "messages": "Хабарламалар",
+  "show-conversations": "Диалогтарды көрсету", 
+  "hide-conversations": "Диалогтарды жасыру",
+  "back": "Артқа" 
 }
