@@ -21,7 +21,7 @@ const Articles = () => {
         setLoading(true);
         try {
             const response = await getAllArticles(page, articlesPerPage);
-            console.log('fetchArticles response:', response); // Логирование для отладки
+            console.log('fetchArticles response:', response);
             setArticles(response.articles || []);
             setTotalPages(response.totalPages || 1);
             setCurrentPage(page);
@@ -41,7 +41,7 @@ const Articles = () => {
                 return;
             }
             const response = await searchArticles(searchQuery, currentPage, articlesPerPage);
-            console.log('handleSearch response:', response); // Логирование для отладки
+            console.log('handleSearch response:', response);
             setArticles(response.articles || []);
             setTotalPages(response.totalPages || 1);
             setCurrentPage(1);
@@ -72,12 +72,12 @@ const Articles = () => {
 
     return (
         <div className='m-5'>
-            <h3 className='text-lg font-medium mb-5'>{t('article.articles_list')}</h3>
-            <form onSubmit={handleSearch} className='mb-5 flex gap-2 max-w-md'>
+            <h3 className='text-lg font-medium mb-5'>{t('articles_list')}</h3>
+            <form onSubmit={handleSearch} className='mb-5 flex gap-2 max-w-md search-form'>
                 <input
                     type='text'
                     className='w-full p-2 border rounded'
-                    placeholder={t('article.search_placeholder') || 'Поиск по заголовку...'}
+                    placeholder={t('search_placeholder')}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                 />
@@ -86,14 +86,14 @@ const Articles = () => {
                     className='bg-primary text-white px-6 py-2 rounded-full'
                     disabled={loading}
                 >
-                    {t('article.search')}
+                    {t('search')}
                 </button>
             </form>
             {loading ? (
-                <p className='text-gray-600'>{t('loading') || 'Загрузка...'}</p>
+                <p className='text-gray-600'>{t('loading')}</p>
             ) : (
                 <>
-                    <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'>
+                    <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 articles-grid'>
                         {articles.length > 0 ? (
                             articles.map((article) => {
                                 const truncatedDescription = article.description.length > 100 
@@ -102,7 +102,7 @@ const Articles = () => {
                                 return (
                                     <div
                                         key={article._id}
-                                        className='bg-white rounded-lg shadow-md p-4 hover:shadow-lg cursor-pointer'
+                                        className='bg-white rounded-lg shadow-md p-4 hover:shadow-lg cursor-pointer article-card'
                                         onClick={() => handleArticleClick(article._id)}
                                     >
                                         {article.image && (
@@ -125,17 +125,17 @@ const Articles = () => {
                                 );
                             })
                         ) : (
-                            <p className='text-gray-500'>{t('article.no_articles') || 'Статьи не найдены'}</p>
+                            <p className='text-gray-500'>{t('no_articles')}</p>
                         )}
                     </div>
                     {totalPages > 1 && (
-                        <div className='mt-8 flex justify-center gap-2'>
+                        <div className='mt-8 flex justify-center gap-2 pagination'>
                             <button
                                 className='px-4 py-2 bg-gray-200 rounded disabled:bg-gray-300'
                                 onClick={() => handlePageChange(currentPage - 1)}
                                 disabled={currentPage === 1}
                             >
-                                {t('article.previous')}
+                                {t('previous')}
                             </button>
                             {[...Array(totalPages).keys()].map((_, i) => {
                                 const page = i + 1;
@@ -154,7 +154,7 @@ const Articles = () => {
                                 onClick={() => handlePageChange(currentPage + 1)}
                                 disabled={currentPage === totalPages}
                             >
-                                {t('article.next')}
+                                {t('next')}
                             </button>
                         </div>
                     )}

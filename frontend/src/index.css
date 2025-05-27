@@ -1,3 +1,4 @@
+/* Existing CSS */
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&subset=cyrillic&display=swap');
 @tailwind base;
 @tailwind components;
@@ -25,7 +26,7 @@ html {
     }
 }
 
-/* Новое: Мобильная адаптация для UserMessages */
+/* Мобильная адаптация для UserMessages */
 @media (max-width: 739px) {
     .conversations-list {
         position: absolute;
@@ -38,5 +39,49 @@ html {
     }
     .chat-container {
         width: 100%;
+    }
+}
+
+/* Стили для меню профиля на мобильных */
+@media (max-width: 739px) {
+  .profile-menu {
+    display: none;
+  }
+  .profile-menu.active {
+    display: block;
+  }
+}
+
+@media (max-width: 739px) {
+    .articles-grid {
+        grid-template-columns: 1fr !important; 
+    }
+    .article-card {
+        padding: 12px !important; 
+    }
+    .article-card img {
+        height: 160px !important; 
+    }
+    .article-card h4 {
+        font-size: 16px !important; 
+    }
+    .article-card p {
+        font-size: 14px !important; 
+    }
+    .search-form {
+        flex-direction: column !important; 
+        gap: 8px !important;
+    }
+    .search-form input,
+    .search-form button {
+        width: 100% !important;
+    }
+    .pagination {
+        flex-wrap: wrap !important;
+        gap: 4px !important;
+    }
+    .pagination button {
+        padding: 8px 12px !important; 
+        font-size: 14px !important;
     }
 }

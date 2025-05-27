@@ -33,10 +33,10 @@ const Appointment = () => {
   const [error, setError] = useState(null);
 
   const specialityMap = {
-    'Therapist': 'doctors.therapist',
-    'Pediatrician': 'doctors.pediatrician',
-    'Psychologist': 'doctors.psychologist',
-    'Nurse': 'doctors.nurse'
+    'Therapist': 'therapist',
+    'Pediatrician': 'pediatrician',
+    'Psychologist': 'psychologist',
+    'Nurse': 'nurse'
   };
 
   const fetchDocInfo = async () => {

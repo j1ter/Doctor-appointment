@@ -28,11 +28,11 @@ const Login = () => {
                 const { data } = response;
 
                 if (data.success) {
-                    toast.success(t('Code sent') || 'Код подтверждения отправлен на ваш email');
+                    toast.success(t('login.code_sent') || 'Код подтверждения отправлен на ваш email');
                     setShowCodeInput(true);
                     setUserId(data.userId);
                 } else {
-                    toast.error(data.message || t('Error') || 'Ошибка входа');
+                    toast.error(data.message || t('login.error') || 'Ошибка входа');
                 }
             } else {
                 // Проверка кода подтверждения
@@ -40,16 +40,16 @@ const Login = () => {
                 const { data } = response;
 
                 if (data.success) {
-                    toast.success(t('Login success') || 'Вход выполнен успешно');
+                    toast.success(t('login.login_success') || 'Вход выполнен успешно');
                     await handleAuthSuccess();
                     navigate('/');
                 } else {
-                    toast.error(data.message || t('Invalid code') || 'Неверный или просроченный код');
+                    toast.error(data.message || t('login.invalid_code') || 'Неверный или просроченный код');
                 }
             }
         } catch (error) {
             console.error('Error in onSubmitHandler:', error);
-            const errorMessage = error.response?.data?.message || t('Error') || 'Произошла ошибка';
+            const errorMessage = error.response?.data?.message || t('login.error') || 'Произошла ошибка';
             toast.error(errorMessage);
         } finally {
             setLoading(false);
@@ -66,16 +66,16 @@ const Login = () => {
         <div className='min-h-screen flex items-center justify-center'>
             <form onSubmit={onSubmitHandler} className='flex flex-col gap-4 p-8 bg-white rounded-xl shadow-lg w-full max-w-md'>
                 <h3 className='text-2xl font-semibold text-center'>
-                    {showCodeInput ? t('Email Verify') : t('Login')}
+                    {showCodeInput ? t('login.email_verify') : t('login.login')}
                 </h3>
                 <p className='text-center text-gray-600'>
-                    {showCodeInput ? t('Verify Code') : t('Login')}
+                    {showCodeInput ? t('login.verify_code') : t('login.login')}
                 </p>
 
                 {!showCodeInput ? (
                     <>
                         <div className='w-full'>
-                            <label className='block text-sm font-medium text-gray-700'>{t('Email')}</label>
+                            <label className='block text-sm font-medium text-gray-700'>{t('login.email')}</label>
                             <input
                                 className='mt-1 w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500'
                                 type="email"
@@ -87,7 +87,7 @@ const Login = () => {
                             />
                         </div>
                         <div className='w-full'>
-                            <label className='block text-sm font-medium text-gray-700'>{t('Password')}</label>
+                            <label className='block text-sm font-medium text-gray-700'>{t('login.password')}</label>
                             <input
                                 className='mt-1 w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500'
                                 type="password"
@@ -101,13 +101,13 @@ const Login = () => {
                     </>
                 ) : (
                     <div className='w-full'>
-                        <label className='block text-sm font-medium text-gray-700'>{t('Enter verification code')}</label>
+                        <label className='block text-sm font-medium text-gray-700'>{t('login.enter_verification_code')}</label>
                         <input
                             className='mt-1 w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500'
                             type="text"
                             onChange={(event) => setCode(event.target.value)}
                             value={code}
-                            placeholder={t('Enter code') || 'Введите 6-значный код'}
+                            placeholder={t('login.enter_code') || 'Введите 6-значный код'}
                             required
                             maxLength={6}
                             autoComplete="one-time-code"
@@ -120,7 +120,7 @@ const Login = () => {
                     className='w-full bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-indigo'
                     disabled={loading}
                 >
-                    {loading ? t('Loading') || 'Загрузка...' : (showCodeInput ? t('Verify') : t('Submit'))}
+                    {loading ? t('loading') || 'Загрузка...' : (showCodeInput ? t('login.verify') : t('login.submit'))}
                 </button>
             </form>
         </div>
