@@ -2,21 +2,20 @@ import express from 'express';
 import {
      addDoctor,
      allDoctors,
-      loginAdmin,
-       appointmentsAdmin,
-        appointmentCancel,
-         adminDashboard,
-          logoutAdmin,
-           refreshTokenAdmin,
-            registerUser,
-             getAllUsers,
-             createArticle,
-             getAllArticles,
-             getArticleById,
-             updateArticle,
-             deleteArticle,
-             deleteComment
-             } from '../controllers/adminController.js';
+     loginAdmin,
+     appointmentsAdmin,
+     appointmentCancel,
+     adminDashboard,
+     logoutAdmin,
+     refreshTokenAdmin,
+     getAllUsers,
+     createArticle,
+     getAllArticles,
+     getArticleById,
+     updateArticle,
+     deleteArticle,
+     deleteComment
+} from '../controllers/adminController.js';
 import upload from '../middlewares/multer.js';
 import authAdmin from '../middlewares/authAdmin.js';
 import debugMiddleware from '../middlewares/debugMiddleware.js';
@@ -34,7 +33,6 @@ adminRouter.post('/change-availability', authAdmin, changeAvailabity);
 adminRouter.get('/appointments', authAdmin, appointmentsAdmin);
 adminRouter.post('/cancel-appointment', authAdmin, appointmentCancel);
 adminRouter.get('/dashboard', authAdmin, adminDashboard);
-adminRouter.post('/register-user', authAdmin, registerUser); // Новый маршрут
 adminRouter.get('/all-users', authAdmin, getAllUsers);
 
 // New article routes

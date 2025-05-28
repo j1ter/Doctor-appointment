@@ -310,25 +310,6 @@ const AdminContextProvider = (props) => {
         }
     };
 
-    const registerUser = async (userData) => {
-        try {
-            const { data } = await axios.post(`${backendUrl}/api/admin/register-user`, userData, {
-                withCredentials: true,
-            });
-            if (data.success) {
-                toast.success(data.message);
-                getAllUsers();
-                return true;
-            } else {
-                toast.error(data.message);
-                return false;
-            }
-        } catch (error) {
-            console.error('Error registering user:', error);
-            toast.error(error.response?.data?.message || 'Failed to register user');
-            return false;
-        }
-    };
 
     const value = {
         backendUrl,
@@ -347,7 +328,6 @@ const AdminContextProvider = (props) => {
         getDashData,
         users,
         getAllUsers,
-        registerUser,
         articles,
         getAllArticles,
         getArticleById,

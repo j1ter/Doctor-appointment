@@ -1,5 +1,6 @@
 import express from 'express';
 import {
+    registerUser,
     loginUser,
     getProfile,
     updateProfile,
@@ -14,6 +15,7 @@ import {
     getAllArticles,
     getArticleById,
     searchArticles
+    
 
 } from '../controllers/userController.js';
 import {
@@ -29,6 +31,7 @@ import { sendMessage, getMessages } from '../controllers/messageController.js';
 
 const userRouter = express.Router();
 
+userRouter.post('/register', registerUser); // Новый маршрут
 userRouter.post('/login', loginUser);
 userRouter.post('/logout', authUser, logoutUser);
 userRouter.post('/refresh-token', refreshToken);

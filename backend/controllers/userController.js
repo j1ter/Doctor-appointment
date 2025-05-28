@@ -79,6 +79,63 @@ const sendVerificationCode = async (email, code) => {
     }
 };
 
+// API for user registration
+const registerUser = async (req, res) => {
+    try {
+        const { name, email, password } = req.body;
+
+        // Проверка обязательных полей
+        if (!name || !email || !password) {
+            return res.status(400).json({ success: false, message: 'Missing required fields' });
+        }
+
+        // Проверка формата email и домена @narxoz.kz
+        if (!validator.isEmail(email) || !email.endsWith('@narxoz.kz')) {
+            return res.status(400).json({ success: false, message: 'Email must be a valid @narxoz.kz address' });
+        }
+
+        // Проверка длины пароля
+        if (password.length < 8) {
+            return res.status(400).json({ success: false, message: 'Password must be at least 8 characters' });
+        }
+
+        // Проверка, существует ли пользователь
+        const userExists = await userModel.findOne({ email });
+        if (userExists) {
+            return res.status(400).json({ success: false, message: 'User already exists' });
+        }
+
+        // Хеширование пароля
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+
+        // Создание нового пользователя (без активации пока)
+        const userData = {
+            name,
+            email,
+            password: hashedPassword,
+            isVerified: false // Поле для отслеживания верификации
+        };
+
+        const newUser = new userModel(userData);
+        const user = await newUser.save();
+
+        // Генерация и отправка кода подтверждения
+        const code = generateVerificationCode();
+        await redis.set(`verify_code:${user._id}`, code, 'EX', 10 * 60); // 10 минут
+        await sendVerificationCode(email, code);
+
+        res.status(201).json({
+            success: true,
+            message: 'Verification code sent to your email',
+            userId: user._id
+        });
+    } catch (error) {
+        console.log('Error in registerUser:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
 
 // API for user login
 const loginUser = async (req, res) => {
@@ -116,7 +173,7 @@ const loginUser = async (req, res) => {
     }
 };
 
-// API to verify code and complete login
+// API to verify code and complete login or registration
 const verifyCode = async (req, res) => {
     try {
         const { userId, code } = req.body;
@@ -135,6 +192,11 @@ const verifyCode = async (req, res) => {
             return res.status(400).json({ success: false, message: 'User not found' });
         }
 
+        // Если пользователь не верифицирован (регистрация), активируем аккаунт
+        if (!user.isVerified) {
+            await userModel.findByIdAndUpdate(userId, { isVerified: true });
+        }
+
         // Удаляем код после успешной проверки
         await redis.del(`verify_code:${userId}`);
 
@@ -150,7 +212,7 @@ const verifyCode = async (req, res) => {
                 name: user.name,
                 email: user.email,
             },
-            message: 'Login successful!',
+            message: 'Action completed successfully!',
         });
     } catch (error) {
         console.log('Error in verifyCode:', error);
@@ -672,6 +734,7 @@ const getArticleById = async (req, res) => {
 };
 
 export {
+    registerUser,
     loginUser,
     getProfile,
     updateProfile,

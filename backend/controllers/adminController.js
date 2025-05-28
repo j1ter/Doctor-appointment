@@ -403,60 +403,6 @@ const adminDashboard = async (req, res) => {
 
 }
 
-// API to register user by admin
-const registerUser = async (req, res) => {
-    try {
-        const { name, email, password } = req.body;
-
-        // Проверка обязательных полей
-        if (!name || !email || !password) {
-            return res.status(400).json({ success: false, message: 'Missing required fields' });
-        }
-
-        // Проверка формата email и домена @narxoz.kz
-        if (!validator.isEmail(email) || !email.endsWith('@narxoz.kz')) {
-            return res.status(400).json({ success: false, message: 'Email must be a valid @narxoz.kz address' });
-        }
-
-        // Проверка длины пароля
-        if (password.length < 8) {
-            return res.status(400).json({ success: false, message: 'Password must be at least 8 characters' });
-        }
-
-        // Проверка, существует ли пользователь
-        const userExists = await userModel.findOne({ email });
-        if (userExists) {
-            return res.status(400).json({ success: false, message: 'User already exists' });
-        }
-
-        // Хеширование пароля
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt);
-
-        // Создание нового пользователя
-        const userData = {
-            name,
-            email,
-            password: hashedPassword,
-        };
-
-        const newUser = new userModel(userData);
-        const user = await newUser.save();
-
-        res.status(201).json({
-            success: true,
-            user: {
-                _id: user._id,
-                name: user.name,
-                email: user.email,
-            },
-            message: 'User registered successfully!',
-        });
-    } catch (error) {
-        console.log('Error in registerUser:', error);
-        res.status(500).json({ success: false, message: error.message });
-    }
-};
 
 // API to get all users for admin panel
 const getAllUsers = async (req, res) => {
@@ -634,7 +580,6 @@ export {
     adminDashboard,
     logoutAdmin,
     refreshTokenAdmin,
-    registerUser,
     getAllUsers,
     createArticle,
     getAllArticles,
