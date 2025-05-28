@@ -35,11 +35,11 @@ const Article = () => {
     const handleCommentSubmit = async (e) => {
         e.preventDefault();
         if (!isAuthenticated) {
-            toast.error(t('article.login_to_comment') || 'Войдите, чтобы оставить комментарий');
+            toast.error(t('login_to_comment'));
             return;
         }
         if (!newComment.trim()) {
-            toast.error(t('article.comment_empty') || 'Комментарий не может быть пустым');
+            toast.error(t('comment_empty'));
             return;
         }
 
@@ -58,13 +58,13 @@ const Article = () => {
     const handleSubmitEdit = async (e) => {
         e.preventDefault();
         if (!editCommentText.trim()) {
-            toast.error(t('article.comment_empty') || 'Комментарий не может быть пустым');
+            toast.error(t('comment_empty'));
             return;
         }
 
         const updatedComment = await updateComment(editingCommentId, editCommentText);
         if (updatedComment) {
-            console.log('Updated comment:', updatedComment); // Логирование для отладки
+            console.log('Updated comment:', updatedComment);
             setComments(comments.map((c) => (c._id === editingCommentId ? updatedComment : c)));
             setEditingCommentId(null);
             setEditCommentText('');
@@ -72,7 +72,7 @@ const Article = () => {
     };
 
     const handleDeleteComment = async (commentId) => {
-        if (window.confirm(t('article.delete_confirm') || 'Вы уверены, что хотите удалить комментарий?')) {
+        if (window.confirm(t('delete_confirm'))) {
             const success = await deleteComment(commentId);
             if (success) {
                 setComments(comments.filter((c) => c._id !== commentId));
@@ -80,7 +80,6 @@ const Article = () => {
         }
     };
 
-    // Форматирование даты в ДД.ММ.ГГГГ
     const formatDate = (date) => {
         const d = new Date(date);
         const day = String(d.getDate()).padStart(2, '0');
@@ -90,11 +89,11 @@ const Article = () => {
     };
 
     if (loading) {
-        return <div className='m-10 text-center'>{t('loading') || 'Загрузка...'}</div>;
+        return <div className='m-10 text-center'>{t('loading')}</div>;
     }
 
     if (!article) {
-        return <div className='m-10 text-center'>{t('article.not_found') || 'Статья не найдена'}</div>;
+        return <div className='m-10 text-center'>{t('not_found')}</div>;
     }
 
     return (
@@ -114,13 +113,13 @@ const Article = () => {
                 </p>
 
                 <div className='mt-8'>
-                    <h3 className='text-lg font-medium mb-4'>{t('article.comments')}</h3>
+                    <h3 className='text-lg font-medium mb-4'>{t('comments')}</h3>
                     {isAuthenticated && (
                         <form onSubmit={handleCommentSubmit} className='mb-6'>
                             <textarea
                                 rows='4'
                                 className='w-full p-2 border rounded'
-                                placeholder={t('article.comment_placeholder') || 'Ваш комментарий...'}
+                                placeholder={t('comment_placeholder')}
                                 value={newComment}
                                 onChange={(e) => setNewComment(e.target.value)}
                             />
@@ -128,7 +127,7 @@ const Article = () => {
                                 type='submit'
                                 className='bg-primary text-white px-6 py-2 rounded-full mt-2'
                             >
-                                {t('article.add_comment')}
+                                {t('add_comment')}
                             </button>
                         </form>
                     )}
@@ -152,14 +151,14 @@ const Article = () => {
                                                     type='submit'
                                                     className='bg-primary text-white px-4 py-1 rounded-full'
                                                 >
-                                                    {t('article.save')}
+                                                    {t('save')}
                                                 </button>
                                                 <button
                                                     type='button'
                                                     onClick={() => setEditingCommentId(null)}
                                                     className='bg-gray-400 text-white px-4 py-1 rounded-full'
                                                 >
-                                                    {t('article.cancel')}
+                                                    {t('cancel')}
                                                 </button>
                                             </div>
                                         </form>
@@ -172,7 +171,7 @@ const Article = () => {
                                                 {comment.edited && (
                                                     <span>
                                                         {' '}
-                                                        ({t('article.edited_at')} {formatDate(comment.editedAt)})
+                                                        ({t('edited_at')} {formatDate(comment.editedAt)})
                                                     </span>
                                                 )}
                                             </p>
@@ -184,20 +183,20 @@ const Article = () => {
                                                 onClick={() => handleEditComment(comment)}
                                                 className='bg-primary text-white px-3 py-1 rounded-full text-sm'
                                             >
-                                                {t('article.edit')}
+                                                {t('edit')}
                                             </button>
                                             <button
                                                 onClick={() => handleDeleteComment(comment._id)}
                                                 className='bg-red-600 text-white px-3 py-1 rounded-full text-sm'
                                             >
-                                                {t('article.delete')}
+                                                {t('delete')}
                                             </button>
                                         </div>
                                     )}
                                 </div>
                             ))
                         ) : (
-                            <p className='text-gray-500 p-4'>{t('article.no_comments') || 'Комментариев нет'}</p>
+                            <p className='text-gray-500 p-4'>{t('no_comments')}</p>
                         )}
                     </div>
                 </div>

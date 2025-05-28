@@ -53,13 +53,13 @@ const ArticleDetails = () => {
         setLoading(true);
 
         if (editData.title.length > 200) {
-            toast.error(t('article.title_too_long') || 'Заголовок не должен превышать 200 символов');
+            toast.error(t('title_too_long') || 'Заголовок не должен превышать 200 символов');
             setLoading(false);
             return;
         }
 
         if (!editData.description) {
-            toast.error(t('article.description_required') || 'Описание обязательно');
+            toast.error(t('description_required') || 'Описание обязательно');
             setLoading(false);
             return;
         }
@@ -75,7 +75,7 @@ const ArticleDetails = () => {
     };
 
     const handleDeleteArticle = async () => {
-        if (window.confirm(t('article.confirm_delete') || 'Вы уверены, что хотите удалить статью?')) {
+        if (window.confirm(t('confirm_delete') || 'Вы уверены, что хотите удалить статью?')) {
             const success = await deleteArticle(id);
             if (success) {
                 navigate('/articles-list');
@@ -84,7 +84,7 @@ const ArticleDetails = () => {
     };
 
     const handleDeleteComment = async (commentId) => {
-        if (window.confirm(t('article.confirm_delete_comment') || 'Вы уверены, что хотите удалить комментарий?')) {
+        if (window.confirm(t('confirm_delete_comment') || 'Вы уверены, что хотите удалить комментарий?')) {
             const success = await deleteComment(commentId);
             if (success) {
                 setComments(comments.filter((comment) => comment._id !== commentId));
@@ -101,7 +101,7 @@ const ArticleDetails = () => {
     };
 
     if (!article && !loading) {
-        return <p className='m-5 text-gray-600'>{t('article.not_found') || 'Статья не найдена'}</p>;
+        return <p className='m-5 text-gray-600'>{t('not_found') || 'Статья не найдена'}</p>;
     }
 
     return (
@@ -111,31 +111,32 @@ const ArticleDetails = () => {
                     <p className='text-gray-600'>{t('loading') || 'Загрузка...'}</p>
                 ) : isEditing ? (
                     <div>
-                        <h3 className='text-lg font-medium mb-5'>{t('article.edit_article')}</h3>
+                        <h3 className='text-lg font-medium mb-5'>{t('edit_article')}</h3>
                         <form onSubmit={handleEditSubmit} className='flex flex-wrap gap-5'>
                             <div className='w-full'>
-                                <p className='mb-2 text-gray-600'>{t('article.title')}</p>
+                                <p className='mb-2 text-gray-600'>{t('title')}</p>
                                 <input
                                     type='text'
                                     className='w-full p-2 border rounded'
                                     value={editData.title}
                                     onChange={(e) => setEditData({ ...editData, title: e.target.value })}
                                     required
-                                    placeholder={t('article.title_placeholder')}
+                                    placeholder={t('title_placeholder')}
                                 />
                             </div>
                             <div className='w-full'>
-                                <p className='mb-2 text-gray-600'>{t('article.description')}</p>
+                                <p className='mb-2 text-gray-600'>{t('description')}</p>
                                 <textarea
                                     className='w-full p-2 border rounded h-40'
                                     value={editData.description}
                                     onChange={(e) => setEditData({ ...editData, description: e.target.value })}
                                     required
-                                    placeholder={t('article.description_placeholder')}
+                                    placeholder={t('description_placeholder')}
+                                    style={{ whiteSpace: 'pre-wrap' }}
                                 />
                             </div>
                             <div className='w-full'>
-                                <p className='mb-2 text-gray-600'>{t('article.image')}</p>
+                                <p className='mb-2 text-gray-600'>{t('image')}</p>
                                 <input
                                     type='file'
                                     accept='image/*'
@@ -156,14 +157,14 @@ const ArticleDetails = () => {
                                     className='bg-primary text-white px-10 py-2 mt-5 rounded-full disabled:bg-gray-400'
                                     disabled={loading}
                                 >
-                                    {loading ? t('loading') : t('article.save')}
+                                    {loading ? t('loading') : t('save')}
                                 </button>
                                 <button
                                     type='button'
                                     className='bg-gray-500 text-white px-10 py-2 mt-5 rounded-full'
                                     onClick={() => setIsEditing(false)}
                                 >
-                                    {t('article.cancel')}
+                                    {t('cancel')}
                                 </button>
                             </div>
                         </form>
@@ -178,32 +179,34 @@ const ArticleDetails = () => {
                                 className='w-full max-w-md rounded mb-5'
                             />
                         )}
-                        <p className='text-gray-600 mb-5'>{article.description}</p>
-                        <p className='text-gray-500 text-sm mb-5'>
-                            {t('article.author')}: {article.author}
+                        <p className='text-gray-600 mb-5' style={{ whiteSpace: 'pre-wrap' }}>
+                            {article.description}
                         </p>
                         <p className='text-gray-500 text-sm mb-5'>
-                            {t('article.created_at')}: {new Date(article.createdAt).toLocaleDateString()}
+                            {t('author')}: {article.author}
                         </p>
                         <p className='text-gray-500 text-sm mb-5'>
-                            {t('article.updated_at')}: {new Date(article.updatedAt).toLocaleDateString()}
+                            {t('created_at')}: {new Date(article.createdAt).toLocaleDateString()}
+                        </p>
+                        <p className='text-gray-500 text-sm mb-5'>
+                            {t('updated_at')}: {new Date(article.updatedAt).toLocaleDateString()}
                         </p>
                         <div className='flex gap-4 mb-5'>
                             <button
                                 className='bg-primary text-white px-10 py-2 rounded-full'
                                 onClick={() => setIsEditing(true)}
                             >
-                                {t('article.edit')}
+                                {t('edit')}
                             </button>
                             <button
                                 className='bg-red-600 text-white px-10 py-2 rounded-full'
                                 onClick={handleDeleteArticle}
                             >
-                                {t('article.delete')}
+                                {t('delete')}
                             </button>
                         </div>
 
-                        <h4 className='text-lg font-medium mb-3'>{t('article.comments')}</h4>
+                        <h4 className='text-lg font-medium mb-3'>{t('comments')}</h4>
                         <div className='bg-white border rounded text-sm max-h-[40vh] overflow-y-scroll'>
                             {comments.length > 0 ? (
                                 comments.map((comment) => (
@@ -214,14 +217,14 @@ const ArticleDetails = () => {
                                         <div>
                                             <p className='text-gray-600'>{comment.content}</p>
                                             <p className='text-gray-500 text-xs'>
-                                                {t('article.comment_by')}: {comment.user.name} ({comment.user.email})
+                                                {t('comment_by')}: {comment.user.name} ({comment.user.email})
                                             </p>
                                             <p className='text-gray-500 text-xs'>
-                                                {t('article.comment_date')}: {new Date(comment.createdAt).toLocaleDateString()}
+                                                {t('comment_date')}: {new Date(comment.createdAt).toLocaleDateString()}
                                                 {comment.edited && (
                                                     <span>
                                                         {' '}
-                                                        ({t('article.edited_at')} {new Date(comment.editedAt).toLocaleDateString()})
+                                                        ({t('edited_at')} {new Date(comment.editedAt).toLocaleDateString()})
                                                     </span>
                                                 )}
                                             </p>
@@ -230,12 +233,12 @@ const ArticleDetails = () => {
                                             className='text-red-600 hover:underline'
                                             onClick={() => handleDeleteComment(comment._id)}
                                         >
-                                            {t('article.delete_comment')}
+                                            {t('delete_comment')}
                                         </button>
                                     </div>
                                 ))
                             ) : (
-                                <p className='text-gray-500 px-6 py-3'>{t('article.no_comments')}</p>
+                                <p className='text-gray-500 px-6 py-3'>{t('no_comments')}</p>
                             )}
                         </div>
                     </div>
