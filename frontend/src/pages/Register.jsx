@@ -25,14 +25,12 @@ const Register = () => {
 
         try {
             if (!showCodeInput) {
-                // Проверка паролей
                 if (password !== confirmPassword) {
-                    toast.error(t('password_mismatch') || 'Пароли не совпадают');
+                    toast.error(t('login.passwordMismatch') || 'Passwords do not match');
                     setLoading(false);
                     return;
                 }
 
-                // Отправка данных для регистрации
                 const response = await axios.post(`${backendUrl}/api/user/register`, {
                     name,
                     email,
@@ -41,14 +39,13 @@ const Register = () => {
                 const { data } = response;
 
                 if (data.success) {
-                    toast.success(t('code_sent') || 'Код подтверждения отправлен на ваш email');
+                    toast.success(t('login.codeSent') || 'Verification code sent to your email');
                     setShowCodeInput(true);
                     setUserId(data.userId);
                 } else {
-                    toast.error(data.message || t('error') || 'Ошибка регистрации');
+                    toast.error(data.message || t('login.error') || 'Registration failed');
                 }
             } else {
-                // Проверка кода подтверждения
                 const response = await axios.post(`${backendUrl}/api/user/verify-code`, {
                     userId,
                     code
@@ -56,20 +53,24 @@ const Register = () => {
                 const { data } = response;
 
                 if (data.success) {
-                    toast.success(t('register_success') || 'Регистрация завершена успешно');
+                    toast.success(t('login.registerSuccess') || 'Registration completed successfully');
                     await handleAuthSuccess();
                     navigate('/');
                 } else {
-                    toast.error(data.message || t('invalid_code') || 'Неверный или просроченный код');
+                    toast.error(data.message || t('login.invalidCode') || 'Invalid or expired code');
                 }
             }
         } catch (error) {
-            console.error('Error in onSubmitHandler:', error);
-            const errorMessage = error.response?.data?.message || t('error') || 'Произошла ошибка';
+            const errorMessage = error.response?.data?.message || t('login.error') || 'An error occurred';
             toast.error(errorMessage);
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleBack = () => {
+        setShowCodeInput(false);
+        setCode('');
     };
 
     useEffect(() => {
@@ -79,75 +80,85 @@ const Register = () => {
     }, [isAuthenticated, navigate]);
 
     return (
-        <div className='min-h-screen flex items-center justify-center'>
-            <form onSubmit={onSubmitHandler} className='flex flex-col gap-4 p-8 bg-white rounded-xl shadow-lg w-full max-w-md'>
-                <h3 className='text-2xl font-semibold text-center'>
-                    {showCodeInput ? t('email_verify') : t('register')}
+        <div className='min-h-screen flex items-center justify-center bg-gray-50 px-4'>
+            <form onSubmit={onSubmitHandler} className='w-full max-w-md bg-white rounded-2xl shadow-lg p-6 sm:p-8 space-y-6 auth-form'>
+                <h3 className='text-2xl font-semibold text-center text-gray-800'>
+                    {showCodeInput ? t('login.emailVerify') : t('login.register')}
                 </h3>
-                <p className='text-center text-gray-600'>
-                    {showCodeInput ? t('verify_code') : t('create_account')}
+                <p className='text-center text-sm text-gray-500'>
+                    {showCodeInput ? t('login.verifyCode') : t('login.createAccount')}
                 </p>
 
                 {!showCodeInput ? (
-                    <>
-                        <div className='w-full'>
-                            <label className='block text-sm font-medium text-gray-700'>{t('name')}</label>
+                    <div className='space-y-4'>
+                        <div>
+                            <label className='block text-sm font-medium text-gray-700 mb-1'>
+                                {t('login.name')}
+                            </label>
                             <input
-                                className='mt-1 w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500'
+                                className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition'
                                 type="text"
                                 onChange={(event) => setName(event.target.value)}
                                 value={name}
                                 required
-                                placeholder={t('enter_name') || 'Введите имя'}
+                                placeholder={t('login.enterName') || 'Enter name'}
                                 autoComplete="name"
                             />
                         </div>
-                        <div className='w-full'>
-                            <label className='block text-sm font-medium text-gray-700'>{t('email')}</label>
+                        <div>
+                            <label className='block text-sm font-medium text-gray-700 mb-1'>
+                                {t('login.email')}
+                            </label>
                             <input
-                                className='mt-1 w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500'
+                                className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition'
                                 type="email"
                                 onChange={(event) => setEmail(event.target.value)}
                                 value={email}
                                 required
-                                placeholder="example@narxoz.kz"
+                                placeholder={t('login.emailPlaceholder') || 'example@narxoz.kz'}
                                 autoComplete="email"
                             />
                         </div>
-                        <div className='w-full'>
-                            <label className='block text-sm font-medium text-gray-700'>{t('password')}</label>
+                        <div>
+                            <label className='block text-sm font-medium text-gray-700 mb-1'>
+                                {t('login.password')}
+                            </label>
                             <input
-                                className='mt-1 w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500'
+                                className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition'
                                 type="password"
                                 onChange={(event) => setPassword(event.target.value)}
                                 value={password}
                                 required
-                                placeholder={t('enter_password') || 'Введите пароль'}
+                                placeholder={t('login.enterPassword') || 'Enter password'}
                                 autoComplete="new-password"
                             />
                         </div>
-                        <div className='w-full'>
-                            <label className='block text-sm font-medium text-gray-700'>{t('confirm_password')}</label>
+                        <div>
+                            <label className='block text-sm font-medium text-gray-700 mb-1'>
+                                {t('login.confirmPassword')}
+                            </label>
                             <input
-                                className='mt-1 w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500'
+                                className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition'
                                 type="password"
                                 onChange={(event) => setConfirmPassword(event.target.value)}
                                 value={confirmPassword}
                                 required
-                                placeholder={t('confirm_password') || 'Подтвердите пароль'}
+                                placeholder={t('login.confirmPasswordPlaceholder') || 'Confirm password'}
                                 autoComplete="new-password"
                             />
                         </div>
-                    </>
+                    </div>
                 ) : (
-                    <div className='w-full'>
-                        <label className='block text-sm font-medium text-gray-700'>{t('enter_verification_code')}</label>
+                    <div>
+                        <label className='block text-sm font-medium text-gray-700 mb-1'>
+                            {t('login.enterVerificationCode')}
+                        </label>
                         <input
-                            className='mt-1 w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500'
+                            className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition'
                             type="text"
                             onChange={(event) => setCode(event.target.value)}
                             value={code}
-                            placeholder={t('enter_code') || 'Введите 6-значный код'}
+                            placeholder={t('login.enterCode') || 'Enter 6-digit code'}
                             required
                             maxLength={6}
                             autoComplete="one-time-code"
@@ -157,21 +168,31 @@ const Register = () => {
 
                 <button
                     type='submit'
-                    className='w-full bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-indigo-400'
+                    className='w-full bg-red-600 text-white py-2.5 rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 disabled:bg-red-400 transition font-medium'
                     disabled={loading}
                 >
-                    {loading ? t('loading') || 'Загрузка...' : (showCodeInput ? t('verify') : t('register'))}
+                    {loading ? t('loading') || 'Loading...' : (showCodeInput ? t('login.verify') : t('login.register'))}
                 </button>
+
+                {showCodeInput && (
+                    <button
+                        type='button'
+                        onClick={handleBack}
+                        className='w-full text-red-600 hover:text-red-700 text-sm font-medium text-center'
+                    >
+                        {t('login.back') || 'Back'}
+                    </button>
+                )}
 
                 {!showCodeInput && (
                     <p className='text-center text-sm text-gray-600'>
-                        {t('already_have_account') || 'Уже есть аккаунт?'}{' '}
+                        {t('login.alreadyHaveAccount') || 'Already have an account? '}{' '}
                         <button
                             type='button'
                             onClick={() => navigate('/login')}
-                            className='text-indigo-600 hover:underline'
+                            className='text-red-600 hover:underline font-medium'
                         >
-                            {t('login') || 'Войти'}
+                            {t('login.loginLink') || 'Login'}
                         </button>
                     </p>
                 )}

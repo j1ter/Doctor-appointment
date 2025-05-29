@@ -113,7 +113,9 @@ const Articles = () => {
                                             />
                                         )}
                                         <h4 className='text-lg font-semibold mb-2'>{article.title}</h4>
-                                        <p className='text-gray-600 mb-2'>{truncatedDescription}</p>
+                                        <p className='text-gray-600 mb-2' style={{ whiteSpace: 'pre-wrap' }}>
+                                            {truncatedDescription}
+                                        </p>
                                         <p className='text-gray-500 text-sm'>
                                             {new Date(article.createdAt).toLocaleDateString('ru-RU', {
                                                 day: '2-digit',

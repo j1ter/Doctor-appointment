@@ -23,9 +23,8 @@ const Article = () => {
             if (articleData) {
                 setArticle(articleData);
             }
-
             const commentsData = await getCommentsByArticle(id);
-            setComments(commentsData);
+            setComments(commentsData || []);
             setLoading(false);
         };
 
@@ -35,11 +34,11 @@ const Article = () => {
     const handleCommentSubmit = async (e) => {
         e.preventDefault();
         if (!isAuthenticated) {
-            toast.error(t('login_to_comment'));
+            toast.error(t('login_to_comment_error') || 'Please log in to comment');
             return;
         }
         if (!newComment.trim()) {
-            toast.error(t('comment_empty'));
+            toast.error(t('comment_empty_error') || 'Comment cannot be empty');
             return;
         }
 
@@ -55,16 +54,15 @@ const Article = () => {
         setEditCommentText(comment.content);
     };
 
-    const handleSubmitEdit = async (e) => {
+    const handleEditSubmit = async (e) => {
         e.preventDefault();
         if (!editCommentText.trim()) {
-            toast.error(t('comment_empty'));
+            toast.error(t('comment_empty_error') || 'Comment cannot be empty');
             return;
         }
 
         const updatedComment = await updateComment(editingCommentId, editCommentText);
         if (updatedComment) {
-            console.log('Updated comment:', updatedComment);
             setComments(comments.map((c) => (c._id === editingCommentId ? updatedComment : c)));
             setEditingCommentId(null);
             setEditCommentText('');
@@ -72,7 +70,7 @@ const Article = () => {
     };
 
     const handleDeleteComment = async (commentId) => {
-        if (window.confirm(t('delete_confirm'))) {
+        if (window.confirm(t('comment_confirm_delete') || 'Confirm comment deletion')) {
             const success = await deleteComment(commentId);
             if (success) {
                 setComments(comments.filter((c) => c._id !== commentId));
@@ -89,11 +87,11 @@ const Article = () => {
     };
 
     if (loading) {
-        return <div className='m-10 text-center'>{t('loading')}</div>;
+        return <div className='m-10 text-center'>{t('loading') || 'Loading...'}</div>;
     }
 
     if (!article) {
-        return <div className='m-10 text-center'>{t('not_found')}</div>;
+        return <div className='m-10 text-center'>{t('not_found') || 'Article not found'}</div>;
     }
 
     return (
@@ -107,19 +105,21 @@ const Article = () => {
                         className='w-full max-w-md rounded mb-6'
                     />
                 )}
-                <p className='text-gray-600 mb-4'>{article.description}</p>
-                <p className='text-gray-500 text-sm mb-6'>
+                <p className='text-gray-600 mb-4' style={{ whiteSpace: 'pre-wrap' }}>
+                    {article.description}
+                </p>
+                <p className='text-gray-600 mb-4' style={{ whiteSpace: 'pre-wrap' }}>
                     {formatDate(article.createdAt)}
                 </p>
 
                 <div className='mt-8'>
-                    <h3 className='text-lg font-medium mb-4'>{t('comments')}</h3>
+                    <h3 className='text-lg font-medium mb-4'>{t('comments') || 'Comments'}</h3>
                     {isAuthenticated && (
                         <form onSubmit={handleCommentSubmit} className='mb-6'>
                             <textarea
                                 rows='4'
                                 className='w-full p-2 border rounded'
-                                placeholder={t('comment_placeholder')}
+                                placeholder={t('comment_placeholder') || 'Write a comment...'}
                                 value={newComment}
                                 onChange={(e) => setNewComment(e.target.value)}
                             />
@@ -127,7 +127,7 @@ const Article = () => {
                                 type='submit'
                                 className='bg-primary text-white px-6 py-2 rounded-full mt-2'
                             >
-                                {t('add_comment')}
+                                {t('add_comment') || 'Add Comment'}
                             </button>
                         </form>
                     )}
@@ -139,7 +139,7 @@ const Article = () => {
                                     className='p-4 border-b last:border-b-0 flex justify-between items-start'
                                 >
                                     {editingCommentId === comment._id ? (
-                                        <form onSubmit={handleSubmitEdit} className='flex-1'>
+                                        <form onSubmit={handleEditSubmit} className='flex-1'>
                                             <textarea
                                                 rows='4'
                                                 className='w-full p-2 border rounded mb-2'
@@ -151,14 +151,14 @@ const Article = () => {
                                                     type='submit'
                                                     className='bg-primary text-white px-4 py-1 rounded-full'
                                                 >
-                                                    {t('save')}
+                                                    {t('save') || 'Save'}
                                                 </button>
                                                 <button
                                                     type='button'
                                                     onClick={() => setEditingCommentId(null)}
                                                     className='bg-gray-400 text-white px-4 py-1 rounded-full'
                                                 >
-                                                    {t('cancel')}
+                                                    {t('cancel') || 'Cancel'}
                                                 </button>
                                             </div>
                                         </form>
@@ -171,7 +171,7 @@ const Article = () => {
                                                 {comment.edited && (
                                                     <span>
                                                         {' '}
-                                                        ({t('edited_at')} {formatDate(comment.editedAt)})
+                                                        ({t('edited_at') || 'Edited at'} {formatDate(comment.editedAt)})
                                                     </span>
                                                 )}
                                             </p>
@@ -183,20 +183,20 @@ const Article = () => {
                                                 onClick={() => handleEditComment(comment)}
                                                 className='bg-primary text-white px-3 py-1 rounded-full text-sm'
                                             >
-                                                {t('edit')}
+                                                {t('edit') || 'Edit'}
                                             </button>
                                             <button
                                                 onClick={() => handleDeleteComment(comment._id)}
                                                 className='bg-red-600 text-white px-3 py-1 rounded-full text-sm'
                                             >
-                                                {t('delete')}
+                                                {t('delete') || 'Delete'}
                                             </button>
                                         </div>
                                     )}
                                 </div>
                             ))
                         ) : (
-                            <p className='text-gray-500 p-4'>{t('no_comments')}</p>
+                            <p className='text-gray-500 p-4'>{t('no_comments') || 'No comments'}</p>
                         )}
                     </div>
                 </div>

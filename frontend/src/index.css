@@ -85,3 +85,26 @@ html {
         font-size: 14px !important;
     }
 }
+
+/* New styles for login and register forms */
+.auth-form {
+    @apply transition-all;
+}
+
+@media (max-width: 640px) {
+    .auth-form {
+        @apply p-4; /* Smaller padding on mobile */
+    }
+    .auth-form h3 {
+        @apply text-xl; /* Smaller heading */
+    }
+    .auth-form p {
+        @apply text-xs; /* Smaller subtitle */
+    }
+    .auth-form input {
+        @apply text-sm py-1.5; /* Smaller input fields */
+    }
+    .auth-form button {
+        @apply py-2 text-sm; /* Smaller buttons */
+    }
+}
