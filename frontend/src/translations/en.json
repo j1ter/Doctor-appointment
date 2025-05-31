@@ -31,7 +31,7 @@
     "create_account": "Create account"
   },
   "footer": {
-    "description": "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.",
+    "description": "NarxozMed is your trusted platform for booking appointments with top doctors and managing your healthcare needs efficiently.",
     "company": "Company",
     "home": "Home",
     "about": "About us",
@@ -84,21 +84,35 @@
     "cancel_success": "Appointment cancelled successfully",
     "cancel_error": "Failed to cancel appointment"
   },
-  "my_profile": {
-    "contact_info": "Contact Information",
-    "email": "Email id:",
-    "phone": "Phone:",
-    "address": "Address:",
-    "basic_info": "Basic Information",
-    "gender": "Gender:",
-    "birthday": "Birthday:",
-    "male": "Male",
-    "female": "Female",
-    "edit": "Edit",
-    "save_information": "Save information",
-    "update_success": "Profile updated successfully",
-    "update_error": "Failed to update profile"
-  },
+"my_profile": {
+  "contact_info": "Contact Information",
+  "email": "Email ID:",
+  "email_id": "Email ID:",
+  "phone": "Phone:",
+  "phone_label": "Phone:",
+  "address": "Address:",
+  "basic_info": "Basic Information",
+  "gender": "Gender:",
+  "gender_label": "Gender:",
+  "birthday": "Birthday:",
+  "birthday_label": "Birthday:",
+  "male": "Male",
+  "female": "Female",
+  "not_selected": "Not selected",
+  "no_records": "No records",
+  "edit": "Edit",
+  "edit_profile": "Edit Profile",
+  "save": "Save",
+  "change_password": "Change password",
+  "save_information": "Save information",
+  "update_success": "Profile updated successfully",
+  "update_error": "Failed to update profile",
+  "medical_history": "Medical history",
+  "file": "File", 
+  "appointment": "Appointment", 
+  "doctor": "Doctor", 
+  "loading": "Loading" 
+},
   "settings": {
     "theme": "Theme",
     "theme_description": "Choose a theme for your web interface"
@@ -130,18 +144,16 @@
     "careers": "Learn more about our teams and job openings.",
     "explore_jobs": "Explore Jobs"
   },
-  "doctors": {
-    "browse": "Browse through the doctors specialist.",
-    "filters": "Filters",
-    "general_physician": "General physician",
-    "gynecologist": "Gynecologist",
-    "dermatologist": "Dermatologist",
-    "pediatricians": "Pediatricians",
-    "neurologist": "Neurologist",
-    "gastroenterologist": "Gastroenterologist",
-    "available": "Available",
-    "not_available": "Not Available"
-  },
+"doctors": {
+  "browse": "Browse through the doctors specialist.",
+  "filters": "Filters",
+  "available": "Available",
+  "not_available": "Not Available",
+  "nurse": "Nurse",
+  "psychologist": "Psychologist", 
+  "pediatrician": "Pediatrician",
+  "therapist": "Therapist" 
+},
   "login": {
     "createAccount": "Create account",
     "createNewAccount": "Need a new account? ",
@@ -172,10 +184,6 @@
     "submit": "Continue",
     "back": "Back"
   },
-  "therapist": "Therapist",
-  "pediatrician": "Pediatrician",
-  "psychologist": "Psychologist",
-  "nurse": "Nurse",
   "messages": "Messages",
   "my-messages": "Messages",
   "show-conversations": "Show Conversations",

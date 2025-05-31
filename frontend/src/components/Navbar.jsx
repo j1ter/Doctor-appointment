@@ -45,7 +45,7 @@ const Navbar = () => {
             <hr className='border-none outline-none h-0.5 bg-primary w-3/5 m-auto hidden' />
           </NavLink>
           <NavLink to='/articles'>
-            <li className='py-1'>{t('navbar.articles')}</li>
+            <li className='py-1'>{t('articles')}</li> 
             <hr className='border-none outline-none h-0.5 bg-primary w-3/5 m-auto hidden' />
           </NavLink>
           <NavLink to='/about'>
@@ -57,7 +57,7 @@ const Navbar = () => {
             <hr className='border-none outline-none h-0.5 bg-primary w-3/5 m-auto hidden' />
           </NavLink>
         </ul>
-        <div className="relative flex items-center gap-2"> {/* Изменено */}
+        <div className="relative flex items-center gap-2">
           <button onClick={() => setShowLanguageMenu(!showLanguageMenu)} className="block">
             <img src={hideLanguageIcon} alt="Toggle Language" className="h-8 w-8" />
           </button>
@@ -78,7 +78,7 @@ const Navbar = () => {
         </div>
         {isAuthenticated && userData ? (
           <div className='flex items-center gap-2 cursor-pointer group relative'>
-            <img className='w-5 rounded-full' src={userData.image || profile_pic} alt='profile_pic' /> {/* Изменено */}
+            <img className='w-5 rounded-full' src={userData.image || profile_pic} alt='profile_pic' />
             <img className='w-2.5' src={dropdown_icon} alt='dropdown_icon' />
             <div className='absolute top-0 right-0 pt-14 text-base font-sans font-medium text-gray-600 z-20 hidden group-hover:block'>
               <div className='min-w-48 bg-stone-100 rounded flex flex-col gap-4 p-4'>
@@ -121,7 +121,7 @@ const Navbar = () => {
               <p className='px-4 py-2 rounded inline-block'>{t('navbar.all_doctors')}</p>
             </NavLink>
             <NavLink onClick={() => setShowMenu(false)} to='/articles'>
-              <p className='px-4 py-2 rounded inline-block'>{t('navbar.articles')}</p>
+              <p className='px-4 py-2 rounded inline-block'>{t('articles')}</p> 
             </NavLink>
             <NavLink onClick={() => setShowMenu(false)} to='/about'>
               <p className='px-4 py-2 rounded inline-block'>{t('navbar.about')}</p>

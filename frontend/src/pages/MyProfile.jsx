@@ -196,31 +196,31 @@ const MyProfile = () => {
           ) : (
             <>
               <button
-                className='border border-primary px-8 py-2 rounded-full hover:bg-primary hover:text-white transition-all duration-500'
-                onClick={() => setIsEdit(true)}
-              >
-                {t('Edit Profile')}
-              </button>
-              <button
-                onClick={() => navigate('/change-password')}
-                className='border border-primary px-8 py-2 rounded-full hover:bg-primary hover:text-white transition-all duration-500'
-              >
-                {t('Change password')}
-              </button>
+              className='border border-primary px-8 py-2 rounded-full hover:bg-primary hover:text-white transition-all duration-500'
+              onClick={() => setIsEdit(true)}
+            >
+              {t('my_profile.edit_profile')}
+            </button>
+            <button
+              onClick={() => navigate('/change-password')}
+              className='border border-primary px-8 py-2 rounded-full hover:bg-primary hover:text-white transition-all duration-500'
+            >
+              {t('my_profile.change_password')}
+            </button>
             </>
           )}
         </div>
       </div>
 
       {/* Medical Records Section */}
-      <div className='m-5'>
-        <h3 className='text-lg font-medium mt-7'>{t('Medical history')}</h3>
+<div className='m-5'>
+        <h3 className='text-lg font-medium mt-7'>{t('my_profile.medical_history')}</h3>
         {medicalRecords.length > 0 ? (
           <div className='bg-white border rounded text-sm max-h-[40vh] overflow-y-scroll w-full'>
             <div className='grid grid-cols-[2fr_2fr_1fr] gap-1 py-3 px-6 border-b'>
-              <p>{t('file')}</p>
-              <p>{t('appointment')}</p>
-              <p>{t('doctor')}</p>
+              <p>{t('my_profile.file')}</p>
+              <p>{t('my_profile.appointment')}</p>
+              <p>{t('my_profile.doctor')}</p>
             </div>
             {medicalRecords.map((record, index) => (
               <div
@@ -243,12 +243,12 @@ const MyProfile = () => {
             ))}
           </div>
         ) : (
-          <p className='text-gray-500'>{t('No records')}</p>
+          <p className='text-gray-500'>{t('my_profile.no_records')}</p>
         )}
       </div>
     </div>
   ) : (
-    <p className='text-gray-500'>{t('Loading') || 'Loading...'}</p>
+    <p className='text-gray-500'>{t('my_profile.loading') || 'Loading...'}</p>
   );
 };
 
