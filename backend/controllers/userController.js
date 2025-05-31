@@ -157,19 +157,24 @@ const loginUser = async (req, res) => {
         }
 
         // Поиск пользователя
-        const cachedUser = await redis.get(`user:${email}`);
         let user;
+        const cachedUser = await redis.get(`user:${email}`);
         if (cachedUser) {
-            user = JSON.parse(cachedUser);
+            const parsedUser = JSON.parse(cachedUser);
+            // Если в кэше нет пароля, запрашиваем из базы
+            if (!parsedUser.password) {
+                user = await userModel.findOne({ email }).select('password name email isVerified');
+            } else {
+                user = parsedUser;
+            }
         } else {
             user = await userModel.findOne({ email }).select('password name email isVerified');
-            if (!user) {
-                await redis.incr(loginAttemptsKey);
-                await redis.expire(loginAttemptsKey, 15 * 60); // 15 минут
-                return res.status(400).json({ success: false, message: 'User does not exist' });
-            }
-            // Кэшируем данные пользователя
-            await redis.set(`user:${email}`, JSON.stringify(user), 'EX', 3600); // 1 час
+        }
+
+        if (!user) {
+            await redis.incr(loginAttemptsKey);
+            await redis.expire(loginAttemptsKey, 15 * 60); // 15 минут
+            return res.status(400).json({ success: false, message: 'User does not exist' });
         }
 
         // Проверка пароля
@@ -182,6 +187,14 @@ const loginUser = async (req, res) => {
 
         // Сбрасываем счетчик попыток
         await redis.del(loginAttemptsKey);
+
+        // Кэшируем данные пользователя (без пароля)
+        await redis.set(`user:${email}`, JSON.stringify({
+            _id: user._id,
+            name: user.name,
+            email: user.email,
+            isVerified: user.isVerified
+        }), 'EX', 3600); // 1 час
 
         // Генерация и кэширование кода верификации
         const code = generateVerificationCode();
@@ -232,7 +245,7 @@ const verifyCode = async (req, res) => {
             { _id: userId, isVerified: false },
             { $set: { isVerified: true } },
             { new: true }
-        ) || await userModel.findById(userId);
+        ) || await userModel.findById(userId).select('name email isVerified');
 
         if (!user) {
             return res.status(400).json({ success: false, message: 'User not found' });
@@ -248,7 +261,7 @@ const verifyCode = async (req, res) => {
         await storeRefreshToken(user._id, refreshToken);
         setCookies(res, accessToken, refreshToken);
 
-        // Обновляем кэш пользователя
+        // Обновляем кэш пользователя (без пароля)
         await redis.set(`user:${user.email}`, JSON.stringify({
             _id: user._id,
             name: user.name,
