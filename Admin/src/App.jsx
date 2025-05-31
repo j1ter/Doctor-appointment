@@ -16,7 +16,6 @@ import DoctorAppointments from './pages/Doctor/DoctorAppointments';
 import DoctorProfile from './pages/Doctor/DoctorProfile';
 import DoctorMessages from './pages/Doctor/DoctorMessages';
 import UserProfile from './pages/Doctor/UserProfile';
-import AddUser from './pages/Admin/AddUser';
 import UsersList from './pages/Admin/UsersList';
 import AddArticle from './pages/Admin/AddArticle'; // Новый импорт
 import ArticlesList from './pages/Admin/ArticlesList'; // Новый импорт
@@ -48,7 +47,6 @@ const App = () => {
                             <Route path='/all-appointments' element={<AllAppointments />} />
                             <Route path='/add-doctor' element={<AddDoctor />} />
                             <Route path='/doctor-list' element={<DoctorsList />} />
-                            <Route path='/add-user' element={<AddUser />} />
                             <Route path='/users-list' element={<UsersList />} />
                             <Route path='/add-article' element={<AddArticle />} />
                             <Route path='/articles-list' element={<ArticlesList />} />

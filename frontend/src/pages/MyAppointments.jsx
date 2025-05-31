@@ -99,8 +99,8 @@ function MyAppointments() {
               <p className='text-neutral-800 font-semibold'>{item.docData.name}</p>
               <p>{t(specialityMap[item.docData.speciality] || item.docData.speciality)}</p>
               <p className='text-zinc-700 font-medium mt-1'>{t('my_appointments.address')}</p>
-              <p className='text-xs'>{item.docData.address.line1}</p>
-              <p className='text-xs'>{item.docData.address.line2}</p>
+              <p className='text-xs'>{item.docData.address?.line1 || 'N/A'}</p>
+              <p className='text-xs'>{item.docData.address?.line2 || 'N/A'}</p>
               <p className='text-xs mt-1'>
                 <span className='text-sm text-neutral-700 font-medium'>{t('my_appointments.date_time')}</span>
                 {slotDateFormat(item.slotDate)} | {item.slotTime}
@@ -139,5 +139,5 @@ function MyAppointments() {
     </div>
   );
 }
-// hello
+
 export default MyAppointments;

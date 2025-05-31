@@ -1,5 +1,6 @@
 import validator from 'validator';
 import bcrypt from 'bcrypt';
+import mongoose from 'mongoose';
 import userModel from '../models/userModel.js';
 import jwt from 'jsonwebtoken';
 import { v2 as cloudinary } from 'cloudinary';
@@ -53,7 +54,7 @@ const generateVerificationCode = () => {
     return Math.floor(100000 + Math.random() * 900000).toString();
 };
 
-// Helper function to send verification code via email
+// Helper function to send verification code via email (asynchronous)
 const sendVerificationCode = async (email, code) => {
     try {
         const transporter = nodemailer.createTransport({
@@ -71,11 +72,8 @@ const sendVerificationCode = async (email, code) => {
             text: `Your verification code is: ${code}. It is valid for 10 minutes.`,
             html: `<p>Your verification code is: <strong>${code}</strong>. It is valid for 10 minutes.</p>`,
         });
-
-        console.log('Verification code sent to:', email);
     } catch (error) {
         console.error('Error sending verification code:', error);
-        throw new Error('Failed to send verification code');
     }
 };
 
@@ -84,46 +82,50 @@ const registerUser = async (req, res) => {
     try {
         const { name, email, password } = req.body;
 
-        // Проверка обязательных полей
+        // Валидация входных данных
         if (!name || !email || !password) {
             return res.status(400).json({ success: false, message: 'Missing required fields' });
         }
-
-        // Проверка формата email и домена @narxoz.kz
         if (!validator.isEmail(email) || !email.endsWith('@narxoz.kz')) {
             return res.status(400).json({ success: false, message: 'Email must be a valid @narxoz.kz address' });
         }
-
-        // Проверка длины пароля
         if (password.length < 8) {
             return res.status(400).json({ success: false, message: 'Password must be at least 8 characters' });
         }
+        if (!validator.isLength(name, { min: 2, max: 50 })) {
+            return res.status(400).json({ success: false, message: 'Name must be between 2 and 50 characters' });
+        }
 
-        // Проверка, существует ли пользователь
-        const userExists = await userModel.findOne({ email });
-        if (userExists) {
+        // Хеширование пароля (с уменьшенным числом раундов для скорости)
+        const salt = await bcrypt.genSalt(8);
+        const hashedPassword = await bcrypt.hash(password, salt);
+
+        // Проверка и создание пользователя в одном запросе
+        const user = await userModel.findOneAndUpdate(
+            { email },
+            {
+                $setOnInsert: {
+                    name,
+                    email,
+                    password: hashedPassword,
+                    isVerified: false
+                }
+            },
+            { upsert: true, new: true }
+        );
+
+        if (!user.isNew) {
             return res.status(400).json({ success: false, message: 'User already exists' });
         }
 
-        // Хеширование пароля
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt);
-
-        // Создание нового пользователя (без активации пока)
-        const userData = {
-            name,
-            email,
-            password: hashedPassword,
-            isVerified: false // Поле для отслеживания верификации
-        };
-
-        const newUser = new userModel(userData);
-        const user = await newUser.save();
-
-        // Генерация и отправка кода подтверждения
+        // Генерация и кэширование кода верификации
         const code = generateVerificationCode();
         await redis.set(`verify_code:${user._id}`, code, 'EX', 10 * 60); // 10 минут
-        await sendVerificationCode(email, code);
+
+        // Отправка email асинхронно
+        sendVerificationCode(email, code).catch((err) => {
+            console.error('Failed to send verification code:', err);
+        });
 
         res.status(201).json({
             success: true,
@@ -131,7 +133,7 @@ const registerUser = async (req, res) => {
             userId: user._id
         });
     } catch (error) {
-        console.log('Error in registerUser:', error);
+        console.error('Error in registerUser:', error);
         res.status(500).json({ success: false, message: error.message });
     }
 };
@@ -142,25 +144,53 @@ const loginUser = async (req, res) => {
     try {
         const { email, password } = req.body;
 
-        // Проверка email
+        // Валидация email
         if (!validator.isEmail(email) || !email.endsWith('@narxoz.kz')) {
-            return res.json({ success: false, message: 'Email must be a valid @narxoz.kz address' });
+            return res.status(400).json({ success: false, message: 'Email must be a valid @narxoz.kz address' });
         }
 
-        const user = await userModel.findOne({ email });
-        if (!user) {
-            return res.json({ success: false, message: 'User does not exist' });
+        // Проверка попыток логина
+        const loginAttemptsKey = `login_attempts:${email}`;
+        const attempts = await redis.get(loginAttemptsKey) || 0;
+        if (parseInt(attempts) >= 5) {
+            return res.status(429).json({ success: false, message: 'Too many login attempts. Try again in 15 minutes' });
         }
 
+        // Поиск пользователя
+        const cachedUser = await redis.get(`user:${email}`);
+        let user;
+        if (cachedUser) {
+            user = JSON.parse(cachedUser);
+        } else {
+            user = await userModel.findOne({ email }).select('password name email isVerified');
+            if (!user) {
+                await redis.incr(loginAttemptsKey);
+                await redis.expire(loginAttemptsKey, 15 * 60); // 15 минут
+                return res.status(400).json({ success: false, message: 'User does not exist' });
+            }
+            // Кэшируем данные пользователя
+            await redis.set(`user:${email}`, JSON.stringify(user), 'EX', 3600); // 1 час
+        }
+
+        // Проверка пароля
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
-            return res.json({ success: false, message: 'Invalid credentials' });
+            await redis.incr(loginAttemptsKey);
+            await redis.expire(loginAttemptsKey, 15 * 60);
+            return res.status(400).json({ success: false, message: 'Invalid credentials' });
         }
 
-        // Генерация и отправка кода подтверждения
+        // Сбрасываем счетчик попыток
+        await redis.del(loginAttemptsKey);
+
+        // Генерация и кэширование кода верификации
         const code = generateVerificationCode();
-        await redis.set(`verify_code:${user._id}`, code, 'EX', 10 * 60); // 10 минут
-        await sendVerificationCode(email, code);
+        await redis.set(`verify_code:${user._id}`, code, 'EX', 10 * 60);
+
+        // Отправка email асинхронно
+        sendVerificationCode(email, code).catch((err) => {
+            console.error('Failed to send verification code:', err);
+        });
 
         res.json({
             success: true,
@@ -168,8 +198,8 @@ const loginUser = async (req, res) => {
             userId: user._id,
         });
     } catch (error) {
-        console.log('Error in loginUser:', error);
-        res.json({ success: false, message: error.message });
+        console.error('Error in loginUser:', error);
+        res.status(500).json({ success: false, message: error.message });
     }
 };
 
@@ -182,28 +212,49 @@ const verifyCode = async (req, res) => {
             return res.status(400).json({ success: false, message: 'User ID and code are required' });
         }
 
+        // Проверка попыток ввода кода
+        const codeAttemptsKey = `code_attempts:${userId}`;
+        const attempts = await redis.get(codeAttemptsKey) || 0;
+        if (parseInt(attempts) >= 3) {
+            return res.status(429).json({ success: false, message: 'Too many code attempts. Request a new code' });
+        }
+
+        // Проверка кода
         const storedCode = await redis.get(`verify_code:${userId}`);
         if (!storedCode || storedCode !== code) {
+            await redis.incr(codeAttemptsKey);
+            await redis.expire(codeAttemptsKey, 10 * 60);
             return res.status(400).json({ success: false, message: 'Invalid or expired verification code' });
         }
 
-        const user = await userModel.findById(userId);
+        // Проверка и обновление пользователя в одном запросе
+        const user = await userModel.findOneAndUpdate(
+            { _id: userId, isVerified: false },
+            { $set: { isVerified: true } },
+            { new: true }
+        ) || await userModel.findById(userId);
+
         if (!user) {
             return res.status(400).json({ success: false, message: 'User not found' });
         }
 
-        // Если пользователь не верифицирован (регистрация), активируем аккаунт
-        if (!user.isVerified) {
-            await userModel.findByIdAndUpdate(userId, { isVerified: true });
-        }
-
-        // Удаляем код после успешной проверки
+        // Очистка кэша и счетчиков
         await redis.del(`verify_code:${userId}`);
+        await redis.del(codeAttemptsKey);
+        await redis.del(`refresh_token:${userId}`); // Инвалидируем старые токены
 
-        // Выдаем токены
+        // Выдача токенов
         const { accessToken, refreshToken } = generateTokens(user._id);
         await storeRefreshToken(user._id, refreshToken);
         setCookies(res, accessToken, refreshToken);
+
+        // Обновляем кэш пользователя
+        await redis.set(`user:${user.email}`, JSON.stringify({
+            _id: user._id,
+            name: user.name,
+            email: user.email,
+            isVerified: user.isVerified
+        }), 'EX', 3600);
 
         res.json({
             success: true,
@@ -215,8 +266,8 @@ const verifyCode = async (req, res) => {
             message: 'Action completed successfully!',
         });
     } catch (error) {
-        console.log('Error in verifyCode:', error);
-        res.json({ success: false, message: error.message });
+        console.error('Error in verifyCode:', error);
+        res.status(500).json({ success: false, message: error.message });
     }
 };
 
@@ -436,48 +487,81 @@ const sendEmailNotification = async (recipient, subject, message) => {
 
 // API to book appointment
 const bookAppointment = async (req, res) => {
+    const session = await mongoose.startSession();
+    session.startTransaction();
     try {
         const { docId, slotDate, slotTime } = req.body;
         const userId = req.user._id;
 
-        const docData = await doctorModel.findById(docId).select('-password');
-        if (!docData) {
-            return res.json({ success: false, message: 'Doctor not found' });
-        }
-        if (!docData.available) {
-            return res.json({ success: false, message: 'Doctor not available' });
-        }
-
-        let slots_booked = docData.slots_booked;
-        if (slots_booked[slotDate]) {
-            if (slots_booked[slotDate].includes(slotTime)) {
-                return res.json({ success: false, message: 'Slot not available' });
-            } else {
-                slots_booked[slotDate].push(slotTime);
+        // Проверяем кэш в Redis
+        const cachedDoc = await redis.get(`doctor:${docId}`);
+        let docData;
+        if (cachedDoc) {
+            docData = JSON.parse(cachedDoc);
+            if (!docData.available) {
+                await session.abortTransaction();
+                return res.status(400).json({ success: false, message: 'Doctor not available' });
             }
         } else {
-            slots_booked[slotDate] = [];
-            slots_booked[slotDate].push(slotTime);
+            // Проверяем доктора и его доступность в одном запросе
+            docData = await doctorModel
+                .findOne({ _id: docId, available: true })
+                .select('name address image') // Добавляем image в выборку
+                .session(session);
+            if (!docData) {
+                await session.abortTransaction();
+                return res.status(404).json({ success: false, message: 'Doctor not found or unavailable' });
+            }
+            // Кэшируем данные доктора в Redis (на 1 час)
+            await redis.set(`doctor:${docId}`, JSON.stringify(docData), 'EX', 3600);
         }
 
-        const userData = await userModel.findById(userId).select('-password');
-        delete docData.slots_booked;
+        // Атомарно проверяем и обновляем слот
+        const updateResult = await doctorModel
+            .findOneAndUpdate(
+                {
+                    _id: docId,
+                    [`slots_booked.${slotDate}`]: { $nin: [slotTime] }, // Проверяем, что слот свободен
+                },
+                {
+                    $push: { [`slots_booked.${slotDate}`]: slotTime }, // Добавляем слот
+                },
+                { session }
+            );
 
+        if (!updateResult) {
+            await session.abortTransaction();
+            return res.status(400).json({ success: false, message: 'Slot not available' });
+        }
+
+        // Получаем минимальные данные пользователя
+        const userData = await userModel
+            .findById(userId)
+            .select('name email')
+            .session(session);
+        if (!userData) {
+            await session.abortTransaction();
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
+
+        // Создаем запись о бронировании с минимальными данными
         const appointmentData = {
             userId,
             docId,
-            userData,
-            docData,
+            userData: { name: userData.name, email: userData.email },
+            docData: { name: docData.name, address: docData.address, image: docData.image }, // Добавляем image
             slotTime,
             slotDate,
             date: Date.now(),
         };
 
         const newAppointment = new appointmentModel(appointmentData);
-        await newAppointment.save();
+        await newAppointment.save({ session });
 
-        await doctorModel.findByIdAndUpdate(docId, { slots_booked });
+        // Подтверждаем транзакцию
+        await session.commitTransaction();
 
+        // Отправляем email асинхронно
         const formattedSlotDate = formatSlotDate(slotDate);
         const message = `
             Здравствуйте, ${userData.name}!
@@ -485,131 +569,24 @@ const bookAppointment = async (req, res) => {
             Дата: ${formattedSlotDate}, Время: ${slotTime}.
             Спасибо за использование нашей системы!
         `;
-        await sendEmailNotification(userData.email, 'Запись к врачу подтверждена', message);
+        sendEmailNotification(userData.email, 'Запись к врачу подтверждена', message).catch((err) => {
+            console.error('Failed to send email notification:', err);
+        });
 
-        res.json({ success: true, message: 'Appointment Booked' });
+        res.json({
+            success: true,
+            message: 'Appointment Booked',
+            appointmentId: newAppointment._id,
+        });
     } catch (error) {
-        console.log('Error in bookAppointment:', error);
-        res.json({ success: false, message: error.message });
+        await session.abortTransaction();
+        console.error('Error in bookAppointment:', error);
+        res.status(500).json({ success: false, message: error.message });
+    } finally {
+        session.endSession();
     }
 };
-// hello
-// const bookAppointment = async (req, res) => {
-//     try {
-//         const { docId, slotDate, slotTime } = req.body;
-//         const userId = req.user._id;
 
-//         const docData = await doctorModel.findById(docId).select('-password');
-//         if (!docData) {
-//             return res.json({ success: false, message: 'Doctor not found' });
-//         }
-//         if (!docData.available) {
-//             return res.json({ success: false, message: 'Doctor not available' });
-//         }
-
-//         let slots_booked = docData.slots_booked;
-//         if (slots_booked[slotDate]) {
-//             if (slots_booked[slotDate].includes(slotTime)) {
-//                 return res.json({ success: false, message: 'Slot not available' });
-//             } else {
-//                 slots_booked[slotDate].push(slotTime);
-//             }
-//         } else {
-//             slots_booked[slotDate] = [];
-//             slots_booked[slotDate].push(slotTime);
-//         }
-
-//         const userData = await userModel.findById(userId).select('-password');
-//         delete docData.slots_booked;
-
-//         const appointmentData = {
-//             userId,
-//             docId,
-//             userData,
-//             docData,
-//             amount: docData.fees,
-//             slotTime,
-//             slotDate,
-//             date: Date.now(),
-//         };
-
-//         const newAppointment = new appointmentModel(appointmentData);
-//         await newAppointment.save();
-
-//         await doctorModel.findByIdAndUpdate(docId, { slots_booked });
-
-
-//         const formattedSlotDate = formatSlotDate(slotDate);
-//         const message = `
-//             Здравствуйте, ${userData.name}!
-//             Вы записаны к врачу ${docData.name}.
-//             Дата: ${formattedSlotDate}, Время: ${slotTime}.
-//             Спасибо за использование нашей системы!
-//         `;
-//         await sendEmailNotification(userData.email, 'Запись к врачу подтверждена', message);
-
-//         res.json({ success: true, message: 'Appointment Booked', conversationId: conversationResponse?.conversation?._id });
-//     } catch (error) {
-//         console.log('Error in bookAppointment:', error);
-//         res.json({ success: false, message: error.message });
-//     }
-// };
-// const bookAppointment = async (req, res) => {
-//     try {
-//         const { docId, slotDate, slotTime } = req.body;
-//         const userId = req.user._id;
-
-//         const docData = await doctorModel.findById(docId).select('-password');
-//         if (!docData.available) {
-//             return res.json({ success: false, message: 'Doctor not available' });
-//         }
-
-//         let slots_booked = docData.slots_booked;
-//         if (slots_booked[slotDate]) {
-//             if (slots_booked[slotDate].includes(slotTime)) {
-//                 return res.json({ success: false, message: 'Slot not available' });
-//             } else {
-//                 slots_booked[slotDate].push(slotTime);
-//             }
-//         } else {
-//             slots_booked[slotDate] = [];
-//             slots_booked[slotDate].push(slotTime);
-//         }
-
-//         const userData = await userModel.findquilById(userId).select('-password');
-//         delete docData.slots_booked;
-
-//         const appointmentData = {
-//             userId,
-//             docId,
-//             userData,
-//             docData,
-//             amount: docData.fees,
-//             slotTime,
-//             slotDate,
-//             date: Date.now(),
-//         };
-
-//         const newAppointment = new appointmentModel(appointmentData);
-//         await newAppointment.save();
-
-//         await doctorModel.findByIdAndUpdate(docId, { slots_booked });
-
-//         const formattedSlotDate = formatSlotDate(slotDate);
-//         const message = `
-//             Здравствуйте, ${userData.name}!
-//             Вы записаны к врачу ${docData.name}.
-//             Дата: ${formattedSlotDate}, Время: ${slotTime}.
-//             Спасибо за использование нашей системы!
-//         `;
-//         await sendEmailNotification(userData.email, 'Запись к врачу подтверждена', message);
-
-//         res.json({ success: true, message: 'Appointment Booked' });
-//     } catch (error) {
-//         console.log('Error in bookAppointment:', error);
-//         res.json({ success: false, message: error.message });
-//     }
-// };
 
 // API to get user appointments
 const listAppointment = async (req, res) => {
