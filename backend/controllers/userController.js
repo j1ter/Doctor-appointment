@@ -39,7 +39,7 @@ const setCookies = (res, accessToken, refreshToken) => {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
-        maxAge: 15 * 60 * 1000, // 15 minutes
+        maxAge: 15 * 60 * 1000, // 15 minute
     });
     res.cookie('refreshToken', refreshToken, {
         httpOnly: true,
@@ -306,33 +306,36 @@ const logoutUser = async (req, res) => {
 const refreshToken = async (req, res) => {
     try {
         const refreshToken = req.cookies.refreshToken;
-
+        console.log('Refresh token received:', refreshToken); // Лог для отладки
         if (!refreshToken) {
             return res.status(401).json({ success: false, message: 'No refresh token provided' });
         }
 
         const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+        console.log('Decoded refresh token:', decoded); // Лог
         const storedToken = await redis.get(`refresh_token:${decoded.userId}`);
-
+        console.log('Stored token in Redis:', storedToken); // Лог
         if (storedToken !== refreshToken) {
             return res.status(401).json({ success: false, message: 'Invalid refresh token' });
         }
 
         const accessToken = jwt.sign({ userId: decoded.userId }, process.env.ACCESS_TOKEN_SECRET, {
-            expiresIn: '15m',
+            expiresIn: '1d', // Changed from '15m' to '1d'
         });
+        console.log('New access token generated:', accessToken); // Лог
 
         res.cookie('accessToken', accessToken, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'strict',
             maxAge: 15 * 60 * 1000,
+            // maxAge: 24 * 60 * 60 * 1000, // 1 day
         });
 
         res.json({ success: true, message: 'Token refreshed successfully' });
     } catch (error) {
-        console.log('Error in refreshToken:', error);
-        res.json({ success: false, message: error.message });
+        console.log('Error in refreshToken:', error.message); // Лог
+        res.status(401).json({ success: false, message: error.message });
     }
 };
 
@@ -506,30 +509,24 @@ const bookAppointment = async (req, res) => {
         const { docId, slotDate, slotTime } = req.body;
         const userId = req.user._id;
 
-        // Проверяем кэш в Redis
-        const cachedDoc = await redis.get(`doctor:${docId}`);
-        let docData;
-        if (cachedDoc) {
-            docData = JSON.parse(cachedDoc);
-            if (!docData.available) {
-                await session.abortTransaction();
-                return res.status(400).json({ success: false, message: 'Doctor not available' });
-            }
-        } else {
-            // Проверяем доктора и его доступность в одном запросе
-            docData = await doctorModel
-                .findOne({ _id: docId, available: true })
-                .select('name address image') // Добавляем image в выборку
-                .session(session);
-            if (!docData) {
-                await session.abortTransaction();
-                return res.status(404).json({ success: false, message: 'Doctor not found or unavailable' });
-            }
-            // Кэшируем данные доктора в Redis (на 1 час)
-            await redis.set(`doctor:${docId}`, JSON.stringify(docData), 'EX', 3600);
+        // Проверяем доктора в базе данных
+        const docData = await doctorModel
+            .findOne({ _id: docId })
+            .select('name address image available slots_booked')
+            .session(session);
+
+        if (!docData) {
+            await session.abortTransaction();
+            return res.status(404).json({ success: false, message: 'Doctor not found' });
         }
 
-        // Атомарно проверяем и обновляем слот
+        if (!docData.available) {
+            console.log(`Doctor ${docId} is not available`);
+            await session.abortTransaction();
+            return res.status(400).json({ success: false, message: 'Doctor not available' });
+        }
+
+        // Проверяем, свободен ли слот
         const updateResult = await doctorModel
             .findOneAndUpdate(
                 {
@@ -539,15 +536,16 @@ const bookAppointment = async (req, res) => {
                 {
                     $push: { [`slots_booked.${slotDate}`]: slotTime }, // Добавляем слот
                 },
-                { session }
+                { session, new: true }
             );
 
         if (!updateResult) {
+            console.log(`Slot ${slotTime} on ${slotDate} is not available for doctor ${docId}`);
             await session.abortTransaction();
             return res.status(400).json({ success: false, message: 'Slot not available' });
         }
 
-        // Получаем минимальные данные пользователя
+        // Получаем данные пользователя
         const userData = await userModel
             .findById(userId)
             .select('name email')
@@ -557,12 +555,12 @@ const bookAppointment = async (req, res) => {
             return res.status(404).json({ success: false, message: 'User not found' });
         }
 
-        // Создаем запись о бронировании с минимальными данными
+        // Создаем запись о бронировании
         const appointmentData = {
             userId,
             docId,
             userData: { name: userData.name, email: userData.email },
-            docData: { name: docData.name, address: docData.address, image: docData.image }, // Добавляем image
+            docData: { name: docData.name, address: docData.address, image: docData.image },
             slotTime,
             slotDate,
             date: Date.now(),
@@ -570,6 +568,14 @@ const bookAppointment = async (req, res) => {
 
         const newAppointment = new appointmentModel(appointmentData);
         await newAppointment.save({ session });
+
+        // Обновляем кэш в Redis
+        await redis.set(
+            `doctor:${docId}`,
+            JSON.stringify({ ...docData.toObject(), slots_booked: updateResult.slots_booked }),
+            'EX',
+            3600
+        );
 
         // Подтверждаем транзакцию
         await session.commitTransaction();
