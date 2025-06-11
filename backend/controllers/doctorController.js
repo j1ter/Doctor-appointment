@@ -9,7 +9,6 @@ import upload from '../middlewares/multer.js';
 import userModel from "../models/userModel.js";
 
 
-// Helper function to generate access and refresh tokens
 const generateTokens = (docId) => {
     const accessToken = jwt.sign({ docId }, process.env.ACCESS_TOKEN_SECRET, {
         expiresIn: '15m',
@@ -29,18 +28,30 @@ const storeRefreshToken = async (docId, refreshToken) => {
 
 // Helper function to set cookies
 const setCookies = (res, accessToken, refreshToken) => {
-    res.cookie('accessToken', accessToken, {
+    res.cookie('doctorAccessToken', accessToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
-        maxAge: 15 * 60 * 1000, // 15 minutes
+        maxAge: 15 * 60 * 1000, // 1 минута
     });
-    res.cookie('refreshToken', refreshToken, {
+    res.cookie('doctorRefreshToken', refreshToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 дней
     });
+};
+
+// API to check if refresh token exists
+const checkRefreshToken = async (req, res) => {
+    try {
+        const refreshToken = req.cookies.doctorRefreshToken;
+        console.log('Check doctor refresh token received:', refreshToken);
+        res.json({ success: true, hasRefreshToken: !!refreshToken });
+    } catch (error) {
+        console.log('Error in checkRefreshToken (doctor):', error.message);
+        res.status(500).json({ success: false, message: error.message });
+    }
 };
 
 // API for login doctor
@@ -81,81 +92,107 @@ const loginDoctor = async (req, res) => {
 // API to log out doctor
 const logoutDoctor = async (req, res) => {
     try {
-        const refreshToken = req.cookies.refreshToken;
-        if (refreshToken) {
-            const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
-            await redis.del(`refresh_token_doctor:${decoded.docId}`);
+        const doctorId = req.doctor?._id;
+        if (!doctorId) {
+            return res.status(401).json({ success: false, message: 'Unauthorized: No doctor ID found' });
         }
 
-        res.clearCookie('accessToken');
-        res.clearCookie('refreshToken');
+        // Проверяем существование refresh-токена
+        const refreshTokenExists = await redis.exists(`refresh_token_doctor:${doctorId}`);
+        if (refreshTokenExists) {
+            await redis.del(`refresh_token_doctor:${doctorId}`);
+            console.log(`Refresh token deleted for doctor: ${doctorId}`);
+        } else {
+            console.log(`No refresh token found for doctor: ${doctorId}`);
+        }
+
+        res.clearCookie('doctorAccessToken', {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+        });
+        res.clearCookie('doctorRefreshToken', {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+        });
+
         res.json({ success: true, message: 'Logged out successfully' });
     } catch (error) {
-        console.log('Error in logoutDoctor:', error);
-        res.json({ success: false, message: error.message });
+        console.error('Error during doctor logout:', error.message);
+        res.status(500).json({ success: false, message: 'Server error' });
     }
 };
 
 // API to refresh access token for doctor
 const refreshTokenDoctor = async (req, res) => {
     try {
-        const refreshToken = req.cookies.refreshToken;
+        const refreshToken = req.cookies.doctorRefreshToken;
+        console.log('Doctor refresh token received:', refreshToken);
 
         if (!refreshToken) {
             return res.status(401).json({ success: false, message: 'No refresh token provided' });
         }
 
         const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+        console.log('Decoded doctor refresh token:', decoded);
+
         const storedToken = await redis.get(`refresh_token_doctor:${decoded.docId}`);
+        console.log('Stored doctor token in Redis:', storedToken);
 
         if (storedToken !== refreshToken) {
             return res.status(401).json({ success: false, message: 'Invalid refresh token' });
         }
 
         const accessToken = jwt.sign({ docId: decoded.docId }, process.env.ACCESS_TOKEN_SECRET, {
-            expiresIn: '15m',
+            expiresIn: '15m', // Увеличено до 15 минут
         });
+        console.log('New doctor access token generated:', accessToken);
 
-        res.cookie('accessToken', accessToken, {
+        res.cookie('doctorAccessToken', accessToken, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'strict',
-            maxAge: 15 * 60 * 1000,
+            maxAge: 15 * 60 * 1000, // 15 минут
         });
 
         res.json({ success: true, message: 'Token refreshed successfully' });
     } catch (error) {
-        console.log('Error in refreshTokenDoctor:', error);
-        res.json({ success: false, message: error.message });
+        console.error('Error in refreshTokenDoctor:', {
+            message: error.message,
+            token: refreshToken,
+            url: req.url,
+        });
+        res.status(401).json({ success: false, message: error.message });
     }
 };
 
 const changeAvailabity = async (req, res) => {
     try {
 
-        const {docId} = req.body;
+        const { docId } = req.body;
 
         const docData = await doctorModel.findById(docId);
-        await doctorModel.findByIdAndUpdate(docId, {available: !docData.available});
-        res.json({success: true, message: 'Availablity Changed'});
+        await doctorModel.findByIdAndUpdate(docId, { available: !docData.available });
+        res.json({ success: true, message: 'Availablity Changed' });
 
     } catch (error) {
         console.log(error);
-        res.json({success: false, message: error.message});
+        res.json({ success: false, message: error.message });
     }
 };
 
 
-const doctorList = async (req,res) => {
+const doctorList = async (req, res) => {
     try {
-        
-        const doctors = await doctorModel.find({}).select(['-password','-email'])
 
-        res.json({success:true,doctors})
+        const doctors = await doctorModel.find({}).select(['-password', '-email'])
+
+        res.json({ success: true, doctors })
 
     } catch (error) {
         console.log(error);
-        res.json({success: false, message: error.message});
+        res.json({ success: false, message: error.message });
     }
 }
 
@@ -214,12 +251,12 @@ const uploadMedicalRecord = async (req, res) => {
 const appointmentsDoctor = async (req, res) => {
     try {
         const docId = req.doctor._id; // Используем ID из middleware authDoctor
-        const appointments = await appointmentModel.find({docId}).populate('userData', 'name image dob');
+        const appointments = await appointmentModel.find({ docId }).populate('userData', 'name image dob');
         console.log('Appointments fetched for docId:', docId, appointments); // Лог для отладки
-        res.json({success: true, appointments});
+        res.json({ success: true, appointments });
     } catch (error) {
         console.log('Error in appointmentsDoctor:', error);
-        res.json({success: false, message: error.message});
+        res.json({ success: false, message: error.message });
     }
 };
 
@@ -292,18 +329,18 @@ const downloadMedicalRecord = async (req, res) => {
 // API to cancel appointment for doctor panel
 const appointmentCancel = async (req, res) => {
     try {
-        const {appointmentId} = req.body;
+        const { appointmentId } = req.body;
         const docId = req.doctor._id; // Используем ID из middleware authDoctor
         const appointmentData = await appointmentModel.findById(appointmentId);
         if (appointmentData && appointmentData.docId.toString() === docId.toString()) {
-            await appointmentModel.findByIdAndUpdate(appointmentId, {cancelled: true});
-            return res.json({success: true, message: 'Appointment Cancelled'});
+            await appointmentModel.findByIdAndUpdate(appointmentId, { cancelled: true });
+            return res.json({ success: true, message: 'Appointment Cancelled' });
         } else {
-            return res.json({success: false, message: 'Cancellation Failed'});
+            return res.json({ success: false, message: 'Cancellation Failed' });
         }
     } catch (error) {
         console.log('Error in appointmentCancel:', error);
-        res.json({success: false, message: error.message});
+        res.json({ success: false, message: error.message });
     }
 };
 
@@ -438,12 +475,12 @@ const updateDoctorProfile = async (req, res) => {
 // hello
 
 export {
-    changeAvailabity, 
-    doctorList, 
-    loginDoctor, 
-    appointmentsDoctor, 
-    appointmentCancel, 
-    appointmentComplete, 
+    changeAvailabity,
+    doctorList,
+    loginDoctor,
+    appointmentsDoctor,
+    appointmentCancel,
+    appointmentComplete,
     doctorDashboard,
     doctorProfile,
     updateDoctorProfile,
@@ -454,4 +491,6 @@ export {
     getMedicalRecords,
     getUserProfile,
     getStudentAppointments,
-    getStudentMedicalRecords };
+    getStudentMedicalRecords,
+    checkRefreshToken
+};

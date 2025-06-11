@@ -5,39 +5,119 @@ import { toast } from 'react-toastify';
 export const DoctorContext = createContext();
 
 const DoctorContextProvider = (props) => {
-    const backendUrl = import.meta.env.VITE_BACKEND_URL;
+   const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:4000';
     const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [loading, setLoading] = useState(true); // Добавляем состояние загрузки
+    const [loading, setLoading] = useState(true);
     const [appointments, setAppointments] = useState([]);
-    const [dashData, setDashData] = useState(false);
-    const [profileData, setProfileData] = useState(false);
+    const [dashData, setDashData] = useState(null);
+    const [profileData, setProfileData] = useState(null);
 
-    // Проверяем авторизацию доктора при монтировании
-    useEffect(() => {
-        const initAuthCheck = async () => {
-            setLoading(true);
-            const isAuth = await checkAuth();
-            setIsAuthenticated(isAuth);
-            if (isAuth) {
-                await getProfileData(); // Загружаем данные профиля, чтобы иметь ID доктора
-            }
-            setLoading(false);
-        };
-        initAuthCheck();
-    }, []);
-
-    const checkAuth = async () => {
+    // Проверка наличия doctorRefreshToken
+    const checkRefreshToken = async () => {
         try {
-            const { data } = await axios.get(`${backendUrl}/api/doctor/dashboard`, {
+            console.log('Checking doctor refresh token...');
+            const { data } = await axios.post(`${backendUrl}/api/doctor/check-refresh-token`, {}, {
                 withCredentials: true,
             });
-            console.log('Doctor auth check:', data);
-            setIsAuthenticated(data.success);
-            return data.success;
+            console.log('Check doctor refresh token response:', data);
+            return data.hasRefreshToken;
         } catch (error) {
-            console.error('Doctor auth error:', error);
+            console.error('Error checking doctor refresh token:', error.response?.data?.message || error.message);
+            return false;
+        }
+    };
+
+    // Обновление токена
+    const refreshToken = async () => {
+        try {
+            console.log('Sending doctor refresh token request to:', `${backendUrl}/api/doctor/refresh-token`);
+            const { data } = await axios.post(`${backendUrl}/api/doctor/refresh-token`, {}, {
+                withCredentials: true,
+            });
+            console.log('Doctor refresh token response:', data);
+            if (data.success) {
+                setIsAuthenticated(true);
+                await getProfileData();
+                return true;
+            }
+            return false;
+        } catch (error) {
+            console.error('Error refreshing doctor token:', error.response?.data?.message || error.message);
+            return false;
+        }
+    };
+
+    // Проверка авторизации доктора
+    const checkAuth = async () => {
+        try {
+            setLoading(true);
+            const hasRefreshToken = await checkRefreshToken();
+            if (!hasRefreshToken) {
+                console.log('No doctor refresh token found');
+                setIsAuthenticated(false);
+                return false;
+            }
+
+            console.log('Checking doctor auth...');
+            const success = await refreshToken();
+            return success;
+        } catch (error) {
+            console.error('Doctor auth error:', error.response?.data?.message || error.message);
             setIsAuthenticated(false);
             return false;
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Выход из аккаунта доктора
+    const logout = async () => {
+        try {
+            console.log('Initiating doctor logout...');
+            const { data } = await axios.post(`${backendUrl}/api/doctor/logout`, {}, {
+                withCredentials: true,
+            });
+            console.log('Doctor logout response:', data);
+            if (data.success) {
+                toast.success(data.message);
+                setIsAuthenticated(false);
+                setAppointments([]);
+                setDashData(null);
+                setProfileData(null);
+                return true;
+            }
+            toast.error(data.message || 'Logout failed');
+            return false;
+        } catch (error) {
+            console.error('Error during doctor logout:', error.response?.data?.message || error.message);
+            // Игнорируем 401, если уже не авторизован
+            if (error.response?.status === 401) {
+                setIsAuthenticated(false);
+                setAppointments([]);
+                setDashData(null);
+                setProfileData(null);
+                return true; // Считаем логаут успешным, если токена нет
+            }
+            toast.error(error.response?.data?.message || 'Logout failed');
+            return false;
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const getProfileData = async () => {
+        try {
+            const { data } = await axios.get(`${backendUrl}/api/doctor/profile`, {
+                withCredentials: true,
+            });
+            if (data.success) {
+                setProfileData(data.profileData);
+            } else {
+                toast.error(data.message);
+            }
+        } catch (error) {
+            console.error('Error fetching profile data:', error);
+            toast.error(error.response?.data?.message || 'Failed to load profile data');
         }
     };
 
@@ -79,46 +159,6 @@ const DoctorContextProvider = (props) => {
         }
     };
 
-    // const sendMessage = async (messageData) => {
-    //     try {
-    //         const { data } = await axios.post(
-    //             `${backendUrl}/api/doctor/messages`,
-    //             messageData,
-    //             { withCredentials: true }
-    //         );
-    //         if (data.success) {
-    //             toast.success('Message sent successfully');
-    //         } else {
-    //             toast.error(data.message);
-    //         }
-    //     } catch (error) {
-    //         console.error('Error sending message:', error);
-    //         toast.error(error.response?.data?.message || error.message);
-    //     }
-    // };
-
-    const logout = async () => {
-        try {
-            const { data } = await axios.post(`${backendUrl}/api/doctor/logout`, {}, {
-                withCredentials: true,
-            });
-            if (data.success) {
-                toast.success(data.message);
-                setIsAuthenticated(false);
-                setAppointments([]);
-                setDashData(false);
-                setProfileData(false);
-                return true;
-            } else {
-                toast.error(data.message);
-                return false;
-            }
-        } catch (error) {
-            console.error('Error during logout:', error);
-            toast.error(error.response?.data?.message || 'Logout failed');
-            return false;
-        }
-    };
 
     const getAppointments = async () => {
         try {
@@ -193,22 +233,6 @@ const DoctorContextProvider = (props) => {
         }
     };
 
-    const getProfileData = async () => {
-        try {
-            const { data } = await axios.get(`${backendUrl}/api/doctor/profile`, {
-                withCredentials: true,
-            });
-            if (data.success) {
-                setProfileData(data.profileData);
-                console.log(data.profileData);
-            } else {
-                toast.error(data.message);
-            }
-        } catch (error) {
-            console.error(error);
-            toast.error(error.response?.data?.message || error.message);
-        }
-    };
 
     const updateProfile = async (updateData) => {
         try {
@@ -230,6 +254,92 @@ const DoctorContextProvider = (props) => {
             return false;
         }
     };
+
+   // Перехватчик axios
+    useEffect(() => {
+        let refreshPromise = null;
+        let retryCount = 0; // Добавляем счетчик повторных попыток
+        const MAX_RETRIES = 3; // Максимум 3 попытки
+
+        const interceptor = axios.interceptors.response.use(
+            (response) => response,
+            async (error) => {
+                const originalRequest = error.config;
+                console.log('Axios error (Doctor):', {
+                    status: error.response?.status,
+                    message: error.response?.data?.message,
+                    url: originalRequest.url,
+                });
+
+                if (
+                    error.response?.status === 401 &&
+                    !originalRequest._retry &&
+                    originalRequest.url.includes('/api/doctor') &&
+                    retryCount < MAX_RETRIES
+                ) {
+                    originalRequest._retry = true;
+                    retryCount += 1;
+
+                    if (refreshPromise) {
+                        console.log('Waiting for existing doctor refresh promise');
+                        await refreshPromise;
+                        return axios(originalRequest);
+                    }
+
+                    const hasRefreshToken = await checkRefreshToken();
+                    if (!hasRefreshToken) {
+                        console.log('No doctor refresh token available, logging out');
+                        await logout();
+                        return Promise.reject(error);
+                    }
+
+                    try {
+                        console.log('Attempting to refresh doctor token...');
+                        refreshPromise = refreshToken();
+                        const success = await refreshPromise;
+                        refreshPromise = null;
+
+                        if (success) {
+                            console.log('Doctor token refreshed successfully, retrying request');
+                            retryCount = 0; // Сбрасываем счетчик
+                            return axios(originalRequest);
+                        } else {
+                            console.log('Doctor refresh token failed, logging out');
+                            await logout();
+                            return Promise.reject(error);
+                        }
+                    } catch (refreshError) {
+                        console.error('Error refreshing doctor token:', refreshError);
+                        refreshPromise = null;
+                        await logout();
+                        return Promise.reject(error);
+                    }
+                }
+
+                retryCount = 0; // Сбрасываем счетчик для других ошибок
+                return Promise.reject(error);
+            }
+        );
+
+        return () => {
+            axios.interceptors.response.eject(interceptor);
+        };
+    }, [backendUrl]);
+
+    // Проверка авторизации при загрузке
+    useEffect(() => {
+        checkAuth();
+    }, []);
+
+    // Инициализация данных при авторизации
+    useEffect(() => {
+        const initData = async () => {
+            if (isAuthenticated) {
+                await Promise.all([getAppointments(), getProfileData()]);
+            }
+        };
+        initData();
+    }, [isAuthenticated]);
 
     const value = {
         backendUrl,

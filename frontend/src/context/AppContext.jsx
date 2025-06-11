@@ -22,51 +22,49 @@ const AppContextProvider = (props) => {
 
     axios.defaults.withCredentials = true;
 
-    // Функция для проверки наличия refreshToken
+    // Функция для проверки наличия refreshToken (изменена на POST)
     const checkRefreshToken = async () => {
         try {
-            const { data } = await axios.get(`${backendUrl}/api/user/check-refresh-token`, { withCredentials: true });
-            console.log('Check refresh token response:', data); // Лог
+            const { data } = await axios.post(`${backendUrl}/api/user/check-refresh-token`, {}, { withCredentials: true });
+            console.log('Check refresh token response:', data);
             return data.hasRefreshToken;
         } catch (error) {
-            console.log('Error checking refresh token:', error.response?.data?.message || error.message); // Лог
+            console.log('Error checking refresh token:', error.response?.data?.message || error.message);
             return false;
         }
     };
 
-    // Функция для обновления токена
     const refreshAndReload = async () => {
         try {
-            console.log('Sending refresh token request to:', backendUrl + '/api/user/refresh-token'); // Лог
+            console.log('Sending refresh token request to:', backendUrl + '/api/user/refresh-token');
             const { data } = await axios.post(backendUrl + '/api/user/refresh-token', {}, { withCredentials: true });
-            console.log('Refresh token response:', data); // Лог
+            console.log('Refresh token response:', data);
             if (data.success) {
                 await loadUserProfileData();
                 return true;
             }
-            console.log('Refresh token failed:', data.message); // Лог
+            console.log('Refresh token failed:', data.message);
             return false;
         } catch (error) {
-            console.error('Error refreshing token:', error.response?.data?.message || error.message); // Лог
+            console.error('Error refreshing token:', error.response?.data?.message || error.message);
             return false;
         }
     };
 
-    // Функция для загрузки профиля
     const loadUserProfileData = async () => {
         try {
             setLoading(true);
             const hasRefreshToken = await checkRefreshToken();
             if (!hasRefreshToken) {
-                console.log('No refresh token found, skipping profile load'); // Лог
+                console.log('No refresh token found, skipping profile load');
                 setIsAuthenticated(false);
                 setUserData(null);
                 return;
             }
 
-            console.log('Fetching user profile...'); // Лог
+            console.log('Fetching user profile...');
             const { data } = await axios.get(backendUrl + '/api/user/profile', { withCredentials: true });
-            console.log('Profile data response:', data); // Лог
+            console.log('Profile data response:', data);
             if (data.success) {
                 setUserData(data.userData);
                 setIsAuthenticated(true);
@@ -75,7 +73,7 @@ const AppContextProvider = (props) => {
                 setIsAuthenticated(false);
             }
         } catch (error) {
-            console.log('Error loading user profile:', error.response?.data?.message || error.message); // Лог
+            console.log('Error loading user profile:', error.response?.data?.message || error.message);
             setUserData(null);
             setIsAuthenticated(false);
         } finally {
@@ -83,29 +81,16 @@ const AppContextProvider = (props) => {
         }
     };
 
-    const getDoctorsData = async () => {
-        try {
-            const { data } = await axios.get(backendUrl + '/api/doctor/list');
-            if (data.success) {
-                setDoctors(data.doctors);
-            } else {
-                toast.error(data.message);
-            }
-        } catch (error) {
-            console.log(error);
-            toast.error(error.message);
-        }
-    };
-
     const handleAuthSuccess = async () => {
+        console.log('Handling auth success...');
         await loadUserProfileData();
     };
 
     const logout = async () => {
         try {
-            console.log('Initiating logout...'); // Лог
+            console.log('Initiating logout...');
             const { data } = await axios.post(backendUrl + '/api/user/logout', {}, { withCredentials: true });
-            console.log('Logout response:', data); // Лог
+            console.log('Logout response:', data);
             if (data.success) {
                 setIsAuthenticated(false);
                 setUserData(null);
@@ -116,10 +101,10 @@ const AppContextProvider = (props) => {
                 toast.error(data.message);
             }
         } catch (error) {
-            console.error('Error during logout:', error); // Лог
+            console.error('Error during logout:', error);
             toast.error(error.message);
         } finally {
-            setLoading(false); // Гарантируем завершение загрузки
+            setLoading(false);
         }
     };
 
@@ -249,6 +234,20 @@ const AppContextProvider = (props) => {
         }
     };
 
+    const getDoctorsData = async () => {
+        try {
+            const { data } = await axios.get(backendUrl + '/api/doctor/list');
+            if (data.success) {
+                setDoctors(data.doctors);
+            } else {
+                toast.error(data.message);
+            }
+        } catch (error) {
+            console.log(error);
+            toast.error(error.message);
+        }
+    };
+
     const calculateAge = (dob) => {
         const today = new Date();
         const birthDate = new Date(dob);
@@ -256,14 +255,14 @@ const AppContextProvider = (props) => {
         return age;
     };
 
-    const months = [" ", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const months = [" ", "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
-    const slotDateFormat = (slotDate) => {
-        const dateArray = slotDate.split('_');
-        return dateArray[0] + " " + months[Number(dateArray[1])] + " " + dateArray[2];
+    const slotDateFormat = (data) => {
+        const dateArray = data.split('_');
+        return `${dateArray[0]} ${months[Number(dateArray[1])]} ${dateArray[2]}`;
     };
 
-    const getAllArticles = async (page = 1, limit = 6) => {
+    const getAllArticles = async (page = 1, limit = 8) => {
         try {
             const { data } = await axios.get(`${backendUrl}/api/user/articles?page=${page}&limit=${limit}`);
             console.log('getAllArticles response:', data);
@@ -276,20 +275,19 @@ const AppContextProvider = (props) => {
                     page: data.page
                 };
             } else {
-                toast.error(data.message || t('article.error_load') || 'Не удалось загрузить статьи');
-                return { articles: [], total: 0, totalPages: 1, page: 1 };
+                toast.error(data.message || t('getAllArticles.error') || 'Failed to load articles');
+                return { articles: [], total: 0, totalPages: 0, page: 0 };
             }
         } catch (error) {
             console.error('Error fetching articles:', error);
-            toast.error(error.response?.data?.message || t('article.error_load') || 'Не удалось загрузить статьи');
-            return { articles: [], total: 0, totalPages: 1, page: 1 };
+            toast.error(error.response?.data?.message || t('getAllArticles.error') || 'Failed to load articles');
+            return { articles: [], total: 0, totalPages: 0, page: 0 };
         }
     };
 
-    const searchArticles = async (query, page = 1, limit = 6) => {
+    const searchArticles = async (query, page = 1, limit = 8) => {
         try {
             const { data } = await axios.get(`${backendUrl}/api/user/articles/search/${encodeURIComponent(query)}?page=${page}&limit=${limit}`);
-            console.log('searchArticles response:', data);
             if (data.success) {
                 return {
                     articles: data.articles,
@@ -298,28 +296,28 @@ const AppContextProvider = (props) => {
                     page: data.page
                 };
             } else {
-                toast.error(data.message || t('article.error_search') || 'Не удалось выполнить поиск');
-                return { articles: [], total: 0, totalPages: 1, page: 1 };
+                toast.error(data.message || t('failedToSearch') || 'Failed to search');
+                return { articles: [], total: null, totalPages: null, page: null };
             }
         } catch (error) {
             console.error('Error searching articles:', error);
-            toast.error(error.response?.data?.message || t('article.error_search') || 'Не удалось выполнить поиск');
-            return { articles: [], total: 0, totalPages: 1, page: 1 };
+            toast.error(error.response?.data?.message || t('failedToSearch') || 'Failed to search articles');
+            return { articles: [], total: null, totalPages: null, page: null };
         }
     };
 
-    const getArticleById = async (articleId) => {
+    const getArticleById = async (id) => {
         try {
-            const { data } = await axios.get(`${backendUrl}/api/user/articles/${articleId}`);
+            const { data } = await axios.get(`${backendUrl}/api/user/articles/${id}`);
             if (data.success) {
                 return data.article;
             } else {
-                toast.error(data.message || t('article.error_load_single') || 'Не удалось загрузить статью');
+                toast.error(data.message || t('failedToLoadArticle') || 'Failed to load article');
                 return null;
             }
         } catch (error) {
             console.error('Error fetching article:', error);
-            toast.error(error.response?.data?.message || t('article.error_load_single') || 'Не удалось загрузить статью');
+            toast.error(error.response?.data?.message || t('failedToLoadArticle') || 'Failed to load article');
             return null;
         }
     };
@@ -332,56 +330,16 @@ const AppContextProvider = (props) => {
                 { withCredentials: true }
             );
             if (data.success) {
-                toast.success(t('article.comment_created') || 'Комментарий добавлен');
+                toast.success(t('commentCreated') || 'Comment successfully created');
                 return data.comment;
             } else {
-                toast.error(data.message || t('article.error_comment') || 'Не удалось добавить комментарий');
+                toast.error(data.message || t('failedToCreateComment') || 'Failed to create comment');
                 return null;
             }
         } catch (error) {
             console.error('Error creating comment:', error);
-            toast.error(error.response?.data?.message || t('article.error_comment') || 'Не удалось добавить комментарий');
+            toast.error(error.response?.data?.message || t('failedToCreateComment') || 'Failed to create comment');
             return null;
-        }
-    };
-
-    const updateComment = async (commentId, content) => {
-        try {
-            const { data } = await axios.put(
-                `${backendUrl}/api/user/comments/${commentId}`,
-                { content },
-                { withCredentials: true }
-            );
-            if (data.success) {
-                toast.success(t('article.comment_updated') || 'Комментарий обновлен');
-                return data.comment;
-            } else {
-                toast.error(data.message || t('article.error_comment_update') || 'Не удалось обновить комментарий');
-                return null;
-            }
-        } catch (error) {
-            console.error('Error updating comment:', error);
-            toast.error(error.response?.data?.message || t('article.error_comment_update') || 'Не удалось обновить комментарий');
-            return null;
-        }
-    };
-
-    const deleteComment = async (commentId) => {
-        try {
-            const { data } = await axios.delete(`${backendUrl}/api/user/comments/${commentId}`, {
-                withCredentials: true,
-            });
-            if (data.success) {
-                toast.success(t('article.comment_deleted') || 'Комментарий удален');
-                return true;
-            } else {
-                toast.error(data.message || t('article.error_comment_delete') || 'Не удалось удалить комментарий');
-                return false;
-            }
-        } catch (error) {
-            console.error('Error deleting comment:', error);
-            toast.error(error.response?.data?.message || t('article.error_comment_delete') || 'Не удалось удалить комментарий');
-            return false;
         }
     };
 
@@ -391,83 +349,118 @@ const AppContextProvider = (props) => {
             if (data.success) {
                 return data.comments;
             } else {
-                toast.error(data.message || t('article.error_comments') || 'Не удалось загрузить комментарии');
+                toast.error(data.message || t('failedToLoadComments') || 'Failed to load comments');
                 return [];
             }
         } catch (error) {
             console.error('Error fetching comments:', error);
-            toast.error(error.response?.data?.message || t('article.error_comments') || 'Не удалось загрузить комментарии');
+            toast.error(error.response?.data?.message || t('failedToLoadComments') || 'Failed to load comments');
             return [];
         }
     };
 
-    // Перехватчик axios
+    const updateComment = async (commentId, content) => {
+        try {
+            const { data } = await axios.put(`${backendUrl}/api/user/comments/${commentId}`, { content }, { withCredentials: true });
+            if (data.success) {
+                toast.success(t('commentUpdated') || 'Comment successfully updated');
+                return data.comment;
+            } else {
+                toast.error(data.message || t('failedToUpdateComment') || 'Failed to update comment');
+                return null;
+            }
+        } catch (error) {
+            console.error('Error updating comment:', error);
+            toast.error(error.response?.data?.message || t('failedToUpdateComment') || 'Failed to update comment');
+            return null;
+        }
+    };
+
+    const deleteComment = async (commentId) => {
+        try {
+            const { data } = await axios.delete(`${backendUrl}/api/user/comments/${commentId}`, { withCredentials: true });
+            if (data.success) {
+                toast.success(t('commentDeleted') || 'Comment successfully deleted');
+                return true;
+            } else {
+                toast.error(data.message || t('failedToDeleteComment') || 'Failed to delete comment');
+                return false;
+            }
+        } catch (error) {
+            console.error('Error deleting comment:', error);
+            toast.error(error.response?.data?.message || t('failedToDeleteComment') || 'Failed to delete comment');
+            return false;
+        }
+    };
+
     useEffect(() => {
         let refreshPromise = null;
 
         const interceptor = axios.interceptors.response.use(
-            (response) => response,
+            response => {
+                return response;
+            },
             async (error) => {
                 const originalRequest = error.config;
                 console.log('Axios error:', {
                     status: error.response?.status,
                     message: error.response?.data?.message,
                     url: originalRequest.url
-                }); // Лог
+                });
 
                 if (error.response?.status === 401 && !originalRequest._retry) {
                     originalRequest._retry = true;
 
                     const hasRefreshToken = await checkRefreshToken();
                     if (!hasRefreshToken) {
-                        console.log('No refresh token available, logging out'); // Лог
+                        console.log('No refresh token available, logging out');
                         setIsAuthenticated(false);
                         setUserData(null);
                         setConversations([]);
                         setMedicalRecords([]);
-                        setLoading(false); // Завершаем загрузку
+                        setLoading(false);
                         return Promise.reject(error);
                     }
 
                     try {
                         if (refreshPromise) {
-                            console.log('Waiting for existing refresh promise'); // Лог
+                            console.log('Waiting for existing refresh promise');
                             await refreshPromise;
                             return axios(originalRequest);
                         }
 
-                        console.log('Attempting to refresh token...'); // Лог
+                        console.log('Attempting to refresh token...');
                         refreshPromise = refreshAndReload();
                         const success = await refreshPromise;
                         refreshPromise = null;
 
                         if (success) {
-                            console.log('Token refreshed successfully, retrying request'); // Лог
+                            console.log('Token refreshed successfully, retrying request');
                             return axios(originalRequest);
                         } else {
-                            console.log('Refresh token failed, logging out'); // Лог
+                            console.log('Refresh token failed, logging out');
                             setIsAuthenticated(false);
                             setUserData(null);
                             setConversations([]);
                             setMedicalRecords([]);
-                            setLoading(false); // Завершаем загрузку
-                            toast.error(t('auth.session_expired') || 'Session expired, please log in again');
+                            setLoading(false);
+                            toast.error(t('sessionExpired') || 'Session expired, please log in again');
                             return Promise.reject(error);
                         }
                     } catch (refreshError) {
-                        console.error('Error refreshing token:', refreshError); // Лог
+                        console.error('Error refreshing token:', refreshError);
                         setIsAuthenticated(false);
                         setUserData(null);
                         setConversations([]);
                         setMedicalRecords([]);
-                        setLoading(false); // Завершаем загрузку
-                        toast.error(t('auth.session_expired') || 'Session expired, please log in again');
+                        setLoading(false);
+                        toast.error(t('sessionExpired') || 'Session expired, please log in again');
                         refreshPromise = null;
                         return Promise.reject(error);
                     }
                 }
 
-                console.log('Non-401 error or retry failed:', error.response?.data?.message || error.message); // Лог
+                console.log('Non-401 error or retry failed:', error.response?.data?.message || error.message);
                 return Promise.reject(error);
             }
         );
@@ -496,11 +489,12 @@ const AppContextProvider = (props) => {
         socket.on('disconnect', () => {
             console.log('Disconnected from socket (user)');
         });
+
         return () => {
             socket.off('connect');
             socket.off('disconnect');
         };
-    }, [socket]);
+    }, []);
 
     const value = {
         doctors,
@@ -534,10 +528,9 @@ const AppContextProvider = (props) => {
         searchArticles,
         getArticleById,
         createComment,
+        getCommentsByArticle,
         updateComment,
         deleteComment,
-        getCommentsByArticle,
-        refreshAndReload,
     };
 
     return (

@@ -10,18 +10,37 @@ const Login = () => {
     const [state, setState] = useState('Admin');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const { backendUrl, setIsAuthenticated: setAdminAuthenticated, checkAuth: checkAdminAuth } =
-        useContext(AdminContext);
-    const { setIsAuthenticated: setDoctorAuthenticated, checkAuth: checkDoctorAuth } =
-        useContext(DoctorContext);
+    const {
+        backendUrl,
+        setIsAuthenticated: setAdminAuthenticated,
+        checkAuth: checkAdminAuth,
+        logout: adminLogout,
+    } = useContext(AdminContext);
+    const {
+        setIsAuthenticated: setDoctorAuthenticated,
+        checkAuth: checkDoctorAuth,
+        logout: doctorLogout,
+        isAuthenticated: isDoctorAuthenticated, // Добавляем isAuthenticated
+    } = useContext(DoctorContext);
     const navigate = useNavigate();
 
     const onSubmitHandler = async (event) => {
         event.preventDefault();
+        setIsSubmitting(true);
         try {
             const endpoint = state === 'Admin' ? '/api/admin/login' : '/api/doctor/login';
             const targetRoute = state === 'Admin' ? '/admin-dashboard' : '/doctor-dashboard';
+
+            // Логаут другой сущности только если она авторизована
+            if (state === 'Admin' && isDoctorAuthenticated) {
+                await doctorLogout();
+                setDoctorAuthenticated(false);
+            } else if (state === 'Doctor') {
+                await adminLogout();
+                setAdminAuthenticated(false);
+            }
 
             const { data } = await axios.post(
                 `${backendUrl}${endpoint}`,
@@ -33,13 +52,11 @@ const Login = () => {
             if (data.success) {
                 toast.success(data.message);
                 if (state === 'Admin') {
-                    const isAuth = await checkAdminAuth();
-                    setAdminAuthenticated(isAuth);
-                    setDoctorAuthenticated(false);
+                    setAdminAuthenticated(true);
+                    checkAdminAuth(); // Фоновая проверка
                 } else {
-                    const isAuth = await checkDoctorAuth();
-                    setDoctorAuthenticated(isAuth);
-                    setAdminAuthenticated(false);
+                    setDoctorAuthenticated(true);
+                    checkDoctorAuth(); // Фоновая проверка
                 }
                 navigate(targetRoute, { replace: true });
             } else {
@@ -48,6 +65,8 @@ const Login = () => {
         } catch (error) {
             console.error('Error during login:', error);
             toast.error(error.response?.data?.message || 'Login failed');
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -65,6 +84,7 @@ const Login = () => {
                         className='border border-[#DADADA] rounded w-full p-2 mt-1'
                         type='email'
                         required
+                        disabled={isSubmitting}
                     />
                 </div>
                 <div className='w-full'>
@@ -75,9 +95,15 @@ const Login = () => {
                         className='border border-[#DADADA] rounded w-full p-2 mt-1'
                         type='password'
                         required
+                        disabled={isSubmitting}
                     />
                 </div>
-                <button className='bg-primary text-white w-full py-2 rounded-md text-base'>Login</button>
+                <button
+                    className='bg-primary text-white w-full py-2 rounded-md text-base'
+                    disabled={isSubmitting}
+                >
+                    {isSubmitting ? 'Loading...' : 'Login'}
+                </button>
                 {state === 'Admin' ? (
                     <p>
                         Doctor Login?{' '}

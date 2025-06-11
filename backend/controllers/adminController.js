@@ -13,7 +13,7 @@ import { redis } from '../lib/redis.js';
 // Helper function to generate access and refresh tokens
 const generateTokens = () => {
     const accessToken = jwt.sign({ isAdmin: true }, process.env.ACCESS_TOKEN_SECRET, {
-        expiresIn: '15m',
+        expiresIn: '15m', // Увеличено до 15 минут
     });
 
     const refreshToken = jwt.sign({ isAdmin: true }, process.env.REFRESH_TOKEN_SECRET, {
@@ -30,22 +30,33 @@ const storeRefreshToken = async (refreshToken) => {
 
 // Helper function to set cookies
 const setCookies = (res, accessToken, refreshToken) => {
-    res.cookie('accessToken', accessToken, {
+    res.cookie('adminAccessToken', accessToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
-        maxAge: 15 * 60 * 1000, // 15 minutes
-        path: '/',
+        maxAge: 15 * 60 * 1000, // 15 минут
     });
-    res.cookie('refreshToken', refreshToken, {
+    res.cookie('adminRefreshToken', refreshToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-        path: '/',
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 дней
     });
 };
 
+// API to check if refresh token exists
+const checkRefreshToken = async (req, res) => {
+    try {
+        const refreshToken = req.cookies.adminRefreshToken; // Исправлено
+        console.log('Check admin refresh token received:', refreshToken);
+        res.json({ success: true, hasRefreshToken: !!refreshToken });
+    } catch (error) {
+        console.log('Error in checkRefreshToken (admin):', error.message);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// API for admin login
 // API for admin login
 const loginAdmin = async (req, res) => {
     try {
@@ -73,68 +84,79 @@ const loginAdmin = async (req, res) => {
     }
 };
 
+
 // API to log out admin
 const logoutAdmin = async (req, res) => {
     try {
-        const deleted = await redis.del(`refresh_token_admin`);
-        console.log(`Redis delete refresh_token_admin: ${deleted}`); // Логирование для отладки
-        res.clearCookie('accessToken', {
+        // Проверяем наличие refresh-токена
+        const refreshToken = req.cookies.adminRefreshToken;
+        if (refreshToken) {
+            await redis.del(`refresh_token_admin`);
+            console.log('Refresh token deleted for admin');
+        } else {
+            console.log('No refresh token found for admin');
+        }
+
+        // Очищаем куки
+        res.clearCookie('adminAccessToken', {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'strict',
-            path: '/',
         });
-        res.clearCookie('refreshToken', {
+        res.clearCookie('adminRefreshToken', {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'strict',
-            path: '/',
         });
+
         res.json({ success: true, message: 'Logged out successfully' });
     } catch (error) {
-        console.log('Error in logoutAdmin:', error);
-        res.json({ success: false, message: error.message });
+        console.error('Error during admin logout:', error.message);
+        res.status(500).json({ success: false, message: 'Server error' });
     }
 };
 
 // API to refresh access token for admin
 const refreshTokenAdmin = async (req, res) => {
     try {
-        const refreshToken = req.cookies.refreshToken;
+        const refreshToken = req.cookies.adminRefreshToken; // Исправлено
+        console.log('Admin refresh token received:', refreshToken);
 
         if (!refreshToken) {
             return res.status(401).json({ success: false, message: 'No refresh token provided' });
         }
 
         const storedToken = await redis.get(`refresh_token_admin`);
+        console.log('Stored admin token in Redis:', storedToken);
         if (storedToken !== refreshToken) {
             return res.status(401).json({ success: false, message: 'Invalid refresh token' });
         }
 
         const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+        console.log('Decoded admin refresh token:', decoded);
         if (!decoded.isAdmin) {
             return res.status(401).json({ success: false, message: 'Unauthorized - Admin access required' });
         }
 
         const accessToken = jwt.sign({ isAdmin: true }, process.env.ACCESS_TOKEN_SECRET, {
-            expiresIn: '15m',
+            expiresIn: '15m', // Увеличено до 15 минут
         });
+        console.log('New admin access token generated:', accessToken);
 
-        res.cookie('accessToken', accessToken, {
+        res.cookie('adminAccessToken', accessToken, { // Исправлено
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'strict',
-            maxAge: 15 * 60 * 1000,
-            path: '/',
+            maxAge: 15 * 60 * 1000, // 15 минут
         });
 
         res.json({ success: true, message: 'Token refreshed successfully' });
     } catch (error) {
         console.log('Error in refreshTokenAdmin:', error);
-        res.json({ success: false, message: error.message });
+        res.status(401).json({ success: false, message: error.message });
     }
 };
-// hello
+
 // API for adding doctor
 const addDoctor = async (req, res) => {
     try {
@@ -586,5 +608,6 @@ export {
     getArticleById,
     updateArticle,
     deleteArticle,
-    deleteComment
+    deleteComment,
+    checkRefreshToken
 };

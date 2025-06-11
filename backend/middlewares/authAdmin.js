@@ -2,7 +2,7 @@ import jwt from 'jsonwebtoken';
 
 export const authAdmin = async (req, res, next) => {
     try {
-        const accessToken = req.cookies.accessToken;
+        const accessToken = req.cookies.adminAccessToken; // Исправлено
 
         if (!accessToken) {
             return res.status(401).json({ success: false, message: 'Unauthorized - No access token provided' });
@@ -24,9 +24,13 @@ export const authAdmin = async (req, res, next) => {
             throw error;
         }
     } catch (error) {
-        console.log('Error in authAdmin middleware:', error.message);
+        console.error('Error in authAdmin middleware:', {
+            message: error.message,
+            token: req.cookies.adminAccessToken,
+            url: req.url,
+        });
         return res.status(401).json({ success: false, message: 'Unauthorized - Invalid access token' });
     }
 };
-// hello
+
 export default authAdmin;

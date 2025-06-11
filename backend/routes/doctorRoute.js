@@ -15,7 +15,8 @@ import {
     getMedicalRecords,
     getUserProfile,
     getStudentMedicalRecords,
-    getStudentAppointments
+    getStudentAppointments,
+    checkRefreshToken
 } from '../controllers/doctorController.js';
 import authDoctor from '../middlewares/authDoctor.js';
 import authDoctorOrUser from '../middlewares/authDoctorOrUser.js';
@@ -25,6 +26,7 @@ import upload from '../middlewares/multer.js';
 
 const doctorRouter = express.Router();
 // hello
+doctorRouter.post('/check-refresh-token', checkRefreshToken)
 doctorRouter.get('/list', doctorList);
 doctorRouter.post('/login', loginDoctor);
 doctorRouter.post('/logout', logoutDoctor);

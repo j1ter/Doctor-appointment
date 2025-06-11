@@ -14,7 +14,8 @@ import {
      getArticleById,
      updateArticle,
      deleteArticle,
-     deleteComment
+     deleteComment,
+     checkRefreshToken
 } from '../controllers/adminController.js';
 import upload from '../middlewares/multer.js';
 import authAdmin from '../middlewares/authAdmin.js';
@@ -24,6 +25,7 @@ import { changeAvailabity } from '../controllers/doctorController.js';
 
 const adminRouter = express.Router();
 // hello
+adminRouter.post('/check-refresh-token', checkRefreshToken); // Новый маршрут
 adminRouter.post('/add-doctor', debugMiddleware, authAdmin, upload.single('image'), multerErrorHandler, addDoctor);
 adminRouter.post('/login', loginAdmin);
 adminRouter.post('/logout', logoutAdmin);
