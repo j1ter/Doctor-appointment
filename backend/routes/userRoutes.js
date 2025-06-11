@@ -14,7 +14,8 @@ import {
     verifyCode, // Новый маршрут
     getAllArticles,
     getArticleById,
-    searchArticles
+    searchArticles,
+    checkRefreshToken
     
 
 } from '../controllers/userController.js';
@@ -31,6 +32,7 @@ import { sendMessage, getMessages } from '../controllers/messageController.js';
 
 const userRouter = express.Router();
 
+userRouter.post('/check-refresh-token', checkRefreshToken); // Новый маршрут
 userRouter.post('/register', registerUser); // Новый маршрут
 userRouter.post('/login', loginUser);
 userRouter.post('/logout', authUser, logoutUser);

@@ -22,7 +22,19 @@ const AppContextProvider = (props) => {
 
     axios.defaults.withCredentials = true;
 
-    // Определяем все функции до их использования
+    // Функция для проверки наличия refreshToken
+    const checkRefreshToken = async () => {
+        try {
+            const { data } = await axios.get(`${backendUrl}/api/user/check-refresh-token`, { withCredentials: true });
+            console.log('Check refresh token response:', data); // Лог
+            return data.hasRefreshToken;
+        } catch (error) {
+            console.log('Error checking refresh token:', error.response?.data?.message || error.message); // Лог
+            return false;
+        }
+    };
+
+    // Функция для обновления токена
     const refreshAndReload = async () => {
         try {
             console.log('Sending refresh token request to:', backendUrl + '/api/user/refresh-token'); // Лог
@@ -40,9 +52,18 @@ const AppContextProvider = (props) => {
         }
     };
 
+    // Функция для загрузки профиля
     const loadUserProfileData = async () => {
         try {
             setLoading(true);
+            const hasRefreshToken = await checkRefreshToken();
+            if (!hasRefreshToken) {
+                console.log('No refresh token found, skipping profile load'); // Лог
+                setIsAuthenticated(false);
+                setUserData(null);
+                return;
+            }
+
             console.log('Fetching user profile...'); // Лог
             const { data } = await axios.get(backendUrl + '/api/user/profile', { withCredentials: true });
             console.log('Profile data response:', data); // Лог
@@ -82,7 +103,9 @@ const AppContextProvider = (props) => {
 
     const logout = async () => {
         try {
+            console.log('Initiating logout...'); // Лог
             const { data } = await axios.post(backendUrl + '/api/user/logout', {}, { withCredentials: true });
+            console.log('Logout response:', data); // Лог
             if (data.success) {
                 setIsAuthenticated(false);
                 setUserData(null);
@@ -93,8 +116,10 @@ const AppContextProvider = (props) => {
                 toast.error(data.message);
             }
         } catch (error) {
-            console.log(error);
+            console.error('Error during logout:', error); // Лог
             toast.error(error.message);
+        } finally {
+            setLoading(false); // Гарантируем завершение загрузки
         }
     };
 
@@ -388,12 +413,22 @@ const AppContextProvider = (props) => {
                     status: error.response?.status,
                     message: error.response?.data?.message,
                     url: originalRequest.url
-                }); // Лог для отладки
+                }); // Лог
 
                 if (error.response?.status === 401 && !originalRequest._retry) {
                     originalRequest._retry = true;
 
-                    // Проверяем, есть ли refreshToken в cookies
+                    const hasRefreshToken = await checkRefreshToken();
+                    if (!hasRefreshToken) {
+                        console.log('No refresh token available, logging out'); // Лог
+                        setIsAuthenticated(false);
+                        setUserData(null);
+                        setConversations([]);
+                        setMedicalRecords([]);
+                        setLoading(false); // Завершаем загрузку
+                        return Promise.reject(error);
+                    }
+
                     try {
                         if (refreshPromise) {
                             console.log('Waiting for existing refresh promise'); // Лог
@@ -415,6 +450,7 @@ const AppContextProvider = (props) => {
                             setUserData(null);
                             setConversations([]);
                             setMedicalRecords([]);
+                            setLoading(false); // Завершаем загрузку
                             toast.error(t('auth.session_expired') || 'Session expired, please log in again');
                             return Promise.reject(error);
                         }
@@ -424,6 +460,7 @@ const AppContextProvider = (props) => {
                         setUserData(null);
                         setConversations([]);
                         setMedicalRecords([]);
+                        setLoading(false); // Завершаем загрузку
                         toast.error(t('auth.session_expired') || 'Session expired, please log in again');
                         refreshPromise = null;
                         return Promise.reject(error);
@@ -438,7 +475,7 @@ const AppContextProvider = (props) => {
         return () => {
             axios.interceptors.response.eject(interceptor);
         };
-    }, [backendUrl, t, loadUserProfileData]);
+    }, [backendUrl, t]);
 
     useEffect(() => {
         loadUserProfileData();

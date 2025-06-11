@@ -77,6 +77,18 @@ const sendVerificationCode = async (email, code) => {
     }
 };
 
+// API to check if refresh token exists
+const checkRefreshToken = async (req, res) => {
+    try {
+        const refreshToken = req.cookies.refreshToken;
+        console.log('Check refresh token received:', refreshToken); // Лог
+        res.json({ success: true, hasRefreshToken: !!refreshToken });
+    } catch (error) {
+        console.log('Error in checkRefreshToken:', error.message); // Лог
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
 // API for user registration
 const registerUser = async (req, res) => {
     try {
@@ -306,7 +318,7 @@ const logoutUser = async (req, res) => {
 const refreshToken = async (req, res) => {
     try {
         const refreshToken = req.cookies.refreshToken;
-        console.log('Refresh token received:', refreshToken); // Лог для отладки
+        console.log('Refresh token received:', refreshToken); // Лог
         if (!refreshToken) {
             return res.status(401).json({ success: false, message: 'No refresh token provided' });
         }
@@ -320,7 +332,7 @@ const refreshToken = async (req, res) => {
         }
 
         const accessToken = jwt.sign({ userId: decoded.userId }, process.env.ACCESS_TOKEN_SECRET, {
-            expiresIn: '1d', // Changed from '15m' to '1d'
+            expiresIn: '15m', // Исправлено с '1d' на '15m'
         });
         console.log('New access token generated:', accessToken); // Лог
 
@@ -328,8 +340,7 @@ const refreshToken = async (req, res) => {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'strict',
-            maxAge: 15 * 60 * 1000,
-            // maxAge: 24 * 60 * 60 * 1000, // 1 day
+            maxAge: 15 * 60 * 1000, // 15 minutes
         });
 
         res.json({ success: true, message: 'Token refreshed successfully' });
@@ -744,5 +755,6 @@ export {
     changePassword,
     searchArticles,
     getAllArticles,
-    getArticleById
+    getArticleById,
+    checkRefreshToken
 };
