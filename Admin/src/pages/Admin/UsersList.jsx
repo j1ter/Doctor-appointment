@@ -14,12 +14,12 @@ const UsersList = () => {
 
   return (
     <div className='m-5'>
-      <h3 className='text-lg font-medium mb-5'>{t('admin.user_list')}</h3>
+      <h3 className='text-lg font-medium mb-5'>{t('user list')}</h3>
       <div className='bg-white border rounded text-sm max-h-[80vh] overflow-y-scroll'>
         <div className='grid grid-cols-[1fr_2fr_1fr] gap-1 py-3 px-6 border-b'>
-          <p>{t('admin.name')}</p>
-          <p>{t('admin.email')}</p>
-          <p>{t('admin.registered_on')}</p>
+          <p>{t('name')}</p>
+          <p>{t('email')}</p>
+          <p>{t('registered on')}</p>
         </div>
         {users.length > 0 ? (
           users.map((user, index) => (
@@ -33,7 +33,7 @@ const UsersList = () => {
             </div>
           ))
         ) : (
-          <p className='text-gray-500 px-6 py-3'>{t('admin.no_users')}</p>
+          <p className='text-gray-500 px-6 py-3'>{t('no_users')}</p>
         )}
       </div>
     </div>

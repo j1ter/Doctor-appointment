@@ -21,7 +21,7 @@ const Sidebar = () => {
                         to={'/admin-dashboard'}
                     >
                         <img src={assets.home_icon} alt='' />
-                        <p>{t('admin.dashboard')}</p>
+                        <p>{t('dashboard')}</p>
                     </NavLink>
                     <NavLink
                         className={({ isActive }) =>
@@ -30,7 +30,7 @@ const Sidebar = () => {
                         to={'/all-appointments'}
                     >
                         <img src={assets.appointment_icon} alt='' />
-                        <p>{t('admin.appointments')}</p>
+                        <p>{t('appointments')}</p>
                     </NavLink>
                     <NavLink
                         className={({ isActive }) =>
@@ -39,7 +39,7 @@ const Sidebar = () => {
                         to={'/add-doctor'}
                     >
                         <img src={assets.add_icon} alt='' />
-                        <p>{t('admin.add_doctor')}</p>
+                        <p>{t('add doctor')}</p>
                     </NavLink>
                     <NavLink
                         className={({ isActive }) =>
@@ -48,7 +48,7 @@ const Sidebar = () => {
                         to={'/doctor-list'}
                     >
                         <img src={assets.people_icon} alt='' />
-                        <p>{t('admin.doctors_list')}</p>
+                        <p>{t('doctors list')}</p>
                     </NavLink>
                     <NavLink
                         className={({ isActive }) =>
@@ -57,7 +57,7 @@ const Sidebar = () => {
                         to={'/add-user'}
                     >
                         <img src={assets.add_icon} alt='' />
-                        <p>{t('admin.add_user')}</p>
+                        <p>{t('add user')}</p>
                     </NavLink>
                     <NavLink
                         className={({ isActive }) =>
@@ -66,7 +66,7 @@ const Sidebar = () => {
                         to={'/users-list'}
                     >
                         <img src={assets.people_icon} alt='' />
-                        <p>{t('admin.users_list')}</p>
+                        <p>{t('users list')}</p>
                     </NavLink>
                     <NavLink
                         className={({ isActive }) =>
@@ -75,7 +75,7 @@ const Sidebar = () => {
                         to={'/add-article'}
                     >
                         <img src={assets.add_icon} alt='' />
-                        <p>{t('article.add_article')}</p>
+                        <p>{t('add article')}</p>
                     </NavLink>
                     <NavLink
                         className={({ isActive }) =>
@@ -84,7 +84,7 @@ const Sidebar = () => {
                         to={'/articles-list'}
                     >
                         <img src={assets.people_icon} alt='' />
-                        <p>{t('article.articles_list')}</p>
+                        <p>{t('articles list')}</p>
                     </NavLink>
                 </ul>
             )}
@@ -97,7 +97,7 @@ const Sidebar = () => {
                         to={'/doctor-dashboard'}
                     >
                         <img src={assets.home_icon} alt='' />
-                        <p className='hidden md:block'>{t('doctor.dashboard')}</p>
+                        <p className='hidden md:block'>{t('dashboard')}</p>
                     </NavLink>
                     <NavLink
                         className={({ isActive }) =>
@@ -106,7 +106,7 @@ const Sidebar = () => {
                         to={'/doctor-appointments'}
                     >
                         <img src={assets.appointment_icon} alt='' />
-                        <p className='hidden md:block'>{t('doctor.appointments')}</p>
+                        <p className='hidden md:block'>{t('appointments')}</p>
                     </NavLink>
                     <NavLink
                         className={({ isActive }) =>
@@ -115,7 +115,7 @@ const Sidebar = () => {
                         to={'/doctor-profile'}
                     >
                         <img src={assets.people_icon} alt='' />
-                        <p className='hidden md:block'>{t('doctor.profile')}</p>
+                        <p className='hidden md:block'>{t('profile')}</p>
                     </NavLink>
                     <NavLink
                         to='/doctor-messages'
@@ -124,7 +124,7 @@ const Sidebar = () => {
                         }
                     >
                         <img src={assets.message_icon} alt='Messages' className='w-6 mr-2' />
-                        <p className='messages-text'>{t('doctor.messages')}</p>
+                        <p className='messages-text'>{t('messages')}</p>
                     </NavLink>
                 </ul>
             )}

@@ -19,13 +19,13 @@ const AddArticle = () => {
         setLoading(true);
 
         if (articleData.title.length > 200) {
-            toast.error(t('title_too_long') || 'Заголовок не должен превышать 200 символов');
+            toast.error(t('title too long') || 'Заголовок не должен превышать 200 символов');
             setLoading(false);
             return;
         }
 
         if (!articleData.description) {
-            toast.error(t('description_required') || 'Описание обязательно');
+            toast.error(t('description required') || 'Описание обязательно');
             setLoading(false);
             return;
         }
@@ -55,7 +55,7 @@ const AddArticle = () => {
     return (
         <div className='m-5 w-full'>
             <div className='w-full max-w-4xl mx-auto my-5'>
-                <h3 className='text-lg font-medium mb-5'>{t('add_article')}</h3>
+                <h3 className='text-lg font-medium mb-5'>{t('add article')}</h3>
                 <form onSubmit={handleSubmit} className='flex flex-wrap gap-5'>
                     <div className='w-full'>
                         <p className='mb-2 text-gray-600'>{t('title')}</p>
@@ -65,7 +65,7 @@ const AddArticle = () => {
                             value={articleData.title}
                             onChange={(e) => setArticleData({ ...articleData, title: e.target.value })}
                             required
-                            placeholder={t('title_placeholder')}
+                            placeholder={t('title placeholder')}
                         />
                     </div>
                     <div className='w-full'>
@@ -75,7 +75,7 @@ const AddArticle = () => {
                             value={articleData.description}
                             onChange={(e) => setArticleData({ ...articleData, description: e.target.value })}
                             required
-                            placeholder={t('description_placeholder')}
+                            placeholder={t('description placeholder')}
                             style={{ whiteSpace: 'pre-wrap' }} // Поддержка отображения переносов строк в textarea
                         />
                     </div>

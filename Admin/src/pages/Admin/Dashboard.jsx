@@ -46,7 +46,7 @@ const Dashboard = () => {
                 <div className="bg-white mt-10">
                     <div className="flex items-center gap-2.5 px-4 py-4 rounded-t border">
                         <img src={assets.list_icon} alt="" />
-                        <p className="font-semibold">{t('admin.latest')}</p>
+                        <p className="font-semibold">{t('latest')}</p>
                     </div>
                     <div className="pt-4 border border-t-0">
                         {dashData.latestAppointments?.map((item, index) => (
