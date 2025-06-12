@@ -21,7 +21,6 @@ const Articles = () => {
         setLoading(true);
         try {
             const response = await getAllArticles(page, articlesPerPage);
-            console.log('fetchArticles response:', response);
             setArticles(response.articles || []);
             setTotalPages(response.totalPages || 1);
             setCurrentPage(page);
@@ -41,7 +40,6 @@ const Articles = () => {
                 return;
             }
             const response = await searchArticles(searchQuery, currentPage, articlesPerPage);
-            console.log('handleSearch response:', response);
             setArticles(response.articles || []);
             setTotalPages(response.totalPages || 1);
             setCurrentPage(1);

@@ -15,11 +15,9 @@ const DoctorContextProvider = (props) => {
     // Проверка наличия doctorRefreshToken
     const checkRefreshToken = async () => {
         try {
-            console.log('Checking doctor refresh token...');
             const { data } = await axios.post(`${backendUrl}/api/doctor/check-refresh-token`, {}, {
                 withCredentials: true,
             });
-            console.log('Check doctor refresh token response:', data);
             return data.hasRefreshToken;
         } catch (error) {
             console.error('Error checking doctor refresh token:', error.response?.data?.message || error.message);
@@ -30,11 +28,9 @@ const DoctorContextProvider = (props) => {
     // Обновление токена
     const refreshToken = async () => {
         try {
-            console.log('Sending doctor refresh token request to:', `${backendUrl}/api/doctor/refresh-token`);
             const { data } = await axios.post(`${backendUrl}/api/doctor/refresh-token`, {}, {
                 withCredentials: true,
             });
-            console.log('Doctor refresh token response:', data);
             if (data.success) {
                 setIsAuthenticated(true);
                 await getProfileData();
@@ -53,12 +49,10 @@ const DoctorContextProvider = (props) => {
             setLoading(true);
             const hasRefreshToken = await checkRefreshToken();
             if (!hasRefreshToken) {
-                console.log('No doctor refresh token found');
                 setIsAuthenticated(false);
                 return false;
             }
 
-            console.log('Checking doctor auth...');
             const success = await refreshToken();
             return success;
         } catch (error) {
@@ -73,11 +67,9 @@ const DoctorContextProvider = (props) => {
     // Выход из аккаунта доктора
     const logout = async () => {
         try {
-            console.log('Initiating doctor logout...');
             const { data } = await axios.post(`${backendUrl}/api/doctor/logout`, {}, {
                 withCredentials: true,
             });
-            console.log('Doctor logout response:', data);
             if (data.success) {
                 toast.success(data.message);
                 setIsAuthenticated(false);
@@ -90,13 +82,12 @@ const DoctorContextProvider = (props) => {
             return false;
         } catch (error) {
             console.error('Error during doctor logout:', error.response?.data?.message || error.message);
-            // Игнорируем 401, если уже не авторизован
             if (error.response?.status === 401) {
                 setIsAuthenticated(false);
                 setAppointments([]);
                 setDashData(null);
                 setProfileData(null);
-                return true; // Считаем логаут успешным, если токена нет
+                return true;
             }
             toast.error(error.response?.data?.message || 'Logout failed');
             return false;
@@ -151,7 +142,7 @@ const DoctorContextProvider = (props) => {
             } else {
                 toast.error(data.message);
             }
-            return data; // Возвращаем данные от сервера
+            return data;
         } catch (error) {
             console.error('Error sending message:', error);
             toast.error(error.response?.data?.message || error.message);
@@ -159,16 +150,13 @@ const DoctorContextProvider = (props) => {
         }
     };
 
-
     const getAppointments = async () => {
         try {
             const { data } = await axios.get(`${backendUrl}/api/doctor/appointments`, {
                 withCredentials: true,
             });
-            console.log('getAppointments response:', data); // Лог для отладки
             if (data.success) {
                 setAppointments(data.appointments);
-                console.log('Appointments set:', data.appointments);
             } else {
                 toast.error(data.message);
             }
@@ -223,7 +211,6 @@ const DoctorContextProvider = (props) => {
             });
             if (data.success) {
                 setDashData(data.dashData);
-                console.log(data.dashData);
             } else {
                 toast.error(data.message);
             }
@@ -232,7 +219,6 @@ const DoctorContextProvider = (props) => {
             toast.error(error.response?.data?.message || error.message);
         }
     };
-
 
     const updateProfile = async (updateData) => {
         try {
@@ -243,7 +229,7 @@ const DoctorContextProvider = (props) => {
             );
             if (data.success) {
                 toast.success(data.message);
-                await getProfileData(); // Убедимся, что данные обновляются
+                await getProfileData();
                 return true;
             } else {
                 toast.error(data.message);
@@ -255,17 +241,16 @@ const DoctorContextProvider = (props) => {
         }
     };
 
-   // Перехватчик axios
     useEffect(() => {
         let refreshPromise = null;
-        let retryCount = 0; // Добавляем счетчик повторных попыток
-        const MAX_RETRIES = 3; // Максимум 3 попытки
+        let retryCount = 0;
+        const MAX_RETRIES = 3;
 
         const interceptor = axios.interceptors.response.use(
             (response) => response,
             async (error) => {
                 const originalRequest = error.config;
-                console.log('Axios error (Doctor):', {
+                console.error('Axios error (Doctor):', {
                     status: error.response?.status,
                     message: error.response?.data?.message,
                     url: originalRequest.url,
@@ -281,30 +266,25 @@ const DoctorContextProvider = (props) => {
                     retryCount += 1;
 
                     if (refreshPromise) {
-                        console.log('Waiting for existing doctor refresh promise');
                         await refreshPromise;
                         return axios(originalRequest);
                     }
 
                     const hasRefreshToken = await checkRefreshToken();
                     if (!hasRefreshToken) {
-                        console.log('No doctor refresh token available, logging out');
                         await logout();
                         return Promise.reject(error);
                     }
 
                     try {
-                        console.log('Attempting to refresh doctor token...');
                         refreshPromise = refreshToken();
                         const success = await refreshPromise;
                         refreshPromise = null;
 
                         if (success) {
-                            console.log('Doctor token refreshed successfully, retrying request');
-                            retryCount = 0; // Сбрасываем счетчик
+                            retryCount = 0;
                             return axios(originalRequest);
                         } else {
-                            console.log('Doctor refresh token failed, logging out');
                             await logout();
                             return Promise.reject(error);
                         }
@@ -316,7 +296,7 @@ const DoctorContextProvider = (props) => {
                     }
                 }
 
-                retryCount = 0; // Сбрасываем счетчик для других ошибок
+                retryCount = 0;
                 return Promise.reject(error);
             }
         );
@@ -326,12 +306,10 @@ const DoctorContextProvider = (props) => {
         };
     }, [backendUrl]);
 
-    // Проверка авторизации при загрузке
     useEffect(() => {
         checkAuth();
     }, []);
 
-    // Инициализация данных при авторизации
     useEffect(() => {
         const initData = async () => {
             if (isAuthenticated) {
@@ -345,7 +323,7 @@ const DoctorContextProvider = (props) => {
         backendUrl,
         isAuthenticated,
         setIsAuthenticated,
-        loading, // Добавляем loading в контекст
+        loading,
         checkAuth,
         logout,
         appointments,
@@ -366,5 +344,5 @@ const DoctorContextProvider = (props) => {
 
     return <DoctorContext.Provider value={value}>{props.children}</DoctorContext.Provider>;
 };
-// hello
+
 export default DoctorContextProvider;

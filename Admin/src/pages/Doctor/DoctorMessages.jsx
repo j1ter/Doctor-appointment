@@ -39,7 +39,6 @@ const DoctorMessages = () => {
         fetchConversations();
 
         newSocket.on('connect', () => {
-            console.log('Socket connected:', newSocket.id);
         });
 
         newSocket.on('connect_error', (error) => {
@@ -47,7 +46,6 @@ const DoctorMessages = () => {
         });
 
         newSocket.on('new_message', (data) => {
-            console.log('New message received:', data);
             if (data.messages) {
                 setMessages(data.messages);
             } else {
@@ -77,7 +75,6 @@ const DoctorMessages = () => {
         }
     }, [selectedConversation, socket]);
 
-    // Прокрутка к последнему сообщению
     useEffect(() => {
         if (messagesContainerRef.current) {
             messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
@@ -96,16 +93,13 @@ const DoctorMessages = () => {
             const response = await sendMessage(newMessage);
             if (response && response.success && response.messages) {
                 setMessages(response.messages);
-                console.log('Message sent successfully');
             } else {
                 console.error('Failed to send message:', response);
-                console.log('Failed to send message');
             }
             setMessage('');
         }
     };
 
-    // Обработка смахивания
     const handleTouchStart = (e) => {
         touchStartX.current = e.touches[0].clientX;
     };

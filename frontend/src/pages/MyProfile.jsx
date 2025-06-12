@@ -23,16 +23,12 @@ const MyProfile = () => {
       formData.append('gender', userData.gender);
       formData.append('dob', userData.dob);
       if (image) {
-        console.log('Appending image to FormData:', image);
         formData.append('image', image);
-      } else {
-        console.log('No image selected');
       }
 
       const { data } = await axios.post(`${backendUrl}/api/user/update-profile`, formData, {
         withCredentials: true,
       });
-      console.log('Server response:', data);
 
       if (data.success) {
         toast.success(t('my_profile.update_success'));
@@ -43,7 +39,6 @@ const MyProfile = () => {
         toast.error(data.message || t('my_profile.update_error'));
       }
     } catch (error) {
-      console.log('Error in updateUserProfileData:', error);
       toast.error(error.response?.data?.message || t('my_profile.update_error'));
     }
   };
@@ -196,24 +191,24 @@ const MyProfile = () => {
           ) : (
             <>
               <button
-              className='border border-primary px-8 py-2 rounded-full hover:bg-primary hover:text-white transition-all duration-500'
-              onClick={() => setIsEdit(true)}
-            >
-              {t('my_profile.edit_profile')}
-            </button>
-            <button
-              onClick={() => navigate('/change-password')}
-              className='border border-primary px-8 py-2 rounded-full hover:bg-primary hover:text-white transition-all duration-500'
-            >
-              {t('my_profile.change_password')}
-            </button>
+                className='border border-primary px-8 py-2 rounded-full hover:bg-primary hover:text-white transition-all duration-500'
+                onClick={() => setIsEdit(true)}
+              >
+                {t('my_profile.edit_profile')}
+              </button>
+              <button
+                onClick={() => navigate('/change-password')}
+                className='border border-primary px-8 py-2 rounded-full hover:bg-primary hover:text-white transition-all duration-500'
+              >
+                {t('my_profile.change_password')}
+              </button>
             </>
           )}
         </div>
       </div>
 
       {/* Medical Records Section */}
-<div className='m-5'>
+      <div className='m-5'>
         <h3 className='text-lg font-medium mt-7'>{t('my_profile.medical_history')}</h3>
         {medicalRecords.length > 0 ? (
           <div className='bg-white border rounded text-sm max-h-[40vh] overflow-y-scroll w-full'>

@@ -17,11 +17,9 @@ const AdminContextProvider = (props) => {
     // Проверка наличия adminRefreshToken
     const checkRefreshToken = async () => {
         try {
-            console.log('Checking admin refresh token...');
             const { data } = await axios.post(`${backendUrl}/api/admin/check-refresh-token`, {}, {
                 withCredentials: true,
             });
-            console.log('Check admin refresh token response:', data);
             return data.hasRefreshToken;
         } catch (error) {
             console.error('Error checking admin refresh token:', error.response?.data?.message || error.message);
@@ -32,11 +30,9 @@ const AdminContextProvider = (props) => {
     // Обновление токена
     const refreshToken = async () => {
         try {
-            console.log('Sending admin refresh token request to:', `${backendUrl}/api/admin/refresh-token`);
             const { data } = await axios.post(`${backendUrl}/api/admin/refresh-token`, {}, {
                 withCredentials: true,
             });
-            console.log('Admin refresh token response:', data);
             if (data.success) {
                 setIsAuthenticated(true);
                 await getDashData();
@@ -55,12 +51,10 @@ const AdminContextProvider = (props) => {
             setLoading(true);
             const hasRefreshToken = await checkRefreshToken();
             if (!hasRefreshToken) {
-                console.log('No admin refresh token found');
                 setIsAuthenticated(false);
                 return false;
             }
 
-            console.log('Checking admin auth...');
             const success = await refreshToken();
             return success;
         } catch (error) {
@@ -75,11 +69,9 @@ const AdminContextProvider = (props) => {
     // Логаут админа
     const logout = async () => {
         try {
-            console.log('Initiating admin logout...');
             const { data } = await axios.post(`${backendUrl}/api/admin/logout`, {}, {
                 withCredentials: true,
             });
-            console.log('Admin logout response:', data);
             if (data.success) {
                 toast.success(data.message);
                 setIsAuthenticated(false);
@@ -101,7 +93,6 @@ const AdminContextProvider = (props) => {
         }
     };
 
-    // Функции getDashData, getAllArticles и т.д. остаются без изменений
     const getDashData = async () => {
         try {
             const { data } = await axios.get(`${backendUrl}/api/admin/dashboard`, {
@@ -118,7 +109,6 @@ const AdminContextProvider = (props) => {
         }
     };
 
-    // Получить все статьи
     const getAllArticles = async () => {
         try {
             const { data } = await axios.get(`${backendUrl}/api/admin/articles`, {
@@ -126,7 +116,6 @@ const AdminContextProvider = (props) => {
             });
             if (data.success && Array.isArray(data.articles)) {
                 setArticles(data.articles);
-                console.log('Articles set:', data.articles);
             } else {
                 toast.error(data.message || 'Статьи не найдены');
                 setArticles([]);
@@ -138,7 +127,6 @@ const AdminContextProvider = (props) => {
         }
     };
 
-    // Получить статью по ID
     const getArticleById = async (articleId) => {
         try {
             const { data } = await axios.get(`${backendUrl}/api/admin/articles/${articleId}`, {
@@ -157,7 +145,6 @@ const AdminContextProvider = (props) => {
         }
     };
 
-    // Создать статью
     const createArticle = async (articleData) => {
         try {
             const formData = new FormData();
@@ -187,7 +174,6 @@ const AdminContextProvider = (props) => {
         }
     };
 
-    // Обновить статью
     const updateArticle = async (articleId, articleData) => {
         try {
             const formData = new FormData();
@@ -217,7 +203,6 @@ const AdminContextProvider = (props) => {
         }
     };
 
-    // Удалить статью
     const deleteArticle = async (articleId) => {
         try {
             const { data } = await axios.delete(`${backendUrl}/api/admin/articles/${articleId}`, {
@@ -238,7 +223,6 @@ const AdminContextProvider = (props) => {
         }
     };
 
-    // Удалить комментарий
     const deleteComment = async (commentId) => {
         try {
             const { data } = await axios.delete(`${backendUrl}/api/admin/comments/${commentId}`, {
@@ -263,10 +247,8 @@ const AdminContextProvider = (props) => {
             const { data } = await axios.get(`${backendUrl}/api/admin/all-doctors`, {
                 withCredentials: true,
             });
-            console.log('Get all doctors response:', data);
             if (data.success && Array.isArray(data.doctors)) {
                 setDoctors(data.doctors);
-                console.log('Doctors set:', data.doctors);
             } else {
                 toast.error(data.message || 'No doctors found');
                 setDoctors([]);
@@ -285,7 +267,6 @@ const AdminContextProvider = (props) => {
             });
             if (data.success && Array.isArray(data.users)) {
                 setUsers(data.users);
-                console.log('Users set:', data.users);
             } else {
                 toast.error(data.message || 'No users found');
                 setUsers([]);
@@ -323,7 +304,6 @@ const AdminContextProvider = (props) => {
             });
             if (data.success) {
                 setAppointments(data.appointments);
-                console.log(data.appointments);
             } else {
                 toast.error(data.message);
             }
@@ -353,7 +333,6 @@ const AdminContextProvider = (props) => {
         }
     };
 
-    // Перехватчик axios
     useEffect(() => {
         let refreshPromise = null;
 
@@ -361,7 +340,7 @@ const AdminContextProvider = (props) => {
             (response) => response,
             async (error) => {
                 const originalRequest = error.config;
-                console.log('Axios error (Admin):', {
+                console.error('Axios error (Admin):', {
                     status: error.response?.status,
                     message: error.response?.data?.message,
                     url: originalRequest.url,
@@ -375,29 +354,24 @@ const AdminContextProvider = (props) => {
                     originalRequest._retry = true;
 
                     if (refreshPromise) {
-                        console.log('Waiting for existing admin refresh promise');
                         await refreshPromise;
                         return axios(originalRequest);
                     }
 
                     const hasRefreshToken = await checkRefreshToken();
                     if (!hasRefreshToken) {
-                        console.log('No admin refresh token available, logging out');
                         await logout();
                         return Promise.reject(error);
                     }
 
                     try {
-                        console.log('Attempting to refresh admin token...');
                         refreshPromise = refreshToken();
                         const success = await refreshPromise;
                         refreshPromise = null;
 
                         if (success) {
-                            console.log('Admin token refreshed successfully, retrying request');
                             return axios(originalRequest);
                         } else {
-                            console.log('Admin refresh token failed, logging out');
                             await logout();
                             return Promise.reject(error);
                         }
@@ -418,12 +392,10 @@ const AdminContextProvider = (props) => {
         };
     }, [backendUrl]);
 
-    // Проверка авторизации при загрузке
     useEffect(() => {
         checkAuth();
     }, []);
 
-    // Инициализация данных при авторизации
     useEffect(() => {
         const initData = async () => {
             if (isAuthenticated) {
@@ -437,7 +409,6 @@ const AdminContextProvider = (props) => {
         };
         initData();
     }, [isAuthenticated]);
-
 
     const value = {
         backendUrl,
@@ -462,7 +433,7 @@ const AdminContextProvider = (props) => {
         createArticle,
         updateArticle,
         deleteArticle,
-        deleteComment, // Новый метод
+        deleteComment,
     };
 
     return <AdminContext.Provider value={value}>{props.children}</AdminContext.Provider>;

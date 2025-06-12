@@ -8,7 +8,7 @@ export const AppContext = createContext();
 
 const AppContextProvider = (props) => {
     const { t } = useTranslation();
-    const currencySymbol = '$';
+    const currencySymbol = '₽';
     const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:4000';
     const [doctors, setDoctors] = useState([]);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -22,28 +22,24 @@ const AppContextProvider = (props) => {
 
     axios.defaults.withCredentials = true;
 
-    // Функция для проверки наличия refreshToken (изменена на POST)
+    // Функция для проверки наличия refreshToken
     const checkRefreshToken = async () => {
         try {
             const { data } = await axios.post(`${backendUrl}/api/user/check-refresh-token`, {}, { withCredentials: true });
-            console.log('Check refresh token response:', data);
             return data.hasRefreshToken;
         } catch (error) {
-            console.log('Error checking refresh token:', error.response?.data?.message || error.message);
+            console.error('Error checking refresh token:', error.response?.data?.message || error.message);
             return false;
         }
     };
 
     const refreshAndReload = async () => {
         try {
-            console.log('Sending refresh token request to:', backendUrl + '/api/user/refresh-token');
             const { data } = await axios.post(backendUrl + '/api/user/refresh-token', {}, { withCredentials: true });
-            console.log('Refresh token response:', data);
             if (data.success) {
                 await loadUserProfileData();
                 return true;
             }
-            console.log('Refresh token failed:', data.message);
             return false;
         } catch (error) {
             console.error('Error refreshing token:', error.response?.data?.message || error.message);
@@ -56,15 +52,12 @@ const AppContextProvider = (props) => {
             setLoading(true);
             const hasRefreshToken = await checkRefreshToken();
             if (!hasRefreshToken) {
-                console.log('No refresh token found, skipping profile load');
                 setIsAuthenticated(false);
                 setUserData(null);
                 return;
             }
 
-            console.log('Fetching user profile...');
             const { data } = await axios.get(backendUrl + '/api/user/profile', { withCredentials: true });
-            console.log('Profile data response:', data);
             if (data.success) {
                 setUserData(data.userData);
                 setIsAuthenticated(true);
@@ -73,7 +66,7 @@ const AppContextProvider = (props) => {
                 setIsAuthenticated(false);
             }
         } catch (error) {
-            console.log('Error loading user profile:', error.response?.data?.message || error.message);
+            console.error('Error loading user profile:', error.response?.data?.message || error.message);
             setUserData(null);
             setIsAuthenticated(false);
         } finally {
@@ -82,15 +75,12 @@ const AppContextProvider = (props) => {
     };
 
     const handleAuthSuccess = async () => {
-        console.log('Handling auth success...');
         await loadUserProfileData();
     };
 
     const logout = async () => {
         try {
-            console.log('Initiating logout...');
             const { data } = await axios.post(backendUrl + '/api/user/logout', {}, { withCredentials: true });
-            console.log('Logout response:', data);
             if (data.success) {
                 setIsAuthenticated(false);
                 setUserData(null);
@@ -123,12 +113,11 @@ const AppContextProvider = (props) => {
                     setConversations(updatedConversations);
                     return updatedConversations;
                 } else {
-                    console.log('Fetch conversations failed:', data.message);
                     toast.error(t('chat.error') || 'Failed to load conversations');
                     return [];
                 }
             } catch (error) {
-                console.log('Error in fetchConversations:', error);
+                console.error('Error in fetchConversations:', error);
                 toast.error(t('chat.error') || 'Failed to load conversations');
                 return [];
             }
@@ -243,7 +232,7 @@ const AppContextProvider = (props) => {
                 toast.error(data.message);
             }
         } catch (error) {
-            console.log(error);
+            console.error('Error fetching doctors:', error);
             toast.error(error.message);
         }
     };
@@ -265,7 +254,6 @@ const AppContextProvider = (props) => {
     const getAllArticles = async (page = 1, limit = 8) => {
         try {
             const { data } = await axios.get(`${backendUrl}/api/user/articles?page=${page}&limit=${limit}`);
-            console.log('getAllArticles response:', data);
             if (data.success) {
                 setArticles(data.articles);
                 return {
@@ -402,7 +390,7 @@ const AppContextProvider = (props) => {
             },
             async (error) => {
                 const originalRequest = error.config;
-                console.log('Axios error:', {
+                console.error('Axios error:', {
                     status: error.response?.status,
                     message: error.response?.data?.message,
                     url: originalRequest.url
@@ -413,7 +401,6 @@ const AppContextProvider = (props) => {
 
                     const hasRefreshToken = await checkRefreshToken();
                     if (!hasRefreshToken) {
-                        console.log('No refresh token available, logging out');
                         setIsAuthenticated(false);
                         setUserData(null);
                         setConversations([]);
@@ -424,21 +411,17 @@ const AppContextProvider = (props) => {
 
                     try {
                         if (refreshPromise) {
-                            console.log('Waiting for existing refresh promise');
                             await refreshPromise;
                             return axios(originalRequest);
                         }
 
-                        console.log('Attempting to refresh token...');
                         refreshPromise = refreshAndReload();
                         const success = await refreshPromise;
                         refreshPromise = null;
 
                         if (success) {
-                            console.log('Token refreshed successfully, retrying request');
                             return axios(originalRequest);
                         } else {
-                            console.log('Refresh token failed, logging out');
                             setIsAuthenticated(false);
                             setUserData(null);
                             setConversations([]);
@@ -460,7 +443,6 @@ const AppContextProvider = (props) => {
                     }
                 }
 
-                console.log('Non-401 error or retry failed:', error.response?.data?.message || error.message);
                 return Promise.reject(error);
             }
         );
@@ -484,10 +466,8 @@ const AppContextProvider = (props) => {
 
     useEffect(() => {
         socket.on('connect', () => {
-            console.log('Connected to socket (user)');
         });
         socket.on('disconnect', () => {
-            console.log('Disconnected from socket (user)');
         });
 
         return () => {

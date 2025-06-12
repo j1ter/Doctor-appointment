@@ -64,12 +64,9 @@ const UserMessages = () => {
                 if (response.messages) {
                     setMessages(response.messages);
                 }
-                // Уведомление об успехе
-                console.log(t('UserMessages.send-success'));
             } else {
                 console.error('Failed to send message:', response?.message || 'Unknown error');
                 // Уведомление об ошибке
-                console.log(t('UserMessages.send-error'));
             }
         }
     };
@@ -87,7 +84,6 @@ const UserMessages = () => {
     useEffect(() => {
         if (socket) {
             const handleNewMessage = (data) => {
-                console.log('New message received:', data);
                 if (userData?._id && data.conversationId) {
                     if (currentConversation?._id === data.conversationId) {
                         if (data.messages) {

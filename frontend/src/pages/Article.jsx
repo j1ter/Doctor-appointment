@@ -38,7 +38,7 @@ const Article = () => {
             return;
         }
         if (!newComment.trim()) {
-            toast.error(t('comment_empty_error') || 'Comment cannot be empty');
+            toast.error(t('comment_error') || 'Comment cannot be empty');
             return;
         }
 
@@ -57,7 +57,7 @@ const Article = () => {
     const handleEditSubmit = async (e) => {
         e.preventDefault();
         if (!editCommentText.trim()) {
-            toast.error(t('comment_empty_error') || 'Comment cannot be empty');
+            toast.error(t('comment_error') || 'Comment cannot be empty');
             return;
         }
 
@@ -70,7 +70,7 @@ const Article = () => {
     };
 
     const handleDeleteComment = async (commentId) => {
-        if (window.confirm(t('comment_confirm_delete') || 'Confirm comment deletion')) {
+        if (window.confirm(t('comment_deleted') || 'Confirm comment deletion')) {
             const success = await deleteComment(commentId);
             if (success) {
                 setComments(comments.filter((c) => c._id !== commentId));
@@ -91,7 +91,7 @@ const Article = () => {
     }
 
     if (!article) {
-        return <div className='m-10 text-center'>{t('not_found') || 'Article not found'}</div>;
+        return <div className='m-10 text-center'>{t('no_articles') || 'Article not found'}</div>;
     }
 
     return (

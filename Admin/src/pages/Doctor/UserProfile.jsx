@@ -71,7 +71,6 @@ const UserProfile = () => {
             if (file) {
                 const formData = new FormData();
                 let fileName = file.name; // Используем оригинальное имя файла
-                console.log('Uploading file with name:', fileName); // Лог для отладки
                 formData.append('file', file, fileName); // Указываем имя файла явно
 
                 try {
