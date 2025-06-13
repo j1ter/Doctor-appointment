@@ -46,7 +46,6 @@ const setCookies = (res, accessToken, refreshToken) => {
 const checkRefreshToken = async (req, res) => {
     try {
         const refreshToken = req.cookies.doctorRefreshToken;
-        console.log('Check doctor refresh token received:', refreshToken);
         res.json({ success: true, hasRefreshToken: !!refreshToken });
     } catch (error) {
         console.log('Error in checkRefreshToken (doctor):', error.message);
@@ -101,7 +100,6 @@ const logoutDoctor = async (req, res) => {
         const refreshTokenExists = await redis.exists(`refresh_token_doctor:${doctorId}`);
         if (refreshTokenExists) {
             await redis.del(`refresh_token_doctor:${doctorId}`);
-            console.log(`Refresh token deleted for doctor: ${doctorId}`);
         } else {
             console.log(`No refresh token found for doctor: ${doctorId}`);
         }
@@ -128,17 +126,14 @@ const logoutDoctor = async (req, res) => {
 const refreshTokenDoctor = async (req, res) => {
     try {
         const refreshToken = req.cookies.doctorRefreshToken;
-        console.log('Doctor refresh token received:', refreshToken);
 
         if (!refreshToken) {
             return res.status(401).json({ success: false, message: 'No refresh token provided' });
         }
 
         const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
-        console.log('Decoded doctor refresh token:', decoded);
 
         const storedToken = await redis.get(`refresh_token_doctor:${decoded.docId}`);
-        console.log('Stored doctor token in Redis:', storedToken);
 
         if (storedToken !== refreshToken) {
             return res.status(401).json({ success: false, message: 'Invalid refresh token' });
@@ -147,7 +142,6 @@ const refreshTokenDoctor = async (req, res) => {
         const accessToken = jwt.sign({ docId: decoded.docId }, process.env.ACCESS_TOKEN_SECRET, {
             expiresIn: '15m', // Увеличено до 15 минут
         });
-        console.log('New doctor access token generated:', accessToken);
 
         res.cookie('doctorAccessToken', accessToken, {
             httpOnly: true,
@@ -212,14 +206,10 @@ const uploadMedicalRecord = async (req, res) => {
             return res.json({ success: false, message: 'Invalid or incomplete appointment' });
         }
 
-        console.log('Received file originalname:', file.originalname);
-        console.log('Request headers:', req.headers);
-
         // Корректная обработка кириллицы
         let originalFileName = file.originalname;
         try {
             originalFileName = Buffer.from(originalFileName, 'binary').toString('utf8');
-            console.log('Decoded file name:', originalFileName);
         } catch (e) {
             console.log('Error decoding file name:', e.message);
             originalFileName = file.originalname; // Fallback
@@ -252,7 +242,6 @@ const appointmentsDoctor = async (req, res) => {
     try {
         const docId = req.doctor._id; // Используем ID из middleware authDoctor
         const appointments = await appointmentModel.find({ docId }).populate('userData', 'name image dob');
-        console.log('Appointments fetched for docId:', docId, appointments); // Лог для отладки
         res.json({ success: true, appointments });
     } catch (error) {
         console.log('Error in appointmentsDoctor:', error);
@@ -282,7 +271,6 @@ const appointmentComplete = async (req, res) => {
 const downloadMedicalRecord = async (req, res) => {
     try {
         const fileName = req.params.fileName;
-        console.log('Attempting to download file:', fileName);
 
         let decodedFileName = fileName;
         try {
@@ -445,14 +433,9 @@ const doctorProfile = async (req, res) => {
 };
 
 // API to update doctor profile data from Doctor Panel
-
-// API to update doctor profile data from Doctor Panel
 const updateDoctorProfile = async (req, res) => {
     try {
         const { docId, address, available } = req.body;
-
-        // Логируем входные данные для отладки
-        console.log('Updating doctor profile:', { docId, address, available });
 
         // Проверяем, существует ли доктор
         const doctor = await doctorModel.findById(docId);

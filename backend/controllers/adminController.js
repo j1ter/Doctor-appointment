@@ -47,8 +47,7 @@ const setCookies = (res, accessToken, refreshToken) => {
 // API to check if refresh token exists
 const checkRefreshToken = async (req, res) => {
     try {
-        const refreshToken = req.cookies.adminRefreshToken; // Исправлено
-        console.log('Check admin refresh token received:', refreshToken);
+        const refreshToken = req.cookies.adminRefreshToken;
         res.json({ success: true, hasRefreshToken: !!refreshToken });
     } catch (error) {
         console.log('Error in checkRefreshToken (admin):', error.message);
@@ -92,7 +91,6 @@ const logoutAdmin = async (req, res) => {
         const refreshToken = req.cookies.adminRefreshToken;
         if (refreshToken) {
             await redis.del(`refresh_token_admin`);
-            console.log('Refresh token deleted for admin');
         } else {
             console.log('No refresh token found for admin');
         }
@@ -119,21 +117,18 @@ const logoutAdmin = async (req, res) => {
 // API to refresh access token for admin
 const refreshTokenAdmin = async (req, res) => {
     try {
-        const refreshToken = req.cookies.adminRefreshToken; // Исправлено
-        console.log('Admin refresh token received:', refreshToken);
+        const refreshToken = req.cookies.adminRefreshToken;
 
         if (!refreshToken) {
             return res.status(401).json({ success: false, message: 'No refresh token provided' });
         }
 
         const storedToken = await redis.get(`refresh_token_admin`);
-        console.log('Stored admin token in Redis:', storedToken);
         if (storedToken !== refreshToken) {
             return res.status(401).json({ success: false, message: 'Invalid refresh token' });
         }
 
         const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
-        console.log('Decoded admin refresh token:', decoded);
         if (!decoded.isAdmin) {
             return res.status(401).json({ success: false, message: 'Unauthorized - Admin access required' });
         }
@@ -141,7 +136,6 @@ const refreshTokenAdmin = async (req, res) => {
         const accessToken = jwt.sign({ isAdmin: true }, process.env.ACCESS_TOKEN_SECRET, {
             expiresIn: '15m', // Увеличено до 15 минут
         });
-        console.log('New admin access token generated:', accessToken);
 
         res.cookie('adminAccessToken', accessToken, { // Исправлено
             httpOnly: true,
@@ -160,10 +154,6 @@ const refreshTokenAdmin = async (req, res) => {
 // API for adding doctor
 const addDoctor = async (req, res) => {
     try {
-        console.log('addDoctor: Request headers:', req.headers);
-        console.log('addDoctor: Request body:', req.body);
-        console.log('addDoctor: Request file:', req.file);
-
         const { name, email, password, speciality, degree, experience, about, address } = req.body;
         const imageFile = req.file;
 
@@ -181,7 +171,6 @@ const addDoctor = async (req, res) => {
 
         let imageUrl = '';
         if (imageFile) {
-            console.log('Uploading image to Cloudinary');
             const result = await new Promise((resolve, reject) => {
                 const uploadStream = cloudinary.uploader.upload_stream(
                     { resource_type: 'image' },
@@ -193,7 +182,6 @@ const addDoctor = async (req, res) => {
                 uploadStream.end(imageFile.buffer);
             });
             imageUrl = result.secure_url;
-            console.log('Cloudinary upload success:', imageUrl);
         }
 
         const doctorData = {
@@ -218,133 +206,6 @@ const addDoctor = async (req, res) => {
         res.status(500).json({ success: false, message: error.message });
     }
 };
-
-// // API for adding doctor
-// const addDoctor = async (req, res) => {
-//     try {
-//         console.log('Request body:', req.body); // Логирование для отладки
-//         console.log('Request file:', req.file);
-
-//         const { name, email, password, speciality, degree, experience, about, fees, address } = req.body;
-//         const imageFile = req.file;
-
-//         // Проверка обязательных полей
-//         if (!name || !email || !password || !speciality || !degree || !experience || !about || !fees || !address) {
-//             return res.json({ success: false, message: 'Missing required fields' });
-//         }
-
-//         // Валидация email
-//         if (!validator.isEmail(email)) {
-//             return res.json({ success: false, message: 'Please enter a valid email' });
-//         }
-
-//         // Валидация пароля
-//         if (password.length < 8) {
-//             return res.json({ success: false, message: 'Password must be at least 8 characters long' });
-//         }
-
-//         let imageUrl = '';
-//         if (imageFile) {
-//             const imageUpload = await cloudinary.uploader.upload(imageFile.path, { resource_type: 'image' });
-//             imageUrl = imageUpload.secure_url;
-//         }
-
-//         const doctorData = {
-//             name,
-//             email,
-//             image: imageUrl,
-//             password: await bcrypt.hash(password, 10),
-//             speciality,
-//             degree,
-//             experience,
-//             about,
-//             fees,
-//             address: JSON.parse(address),
-//             date: Date.now(),
-//         };
-
-//         const newDoctor = new doctorModel(doctorData);
-//         await newDoctor.save();
-
-//         res.json({ success: true, message: 'Doctor added successfully' });
-//     } catch (error) {
-//         console.log('Error in addDoctor:', error);
-//         res.json({ success: false, message: error.message });
-//     }
-// };
-
-// API for adding doctor
-// const addDoctor = async (req, res) => {
-//     try {
-
-//         const { name, email, password, speciality, degree, experience, about, fees, address } = req.body
-//         const imageFile = req.file
-
-//         // checking for all data to add doctor
-//         if (!name || !email || !password || !speciality || !degree || !experience || !about || !fees || !address) {
-//             return res.json({success: false, message: 'Missing Details'});
-//         }
-
-//         // validating email format
-//         if (!validator.isEmail(email)) {
-//             return res.json({success: false, message: 'Please enter a valid email'});
-//         }
-
-//         // validating strong password
-//         if (password.length < 8) {
-//             return res.json({success: false, message: 'Please enter a strong password'});
-//         }
-
-//         // hashing doctor password
-//         const salt = await bcrypt.genSalt(10);
-//         const hashedPassword = await bcrypt.hash(password, salt);
-
-//         // upload image to cloudinary
-//         const imageUpload = await cloudinary.uploader.upload(imageFile.path, {resource_type: 'image'});
-//         const imageUrl = imageUpload.secure_url
-
-//         const doctorData = {
-//             name,
-//             email,
-//             image: imageUrl,
-//             password: hashedPassword,
-//             speciality,
-//             degree,
-//             experience,
-//             about,
-//             fees,
-//             address: JSON.parse(address),
-//             date: Date.now()
-//         }
-
-//         const newDoctor = new doctorModel(doctorData)
-//         await newDoctor.save()
-
-//         res.json({success: true, message: 'Doctor Added'});
-
-//     } catch (error) {
-//         console.log(error)
-//         res.json({success: false, message: error.message})
-//     }
-// }
-// // API for admin login
-// const loginAdmin = async (req, res) => {
-//     try {
-//         const {email, password} = req.body
-
-//         if (email === process.env.ADMIN_EMAIL && password === process.env.ADMIN_PASSWORD) {
-
-//             const token = jwt.sign(email + password, process.env.JWT_SECRET);
-//             res.json({success: true, token});
-
-//         } else {
-//             res.json({success: false, message: 'Invalid credentials'})
-//         }
-//     } catch (error) {
-//         console.log(error)
-//         res.json({success: false, message: error.message})
-//     }
-// }
 
 // API to get all doctors list for admin panel
 const allDoctors = async (req, res) => {
@@ -440,10 +301,6 @@ const getAllUsers = async (req, res) => {
 // New API: Create an article
 const createArticle = async (req, res) => {
     try {
-        console.log('createArticle: Request headers:', req.headers);
-        console.log('createArticle: Request body:', req.body);
-        console.log('createArticle: Request file:', req.file);
-
         const { title, description } = req.body;
         const imageFile = req.file;
 
@@ -453,7 +310,6 @@ const createArticle = async (req, res) => {
 
         let imageUrl = '';
         if (imageFile) {
-            console.log('Uploading image to Cloudinary');
             const result = await new Promise((resolve, reject) => {
                 const uploadStream = cloudinary.uploader.upload_stream(
                     { resource_type: 'image', folder: 'articles' },
@@ -465,7 +321,6 @@ const createArticle = async (req, res) => {
                 uploadStream.end(imageFile.buffer);
             });
             imageUrl = result.secure_url;
-            console.log('Cloudinary upload success:', imageUrl);
         }
 
         const articleData = {
@@ -514,10 +369,6 @@ const getArticleById = async (req, res) => {
 // New API: Update an article
 const updateArticle = async (req, res) => {
     try {
-        console.log('updateArticle: Request headers:', req.headers);
-        console.log('updateArticle: Request body:', req.body);
-        console.log('updateArticle: Request file:', req.file);
-
         const { id } = req.params;
         const { title, description } = req.body;
         const imageFile = req.file;
@@ -532,7 +383,6 @@ const updateArticle = async (req, res) => {
         };
 
         if (imageFile) {
-            console.log('Uploading new image to Cloudinary');
             const result = await new Promise((resolve, reject) => {
                 const uploadStream = cloudinary.uploader.upload_stream(
                     { resource_type: 'image', folder: 'articles' },
@@ -544,7 +394,6 @@ const updateArticle = async (req, res) => {
                 uploadStream.end(imageFile.buffer);
             });
             updateData.image = result.secure_url;
-            console.log('Cloudinary upload success:', updateData.image);
         }
 
         const updatedArticle = await articleModel.findByIdAndUpdate(id, updateData, { new: true });

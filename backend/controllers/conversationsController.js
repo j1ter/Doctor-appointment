@@ -76,8 +76,6 @@ const getConversations = async (req, res) => {
             })
             .lean();
 
-        console.log('Populated conversations:', conversations);
-
         const formattedConversations = conversations
             .filter(conv => conv.members && conv.members.length > 0)
             .map(conv => {

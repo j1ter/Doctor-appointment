@@ -81,10 +81,8 @@ const sendVerificationCode = async (email, code) => {
 const checkRefreshToken = async (req, res) => {
     try {
         const refreshToken = req.cookies.refreshToken;
-        console.log('Check refresh token received:', refreshToken); // Лог
         res.json({ success: true, hasRefreshToken: !!refreshToken });
     } catch (error) {
-        console.log('Error in checkRefreshToken:', error.message); // Лог
         res.status(500).json({ success: false, message: error.message });
     }
 };
@@ -318,15 +316,12 @@ const logoutUser = async (req, res) => {
 const refreshToken = async (req, res) => {
     try {
         const refreshToken = req.cookies.refreshToken;
-        console.log('Refresh token received:', refreshToken); // Лог
         if (!refreshToken) {
             return res.status(401).json({ success: false, message: 'No refresh token provided' });
         }
 
         const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
-        console.log('Decoded refresh token:', decoded); // Лог
         const storedToken = await redis.get(`refresh_token:${decoded.userId}`);
-        console.log('Stored token in Redis:', storedToken); // Лог
         if (storedToken !== refreshToken) {
             return res.status(401).json({ success: false, message: 'Invalid refresh token' });
         }
@@ -334,7 +329,6 @@ const refreshToken = async (req, res) => {
         const accessToken = jwt.sign({ userId: decoded.userId }, process.env.ACCESS_TOKEN_SECRET, {
             expiresIn: '15m', // Исправлено с '1d' на '15m'
         });
-        console.log('New access token generated:', accessToken); // Лог
 
         res.cookie('accessToken', accessToken, {
             httpOnly: true,
@@ -370,9 +364,6 @@ const updateProfile = async (req, res) => {
         const { name, phone, address, dob, gender } = req.body;
         const imageFile = req.file;
 
-        console.log('Received file in updateProfile:', imageFile);
-        console.log('Received body in updateProfile:', req.body);
-
         if (!name || !phone || !address || !dob || !gender) {
             return res.json({ success: false, message: 'Data Missing' });
         }
@@ -387,10 +378,8 @@ const updateProfile = async (req, res) => {
 
         // Обновляем основные данные профиля
         const updatedUser = await userModel.findByIdAndUpdate(req.user._id, updateData, { new: true });
-        console.log('Profile data updated:', updatedUser);
 
         if (imageFile) {
-            console.log('Uploading buffer to Cloudinary:', imageFile.buffer);
             try {
                 // Загружаем файл из буфера
                 const imageUpload = await new Promise((resolve, reject) => {
@@ -411,7 +400,6 @@ const updateProfile = async (req, res) => {
                 });
 
                 const imageURL = imageUpload.secure_url;
-                console.log('Image uploaded to Cloudinary:', imageURL);
 
                 // Обновляем поле image в базе данных
                 const imageUpdate = await userModel.findByIdAndUpdate(
@@ -419,7 +407,6 @@ const updateProfile = async (req, res) => {
                     { image: imageURL },
                     { new: true }
                 );
-                console.log('Image field updated in DB:', imageUpdate);
             } catch (cloudinaryError) {
                 console.log('Error uploading to Cloudinary:', cloudinaryError);
                 return res.json({ success: false, message: 'Failed to upload image to Cloudinary' });
@@ -505,8 +492,6 @@ const sendEmailNotification = async (recipient, subject, message) => {
             text: message,
             html: `<p>${message}</p>`,
         });
-
-        console.log('Email успешно отправлен');
     } catch (error) {
         console.error('Ошибка при отправке email:', error);
     }
@@ -532,7 +517,6 @@ const bookAppointment = async (req, res) => {
         }
 
         if (!docData.available) {
-            console.log(`Doctor ${docId} is not available`);
             await session.abortTransaction();
             return res.status(400).json({ success: false, message: 'Doctor not available' });
         }
@@ -551,7 +535,6 @@ const bookAppointment = async (req, res) => {
             );
 
         if (!updateResult) {
-            console.log(`Slot ${slotTime} on ${slotDate} is not available for doctor ${docId}`);
             await session.abortTransaction();
             return res.status(400).json({ success: false, message: 'Slot not available' });
         }

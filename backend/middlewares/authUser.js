@@ -8,10 +8,8 @@ export const authUser = async (req, res, next) => {
         if (!accessToken) {
             return res.status(401).json({ success: false, message: 'Unauthorized - No access token provided' });
         }
-// hello
         try {
             const decoded = jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET);
-            console.log('Decoded token (User):', decoded); // Лог для отладки
             const user = await userModel.findById(decoded.userId).select('-password');
 
             if (!user) {
@@ -31,27 +29,3 @@ export const authUser = async (req, res, next) => {
         return res.status(401).json({ success: false, message: 'Unauthorized - Invalid access token' });
     }
 };
-
-
-// user authentication middleware
-// const authUser = async (req, res, next) => {
-//     try {
-
-//         const {token} = req.headers
-//         if (!token) {
-//             return res.json({success: false, message: 'Not Authorized Login Again'});
-//         }
-
-//         const token_decode = jwt.verify(token, process.env.JWT_SECRET);
-
-//         req.body.userId = token_decode.id
-
-//         next()
-
-//     } catch (error) {
-//         console.log(error)
-//         res.json({success: false, message: error.message})
-//     }
-// }
-
-// export default authUser;
