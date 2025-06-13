@@ -1,4 +1,5 @@
 {
+  "name": "doctor-appointment",
   "type": "module",
   "main": "backend/server.js",
   "scripts": {
