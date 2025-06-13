@@ -3,12 +3,10 @@ import { AdminContext } from '../context/AdminContext';
 import { DoctorContext } from '../context/DoctorContext';
 import { NavLink } from 'react-router-dom';
 import { assets } from '../assets/assets';
-import { useTranslation } from 'react-i18next';
 
 const Sidebar = () => {
     const { isAuthenticated: isAdminAuthenticated } = useContext(AdminContext);
     const { isAuthenticated: isDoctorAuthenticated } = useContext(DoctorContext);
-    const { t } = useTranslation();
 
     return (
         <div className='min-h-screen bg-white border-r'>
@@ -21,7 +19,7 @@ const Sidebar = () => {
                         to={'/admin-dashboard'}
                     >
                         <img src={assets.home_icon} alt='' />
-                        <p>{t('dashboard')}</p>
+                        <p>{('dashboard')}</p>
                     </NavLink>
                     <NavLink
                         className={({ isActive }) =>
@@ -30,7 +28,7 @@ const Sidebar = () => {
                         to={'/all-appointments'}
                     >
                         <img src={assets.appointment_icon} alt='' />
-                        <p>{t('appointments')}</p>
+                        <p>{('appointments')}</p>
                     </NavLink>
                     <NavLink
                         className={({ isActive }) =>
@@ -39,7 +37,7 @@ const Sidebar = () => {
                         to={'/add-doctor'}
                     >
                         <img src={assets.add_icon} alt='' />
-                        <p>{t('add doctor')}</p>
+                        <p>{('add doctor')}</p>
                     </NavLink>
                     <NavLink
                         className={({ isActive }) =>
@@ -48,16 +46,7 @@ const Sidebar = () => {
                         to={'/doctor-list'}
                     >
                         <img src={assets.people_icon} alt='' />
-                        <p>{t('doctors list')}</p>
-                    </NavLink>
-                    <NavLink
-                        className={({ isActive }) =>
-                            `flex items-center gap-3 py-3.5 px-3 md:px-9 md:min-w-72 cursor-pointer ${isActive ? 'bg-[#F2F3FF] border-r-4 border-primary' : ''}`
-                        }
-                        to={'/add-user'}
-                    >
-                        <img src={assets.add_icon} alt='' />
-                        <p>{t('add user')}</p>
+                        <p>{('doctors list')}</p>
                     </NavLink>
                     <NavLink
                         className={({ isActive }) =>
@@ -66,7 +55,7 @@ const Sidebar = () => {
                         to={'/users-list'}
                     >
                         <img src={assets.people_icon} alt='' />
-                        <p>{t('users list')}</p>
+                        <p>{('users list')}</p>
                     </NavLink>
                     <NavLink
                         className={({ isActive }) =>
@@ -75,7 +64,7 @@ const Sidebar = () => {
                         to={'/add-article'}
                     >
                         <img src={assets.add_icon} alt='' />
-                        <p>{t('add article')}</p>
+                        <p>{('add article')}</p>
                     </NavLink>
                     <NavLink
                         className={({ isActive }) =>
@@ -84,7 +73,7 @@ const Sidebar = () => {
                         to={'/articles-list'}
                     >
                         <img src={assets.people_icon} alt='' />
-                        <p>{t('articles list')}</p>
+                        <p>{('articles list')}</p>
                     </NavLink>
                 </ul>
             )}
@@ -97,7 +86,7 @@ const Sidebar = () => {
                         to={'/doctor-dashboard'}
                     >
                         <img src={assets.home_icon} alt='' />
-                        <p className='hidden md:block'>{t('dashboard')}</p>
+                        <p className='hidden md:block'>{('dashboard')}</p>
                     </NavLink>
                     <NavLink
                         className={({ isActive }) =>
@@ -106,7 +95,7 @@ const Sidebar = () => {
                         to={'/doctor-appointments'}
                     >
                         <img src={assets.appointment_icon} alt='' />
-                        <p className='hidden md:block'>{t('appointments')}</p>
+                        <p className='hidden md:block'>{('appointments')}</p>
                     </NavLink>
                     <NavLink
                         className={({ isActive }) =>
@@ -115,7 +104,7 @@ const Sidebar = () => {
                         to={'/doctor-profile'}
                     >
                         <img src={assets.people_icon} alt='' />
-                        <p className='hidden md:block'>{t('profile')}</p>
+                        <p className='hidden md:block'>{('profile')}</p>
                     </NavLink>
                     <NavLink
                         to='/doctor-messages'
@@ -124,7 +113,7 @@ const Sidebar = () => {
                         }
                     >
                         <img src={assets.message_icon} alt='Messages' className='w-6 mr-2' />
-                        <p className='messages-text'>{t('messages')}</p>
+                        <p className='messages-text'>{('messages')}</p>
                     </NavLink>
                 </ul>
             )}

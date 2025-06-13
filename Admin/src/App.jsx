@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useContext, useEffect } from 'react';
 import Login from './pages/login';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -22,9 +22,15 @@ import ArticlesList from './pages/Admin/ArticlesList'; // Новый импор�
 import ArticleDetails from './pages/Admin/ArticleDetails'; // Новый импорт
 
 const App = () => {
-    const { isAuthenticated: isAdminAuthenticated, loading: adminLoading } = useContext(AdminContext);
-    const { isAuthenticated: isDoctorAuthenticated, loading: doctorLoading } = useContext(DoctorContext);
+    const { isAuthenticated: isAdminAuthenticated, loading: adminLoading } = useContext(AdminContext) || { isAuthenticated: false, loading: true };
+    const { isAuthenticated: isDoctorAuthenticated, loading: doctorLoading } = useContext(DoctorContext) || { isAuthenticated: false, loading: true };
 
+    useEffect(() => {
+        console.log('App.jsx: adminLoading:', adminLoading, 'isAdminAuthenticated:', isAdminAuthenticated);
+        console.log('App.jsx: doctorLoading:', doctorLoading, 'isDoctorAuthenticated:', isDoctorAuthenticated);
+    }, [adminLoading, isAdminAuthenticated, doctorLoading, isDoctorAuthenticated]);
+
+    // Показываем экран загрузки, пока идет проверка авторизации
     if (adminLoading || doctorLoading) {
         return (
             <div className='bg-[#F8F9FD] h-screen flex items-center justify-center'>

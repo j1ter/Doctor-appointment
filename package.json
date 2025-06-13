@@ -1,4 +1,10 @@
 {
+  "main": "backend/server.js",
+  "scripts": {
+    "dev": "nodemon backend/server.js",
+    "start": "node backend/server.js",
+    "build": "npm install && npm install --prefix frontend && npm run build --prefix frontend"
+  },
   "dependencies": {
     "i18next": "^25.2.1",
     "i18next-browser-languagedetector": "^8.1.0",

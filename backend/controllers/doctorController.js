@@ -91,30 +91,43 @@ const loginDoctor = async (req, res) => {
 // API to log out doctor
 const logoutDoctor = async (req, res) => {
     try {
-        const doctorId = req.doctor?._id;
-        if (!doctorId) {
-            return res.status(401).json({ success: false, message: 'Unauthorized: No doctor ID found' });
-        }
+        console.log('Received logout request for doctor');
+        const refreshToken = req.cookies.doctorRefreshToken;
 
-        // Проверяем существование refresh-токена
-        const refreshTokenExists = await redis.exists(`refresh_token_doctor:${doctorId}`);
-        if (refreshTokenExists) {
-            await redis.del(`refresh_token_doctor:${doctorId}`);
+        // Если refresh-токен присутствует, пытаемся удалить его из Redis
+        if (refreshToken) {
+            try {
+                const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+                const doctorId = decoded.docId;
+                const refreshTokenExists = await redis.exists(`refresh_token_doctor:${doctorId}`);
+                if (refreshTokenExists) {
+                    console.log(`Removing refresh token for doctor: ${doctorId}`);
+                    await redis.del(`refresh_token_doctor:${doctorId}`);
+                } else {
+                    console.log(`No refresh token found in Redis for doctor: ${doctorId}`);
+                }
+            } catch (jwtError) {
+                console.log('Invalid refresh token, proceeding with cookie cleanup:', jwtError.message);
+            }
         } else {
-            console.log(`No refresh token found for doctor: ${doctorId}`);
+            console.log('No refresh token provided in cookies');
         }
 
+        // Очищаем куки с теми же параметрами, что при установке
         res.clearCookie('doctorAccessToken', {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'strict',
+            path: '/', // Убедимся, что path совпадает
         });
         res.clearCookie('doctorRefreshToken', {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'strict',
+            path: '/', // Убедимся, что path совпадает
         });
 
+        console.log('Cookies cleared, sending success response');
         res.json({ success: true, message: 'Logged out successfully' });
     } catch (error) {
         console.error('Error during doctor logout:', error.message);

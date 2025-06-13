@@ -17,9 +17,11 @@ const AdminContextProvider = (props) => {
     // Проверка наличия adminRefreshToken
     const checkRefreshToken = async () => {
         try {
+            console.log('Checking admin refresh token...');
             const { data } = await axios.post(`${backendUrl}/api/admin/check-refresh-token`, {}, {
                 withCredentials: true,
             });
+            console.log('Check refresh token response:', data);
             return data.hasRefreshToken;
         } catch (error) {
             console.error('Error checking admin refresh token:', error.response?.data?.message || error.message);
@@ -30,9 +32,11 @@ const AdminContextProvider = (props) => {
     // Обновление токена
     const refreshToken = async () => {
         try {
+            console.log('Refreshing admin token...');
             const { data } = await axios.post(`${backendUrl}/api/admin/refresh-token`, {}, {
                 withCredentials: true,
             });
+            console.log('Refresh token response:', data);
             if (data.success) {
                 setIsAuthenticated(true);
                 await getDashData();
@@ -47,22 +51,29 @@ const AdminContextProvider = (props) => {
 
     // Проверка авторизации админа
     const checkAuth = async () => {
+        setLoading(true);
         try {
-            setLoading(true);
+            console.log('Starting admin auth check...');
             const hasRefreshToken = await checkRefreshToken();
+            console.log('Has refresh token:', hasRefreshToken);
             if (!hasRefreshToken) {
                 setIsAuthenticated(false);
                 return false;
             }
 
             const success = await refreshToken();
+            console.log('Refresh token success:', success);
+            setIsAuthenticated(success);
             return success;
         } catch (error) {
             console.error('Admin auth error:', error.response?.data?.message || error.message);
             setIsAuthenticated(false);
             return false;
         } finally {
+            // Минимальная задержка для предотвращения мигания
+            await new Promise((resolve) => setTimeout(resolve, 500));
             setLoading(false);
+            console.log('Admin auth check completed');
         }
     };
 
@@ -322,8 +333,8 @@ const AdminContextProvider = (props) => {
             );
             if (data.success) {
                 toast.success(data.message);
-                getAllAppointments();
-                getDashData();
+                await getAllAppointments(); // Обновляем список записей
+                getDashData(); // Обновляем данные дашборда
             } else {
                 toast.error(data.message);
             }
@@ -393,12 +404,18 @@ const AdminContextProvider = (props) => {
     }, [backendUrl]);
 
     useEffect(() => {
-        checkAuth();
+        const initAuth = async () => {
+            console.log('Starting initAuth in AdminContext');
+            const isAuth = await checkAuth();
+            console.log('Admin auth check completed:', isAuth);
+        };
+        initAuth();
     }, []);
 
     useEffect(() => {
         const initData = async () => {
             if (isAuthenticated) {
+                console.log('Initializing admin data...');
                 await Promise.all([
                     getAllDoctors(),
                     getAllUsers(),
@@ -409,6 +426,10 @@ const AdminContextProvider = (props) => {
         };
         initData();
     }, [isAuthenticated]);
+
+    useEffect(() => {
+        console.log('AdminContext: isAuthenticated:', isAuthenticated, 'loading:', loading);
+    }, [isAuthenticated, loading]);
 
     const value = {
         backendUrl,
@@ -434,6 +455,7 @@ const AdminContextProvider = (props) => {
         updateArticle,
         deleteArticle,
         deleteComment,
+        loading, // Добавляем loading в value
     };
 
     return <AdminContext.Provider value={value}>{props.children}</AdminContext.Provider>;

@@ -498,6 +498,7 @@ const sendEmailNotification = async (recipient, subject, message) => {
 };
 
 // API to book appointment
+// userController.js
 const bookAppointment = async (req, res) => {
     const session = await mongoose.startSession();
     session.startTransaction();
@@ -526,10 +527,10 @@ const bookAppointment = async (req, res) => {
             .findOneAndUpdate(
                 {
                     _id: docId,
-                    [`slots_booked.${slotDate}`]: { $nin: [slotTime] }, // Проверяем, что слот свободен
+                    [`slots_booked.${slotDate}`]: { $nin: [slotTime] },
                 },
                 {
-                    $push: { [`slots_booked.${slotDate}`]: slotTime }, // Добавляем слот
+                    $push: { [`slots_booked.${slotDate}`]: slotTime },
                 },
                 { session, new: true }
             );
@@ -539,10 +540,10 @@ const bookAppointment = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Slot not available' });
         }
 
-        // Получаем данные пользователя
+        // Получаем данные пользователя, включая dob
         const userData = await userModel
             .findById(userId)
-            .select('name email')
+            .select('name email dob') // Добавляем dob
             .session(session);
         if (!userData) {
             await session.abortTransaction();
@@ -553,7 +554,11 @@ const bookAppointment = async (req, res) => {
         const appointmentData = {
             userId,
             docId,
-            userData: { name: userData.name, email: userData.email },
+            userData: {
+                name: userData.name,
+                email: userData.email,
+                dob: userData.dob, // Добавляем dob
+            },
             docData: { name: docData.name, address: docData.address, image: docData.image },
             slotTime,
             slotDate,

@@ -10,6 +10,7 @@ import cookieParser from 'cookie-parser';
 import { Server } from 'socket.io';
 import http from 'http';
 import { sendMessage } from './controllers/messageController.js';
+import path from "path";
 
 
 // app config
@@ -26,6 +27,8 @@ const io = new Server(server, {
 const port = process.env.PORT || 4000;
 connectDB();
 connectCloudinary();
+
+const __dirname = path.resolve()
 
 // middlewares
 app.use(
@@ -94,6 +97,14 @@ app.set('io', io);
 app.use('/api/admin', adminRouter);
 app.use('/api/doctor', doctorRouter);
 app.use('/api/user', userRouter);
+
+if(process.env.NODE_ENV === "production") {
+  app.use(express.static(path.join(__dirname, "/frontend/dist")));
+
+  app.get("*", (req, res) => {
+    res.sendFile(path.resolve(__dirname, "frontend", "dist", "index.html"));
+  });
+}
 
 app.get('/', (req, res) => {
   res.send('API WORKING');

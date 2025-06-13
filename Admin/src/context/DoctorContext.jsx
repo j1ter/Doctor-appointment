@@ -5,7 +5,7 @@ import { toast } from 'react-toastify';
 export const DoctorContext = createContext();
 
 const DoctorContextProvider = (props) => {
-   const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:4000';
+    const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:4000';
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [loading, setLoading] = useState(true);
     const [appointments, setAppointments] = useState([]);
@@ -67,9 +67,11 @@ const DoctorContextProvider = (props) => {
     // Выход из аккаунта доктора
     const logout = async () => {
         try {
+            console.log('Initiating doctor logout request...');
             const { data } = await axios.post(`${backendUrl}/api/doctor/logout`, {}, {
                 withCredentials: true,
             });
+            console.log('Logout response:', data);
             if (data.success) {
                 toast.success(data.message);
                 setIsAuthenticated(false);
